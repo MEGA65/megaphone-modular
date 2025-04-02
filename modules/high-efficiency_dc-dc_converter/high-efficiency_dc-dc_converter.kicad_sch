@@ -2673,6 +2673,42 @@
 				(hide yes)
 			)
 		)
+		(property "Mft. PN" "RK73H1JTTD1403F"
+			(at 101.6 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/KOA-Speer/RK73H1JTTD1403F?qs=XOvILOgadXaHJrsLzSCu9w%3D%3D"
+			(at 101.6 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "660-RK73H1JTTD1403F"
+			(at 101.6 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey" "https://www.digikey.com.au/en/products/detail/koa-speer-electronics-inc/RK73H1JTTD1403F/9845164"
+			(at 101.6 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "83da933a-5119-4c2a-8e7d-65a423d91132")
 		)
@@ -2735,6 +2771,42 @@
 			)
 		)
 		(property "Description" ""
+			(at 92.71 52.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mft. PN" "RN73R1JTTD2913F100"
+			(at 92.71 52.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" ""
+			(at 92.71 52.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" ""
+			(at 92.71 52.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey" "https://www.digikey.com/en/products/detail/koa-speer-electronics-inc/RN73R1JTTD2913F100/10014619?s=N4IgTCBcDaIEoDkDsBmOBGAUgFWwETAE50UAxdABgpAF0BfIA"
 			(at 92.71 52.07 0)
 			(effects
 				(font
@@ -2898,7 +2970,6 @@
 		(in_bom yes)
 		(on_board yes)
 		(dnp no)
-		(fields_autoplaced yes)
 		(uuid "2fdcca33-c34a-4fb0-8325-353e4d343d48")
 		(property "Reference" "U1"
 			(at 75.8541 86.36 0)
@@ -2909,8 +2980,8 @@
 				(justify left)
 			)
 		)
-		(property "Value" "~"
-			(at 60.96 66.04 0)
+		(property "Value" "ISl91127IR"
+			(at 83.312 49.022 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -2926,7 +2997,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://www.renesas.com/en/document/dst/isl91127ir-datasheet"
 			(at 60.96 66.04 0)
 			(effects
 				(font
@@ -2935,7 +3006,43 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "IC REG BUCK BST ADJ/1V 2A 20QFN"
+			(at 72.39 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mft. PN" "ISL91127IRAZ-T7A"
+			(at 72.39 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Renesas-Intersil/ISL91127IRAZ-T?qs=UgE%2F0m3bTsblEvh8Dzj1lg%3D%3D"
+			(at 72.39 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" " 968-ISL91127IRAZ-T"
+			(at 72.39 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey" "https://www.digikey.com/en/products/detail/renesas-electronics-corporation/ISL91127IRAZ-T7A/6163917"
 			(at 72.39 67.31 0)
 			(effects
 				(font
@@ -3053,7 +3160,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://www.koaspeer.com/pdfs/RN73H.pdf"
 			(at 92.71 62.23 0)
 			(effects
 				(font
@@ -3063,6 +3170,42 @@
 			)
 		)
 		(property "Description" ""
+			(at 92.71 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mft. PN" "RC0603FR-0791KL"
+			(at 92.71 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/YAGEO/RC0603FR-0791KL?qs=EiqXWrxQq62Zxx9xQZom2g%3D%3D"
+			(at 92.71 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "603-RC0603FR-0791KL"
+			(at 92.71 62.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey" "https://www.digikey.com.au/en/products/detail/yageo/RC0603FR-0791KL/727428"
 			(at 92.71 62.23 0)
 			(effects
 				(font
@@ -3187,7 +3330,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://www.koaspeer.com/pdfs/RN73H.pdf"
 			(at 55.88 67.31 0)
 			(effects
 				(font
@@ -3196,7 +3339,43 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Thin Film Resistors - SMD 92kOhm,0603,0.1%,25p"
+			(at 55.88 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mft. PN" "RC0603FR-0791KL"
+			(at 55.88 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/YAGEO/RC0603FR-0791KL?qs=EiqXWrxQq62Zxx9xQZom2g%3D%3D"
+			(at 55.88 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "603-RC0603FR-0791KL"
+			(at 55.88 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey" "https://www.digikey.com.au/en/products/detail/yageo/RC0603FR-0791KL/727428"
 			(at 55.88 67.31 0)
 			(effects
 				(font
@@ -3274,6 +3453,42 @@
 				(hide yes)
 			)
 		)
+		(property "Mft. PN" "CL21A106KOQNNNG"
+			(at 31.75 81.28 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/Samsung-Electro-Mechanics/CL21A106KOQNNNG?qs=hqM3L16%252BxlcMWI7QbqH0LA%3D%3D"
+			(at 31.75 81.28 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "187-CL21A106KOQNNNG"
+			(at 31.75 81.28 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey" "https://www.digikey.com.au/en/products/detail/samsung-electro-mechanics/CL21A106KOQNNNG/3894417"
+			(at 31.75 81.28 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "e659fc70-4be4-47b3-a6a2-96cbd503260e")
 		)
@@ -3336,6 +3551,42 @@
 			)
 		)
 		(property "Description" ""
+			(at 104.14 52.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mft. PN" "CC0805JRNPO9BN201"
+			(at 104.14 52.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "603-CC805JRNPO9BN201"
+			(at 104.14 52.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "https://hr.mouser.com/ProductDetail/YAGEO/CC0805JRNPO9BN201?qs=57cj7OiSijkQwP0oHDWT0Q%3D%3D"
+			(at 104.14 52.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey" "https://www.digikey.com.au/en/products/detail/yageo/CC0805JRNPO9BN201/5884041"
 			(at 104.14 52.07 0)
 			(effects
 				(font
@@ -3478,6 +3729,42 @@
 				(hide yes)
 			)
 		)
+		(property "Mft. PN" ""
+			(at 62.23 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" ""
+			(at 62.23 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" ""
+			(at 62.23 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey" ""
+			(at 62.23 99.06 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "1667babb-d4fd-4526-9c87-27983afb7b90")
 		)
@@ -3540,6 +3827,42 @@
 			)
 		)
 		(property "Description" ""
+			(at 38.1 81.28 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mft. PN" "CL21A106KOQNNNG"
+			(at 38.1 81.28 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/Samsung-Electro-Mechanics/CL21A106KOQNNNG?qs=hqM3L16%252BxlcMWI7QbqH0LA%3D%3D"
+			(at 38.1 81.28 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "187-CL21A106KOQNNNG"
+			(at 38.1 81.28 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey" "https://www.digikey.com.au/en/products/detail/samsung-electro-mechanics/CL21A106KOQNNNG/3894417"
 			(at 38.1 81.28 0)
 			(effects
 				(font
@@ -3674,6 +3997,42 @@
 			)
 		)
 		(property "Description" "Generated using footprint-gen .. 15.74 22.25 21 MA0780C"
+			(at 113.03 111.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mft. PN" ""
+			(at 113.03 111.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" ""
+			(at 113.03 111.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" ""
+			(at 113.03 111.76 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey" ""
 			(at 113.03 111.76 0)
 			(effects
 				(font
@@ -3828,6 +4187,42 @@
 			)
 		)
 		(property "Description" ""
+			(at 92.71 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mft. PN" "CL21A226KOQNNNG"
+			(at 92.71 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/Samsung-Electro-Mechanics/CL21A226KOQNNNG?qs=y02iAgv9n63ATGKnSfEDrg%3D%3D"
+			(at 92.71 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "187-CL21A226KOQNNNG"
+			(at 92.71 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey" "https://www.digikey.com.au/en/products/detail/samsung-electro-mechanics/CL21A226KOQNNNG/3894433?s=N4IgTCBcDaIMIBkwEYCCYwDYDSB5AigHLEDiIAugL5A"
 			(at 92.71 78.74 0)
 			(effects
 				(font
@@ -4038,6 +4433,42 @@
 				(hide yes)
 			)
 		)
+		(property "Mft. PN" "CL21A226KOQNNNG"
+			(at 105.41 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/Samsung-Electro-Mechanics/CL21A226KOQNNNG?qs=y02iAgv9n63ATGKnSfEDrg%3D%3D"
+			(at 105.41 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "187-CL21A226KOQNNNG"
+			(at 105.41 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey" "https://www.digikey.com.au/en/products/detail/samsung-electro-mechanics/CL21A226KOQNNNG/3894433?s=N4IgTCBcDaIMIBkwEYCCYwDYDSB5AigHLEDiIAugL5A"
+			(at 105.41 78.74 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "3ce4a117-f1ed-4b01-b38a-c1fe1aa1abe9")
 		)
@@ -4164,6 +4595,42 @@
 			)
 		)
 		(property "Description" ""
+			(at 72.39 43.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mft. PN" "DFE252012P-1R0M=P2"
+			(at 72.39 43.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/Murata-Electronics/DFE252012P-1R0M%3dP2?qs=KuGPmAKtFKUHla8Odvjl9w%3D%3D"
+			(at 72.39 43.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "81-DFE252012P-1R0MP2"
+			(at 72.39 43.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "DigiKey" "https://www.digikey.com.au/en/products/detail/koa-speer-electronics-inc/RN73R1JTTD2913F100/10014619"
 			(at 72.39 43.18 0)
 			(effects
 				(font

@@ -1193,6 +1193,33 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/KYOCERA-AVX/12066D104KAT4A?qs=np9tehfYv7O1LpY%2FkoBbBg%3D%3D"
+			(at 50.8 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" " 581-12066D104KAT4A"
+			(at 50.8 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" " 12066D104KAT4A"
+			(at 50.8 55.88 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "ae991e04-33a7-40eb-adca-1dc376775611")
 		)
@@ -1254,6 +1281,33 @@
 		)
 		(property "Description" "Resistor"
 			(at 91.44 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/YAGEO/AC0603JR-07100RL?qs=ygRr%2FtkhtetP1ztKDq36TA%3D%3D"
+			(at 91.44 60.96 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "603-AC0603JR-07100RL"
+			(at 91.44 60.96 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "AC0603JR-07100RL"
+			(at 91.44 60.96 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -1324,6 +1378,33 @@
 			)
 		)
 		(property "Description" "Digital MEMS Microphone, LGA-5"
+			(at 77.47 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Infineon-Technologies/IM69D130V01XTSA1?qs=W0yvOO0ixfHjr98Yrg6FIA%3D%3D"
+			(at 77.47 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "726-IM69D130V01XTSA1"
+			(at 77.47 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "IM69D130V01XTSA1"
 			(at 77.47 60.96 0)
 			(effects
 				(font
@@ -1411,6 +1492,33 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/YAGEO/AC0603JR-07100KL?qs=cGU37fGUGy%252BuVeV1ZRovkw%3D%3D"
+			(at 87.63 49.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "603-AC0603JR-07100KL"
+			(at 87.63 49.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "AC0603JR-07100KL"
+			(at 87.63 49.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "8959fc3c-dde2-433e-bff9-8aa05e5c5c55")
 		)
@@ -1471,6 +1579,33 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 91.44 71.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "AC0603JR-07100RL"
+			(at 91.44 71.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/YAGEO/AC0603JR-07100RL?qs=ygRr%2FtkhtetP1ztKDq36TA%3D%3D"
+			(at 91.44 71.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "603-AC0603JR-07100RL"
 			(at 91.44 71.12 0)
 			(effects
 				(font

@@ -1331,7 +1331,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "S2B-PH-K-SLFSN"
+		(property "Datasheet" "https://eu.mouser.com/datasheet/2/564/ePH-3433490.pdf"
 			(at 102.87 46.99 0)
 			(effects
 				(font
@@ -1342,6 +1342,33 @@
 			)
 		)
 		(property "Description" ""
+			(at 102.87 46.99 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/JST-Commercial/S2B-PH-K-SLFSN?qs=cdbOS8ANM9A5Ie4gXeMjTA%3D%3D"
+			(at 102.87 46.99 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "306-S2BPHKSLFSNPP"
+			(at 102.87 46.99 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" " S2B-PH-K-S(LF)(SN) "
 			(at 102.87 46.99 0)
 			(effects
 				(font
@@ -1401,7 +1428,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://tensility.s3.us-west-2.amazonaws.com/uploads/pdffiles/54-00127.pdf"
 			(at 111.76 72.39 0)
 			(effects
 				(font
@@ -1466,6 +1493,15 @@
 					(size 1.27 1.27)
 				)
 				(justify bottom)
+				(hide yes)
+			)
+		)
+		(property "Digikey" "https://www.digikey.com/en/products/detail/tensility-international-corp/54-00127/9685436"
+			(at 111.76 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
 				(hide yes)
 			)
 		)

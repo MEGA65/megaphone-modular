@@ -2597,22 +2597,10 @@
 		(uuid "10c750ef-6efd-4874-8fbb-3155fac1bebc")
 	)
 	(junction
-		(at 273.05 134.62)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "1af4c32e-f23c-4472-b914-67a594ddc4c4")
-	)
-	(junction
 		(at 274.32 30.48)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "21b4c66d-4edc-4983-81de-b9eed6971dbd")
-	)
-	(junction
-		(at 274.32 53.34)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "2bcc96cd-6824-45b8-9bda-b28fa64738d2")
 	)
 	(junction
 		(at 266.7 127)
@@ -2625,12 +2613,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "4a3ef0ff-7b2a-4402-b94f-784b2ad6ee1d")
-	)
-	(junction
-		(at 273.05 157.48)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "4dbbda0e-c2f0-4862-a650-e35d3e4eef25")
 	)
 	(junction
 		(at 266.7 102.87)
@@ -2697,18 +2679,6 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "a6cb1aa2-2174-4491-9290-e861d98fe19d")
-	)
-	(junction
-		(at 273.05 110.49)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "ae81423a-c0ef-42a4-a905-22407cd286a7")
-	)
-	(junction
-		(at 273.05 87.63)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "db3f14c8-52a6-43d8-9005-92ee3a9ef213")
 	)
 	(junction
 		(at 266.7 87.63)
@@ -2826,16 +2796,6 @@
 	)
 	(wire
 		(pts
-			(xy 266.7 110.49) (xy 273.05 110.49)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "1c8fb139-1e5f-42c5-8a75-56ac0a055a39")
-	)
-	(wire
-		(pts
 			(xy 182.88 81.28) (xy 172.72 81.28)
 		)
 		(stroke
@@ -2873,16 +2833,6 @@
 			(type default)
 		)
 		(uuid "23acb362-96d2-466c-abfb-a70f89ca8a30")
-	)
-	(wire
-		(pts
-			(xy 273.05 86.36) (xy 273.05 87.63)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "24ef2075-7ef1-485f-807b-bc2fed9f126a")
 	)
 	(wire
 		(pts
@@ -2983,16 +2933,6 @@
 			(type default)
 		)
 		(uuid "501f6ef4-070d-4502-9d4b-eec795684e83")
-	)
-	(wire
-		(pts
-			(xy 273.05 109.22) (xy 273.05 110.49)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "542f2df5-26bf-4b63-8ed6-189459062ed1")
 	)
 	(wire
 		(pts
@@ -3186,6 +3126,16 @@
 	)
 	(wire
 		(pts
+			(xy 266.7 110.49) (xy 273.05 110.49)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "84847c42-81ed-4fdc-978f-fb3061352b3d")
+	)
+	(wire
+		(pts
 			(xy 218.44 50.8) (xy 228.6 50.8)
 		)
 		(stroke
@@ -3233,16 +3183,6 @@
 			(type default)
 		)
 		(uuid "8c595e66-170c-44e7-bd62-50bcc7dff749")
-	)
-	(wire
-		(pts
-			(xy 274.32 52.07) (xy 274.32 53.34)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "8dc8f783-df37-48ac-99a9-1218a8a9a806")
 	)
 	(wire
 		(pts
@@ -3353,26 +3293,6 @@
 			(type default)
 		)
 		(uuid "b4372ca9-8a1e-432f-afc9-c59f1f438df4")
-	)
-	(wire
-		(pts
-			(xy 273.05 133.35) (xy 273.05 134.62)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b56aadd3-79df-4c97-a53a-9632da50e2c7")
-	)
-	(wire
-		(pts
-			(xy 273.05 156.21) (xy 273.05 157.48)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "b6543cca-2bf4-4eea-9aa1-c6f908220d9f")
 	)
 	(wire
 		(pts
@@ -4941,6 +4861,33 @@
 				(hide yes)
 			)
 		)
+		(property "Mfr. PN" "C0603C104M4RAC"
+			(at 260.35 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/KEMET/C0603C104M4RAC?qs=sykUljcfnH2CXqY4UGVWfw%3D%3D"
+			(at 260.35 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "80-C0603C104M4RAC"
+			(at 260.35 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "d03cbcf8-a101-4a79-894e-690924230a9e")
 		)
@@ -5473,6 +5420,33 @@
 				(hide yes)
 			)
 		)
+		(property "Mfr. PN" "C0603C104M4RAC"
+			(at 260.35 130.81 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/KEMET/C0603C104M4RAC?qs=sykUljcfnH2CXqY4UGVWfw%3D%3D"
+			(at 260.35 130.81 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "80-C0603C104M4RAC"
+			(at 260.35 130.81 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "3ef55799-7902-424a-8e40-cb00d38df346")
 		)
@@ -5524,7 +5498,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://www.ti.com/lit/gpn/tlv320aic3110"
 			(at 200.66 81.28 0)
 			(effects
 				(font
@@ -5619,6 +5593,33 @@
 					(size 1.27 1.27)
 				)
 				(justify bottom)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/Texas-Instruments/TLV320AIC3110IRHBR?qs=%2Fqzd9s%252BcLd6OGo98zEpQbA%3D%3D"
+			(at 200.66 81.28 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "595-V320AIC3110IRHBR"
+			(at 200.66 81.28 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" " TLV320AIC3110IRHBR"
+			(at 200.66 81.28 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
 				(hide yes)
 			)
 		)
@@ -5866,6 +5867,33 @@
 				(hide yes)
 			)
 		)
+		(property "Mfr. PN" "C0603C106M9PAC7411"
+			(at 273.05 106.68 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/KEMET/C0603C106M9PAC7411?qs=sGAEpiMZZMukHu%252BjC5l7YTwKPozCbOUkkO%252BcUlAin%2Fo%3D"
+			(at 273.05 106.68 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "80-C0603C106M9P7411"
+			(at 273.05 106.68 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "d9726d8a-59b9-48a6-8683-e10d63e5adfa")
 		)
@@ -5928,6 +5956,33 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 274.32 26.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "CC0603MRX5R5BB226"
+			(at 274.32 26.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/YAGEO/CC0603MRX5R5BB226?qs=sGAEpiMZZMsh%252B1woXyUXj%252By57dOsWF1cCgJViTY3030%3D"
+			(at 274.32 26.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "603-CC603MRX5R5BB226"
 			(at 274.32 26.67 0)
 			(effects
 				(font
@@ -6197,6 +6252,33 @@
 				(hide yes)
 			)
 		)
+		(property "Mfr. PN" "C0603C106M9PAC7411"
+			(at 273.05 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/KEMET/C0603C106M9PAC7411?qs=sGAEpiMZZMukHu%252BjC5l7YTwKPozCbOUkkO%252BcUlAin%2Fo%3D"
+			(at 273.05 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "80-C0603C106M9P7411"
+			(at 273.05 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "142a1699-68c9-4366-8d41-45ea862feb5f")
 		)
@@ -6257,6 +6339,33 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 243.84 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "GRM188R60E476ME15J"
+			(at 243.84 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/Murata-Electronics/GRM188R60E476ME15J?qs=sGAEpiMZZMsh%252B1woXyUXj%252BPOAS4JE4Y%252BO6TFXMM4y7M%3D"
+			(at 243.84 66.04 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "81-GRM188R60E476ME5J"
 			(at 243.84 66.04 0)
 			(effects
 				(font
@@ -6448,7 +6557,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://hr.mouser.com/datasheet/2/609/ADP5301-1503385.pdf"
 			(at 85.09 64.77 0)
 			(effects
 				(font
@@ -6886,6 +6995,33 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/Analog-Devices/ADP5301ACBZ-1-R7?qs=OplyyfyNBA7EZCtOr7ySlA%3D%3D"
+			(at 85.09 64.77 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "584-ADP5301ACBZ-1-R7"
+			(at 85.09 64.77 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "ADP5301ACBZ-1-R7"
+			(at 85.09 64.77 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "C2"
 			(uuid "6a1d1a76-308e-46ae-8a32-3886ec3cffa7")
 		)
@@ -6974,6 +7110,33 @@
 				(hide yes)
 			)
 		)
+		(property "Mfr. PN" "RT0603DRE072K2L"
+			(at 250.19 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/YAGEO/RT0603DRE072K2L?qs=xsTFCgGnzbLzovqMY9uF1w%3D%3D"
+			(at 250.19 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "603-RT0603DRE072K2L"
+			(at 250.19 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "7947d1e9-d305-468c-a88c-dd1a65b5de9d")
 		)
@@ -7044,6 +7207,33 @@
 				(hide yes)
 			)
 		)
+		(property "Mfr. PN" "C0603C104M4RAC"
+			(at 260.35 106.68 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/KEMET/C0603C104M4RAC?qs=sykUljcfnH2CXqY4UGVWfw%3D%3D"
+			(at 260.35 106.68 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "80-C0603C104M4RAC"
+			(at 260.35 106.68 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "b8790016-8d3b-41af-a201-58551ef367ee")
 		)
@@ -7104,6 +7294,33 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 59.69 54.61 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "C0603C106M9PAC7411"
+			(at 59.69 54.61 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/KEMET/C0603C106M9PAC7411?qs=sGAEpiMZZMukHu%252BjC5l7YTwKPozCbOUkkO%252BcUlAin%2Fo%3D"
+			(at 59.69 54.61 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "80-C0603C106M9P7411"
 			(at 59.69 54.61 0)
 			(effects
 				(font
@@ -7312,6 +7529,33 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/TDK/MLP2016V2R2MT0S1?qs=%2FPzWLGNeQ%252BhaB%252BHRvf0xkw%3D%3D"
+			(at 109.22 52.07 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "810-MLP2016V2R2MT0S1"
+			(at 109.22 52.07 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "MLP2016V2R2MT0S1"
+			(at 109.22 52.07 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "de222184-567d-4c58-9d2c-27f3435b04e1")
 		)
@@ -7374,6 +7618,33 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 260.35 153.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "C0603C104M4RAC"
+			(at 260.35 153.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/KEMET/C0603C104M4RAC?qs=sykUljcfnH2CXqY4UGVWfw%3D%3D"
+			(at 260.35 153.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "80-C0603C104M4RAC"
 			(at 260.35 153.67 0)
 			(effects
 				(font
@@ -7714,6 +7985,33 @@
 				(hide yes)
 			)
 		)
+		(property "Mfr. PN" "C0603C104M4RAC"
+			(at 168.91 76.2 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/KEMET/C0603C104M4RAC?qs=sykUljcfnH2CXqY4UGVWfw%3D%3D"
+			(at 168.91 76.2 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "80-C0603C104M4RAC"
+			(at 168.91 76.2 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "ceaeb419-5675-43d9-89a7-310f108e8b88")
 		)
@@ -7776,6 +8074,33 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 273.05 130.81 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "C0603C106M9PAC7411"
+			(at 273.05 130.81 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/KEMET/C0603C106M9PAC7411?qs=sGAEpiMZZMukHu%252BjC5l7YTwKPozCbOUkkO%252BcUlAin%2Fo%3D"
+			(at 273.05 130.81 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "80-C0603C106M9P7411"
 			(at 273.05 130.81 0)
 			(effects
 				(font
@@ -7920,6 +8245,33 @@
 				(hide yes)
 			)
 		)
+		(property "Mfr. PN" "C0603C104M4RAC"
+			(at 261.62 49.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/KEMET/C0603C104M4RAC?qs=sykUljcfnH2CXqY4UGVWfw%3D%3D"
+			(at 261.62 49.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "80-C0603C104M4RAC"
+			(at 261.62 49.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "f0b4a10d-2274-46a7-9fba-65e3bd791ff6")
 		)
@@ -7990,6 +8342,33 @@
 				(hide yes)
 			)
 		)
+		(property "Mfr. PN" "CC0603MRX5R5BB226"
+			(at 274.32 49.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/YAGEO/CC0603MRX5R5BB226?qs=sGAEpiMZZMsh%252B1woXyUXj%252By57dOsWF1cCgJViTY3030%3D"
+			(at 274.32 49.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "603-CC603MRX5R5BB226"
+			(at 274.32 49.53 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "61c23824-09a6-4bd5-a00b-07060fb334a9")
 		)
@@ -8050,6 +8429,33 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 224.79 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "GRM188R60E476ME15J"
+			(at 224.79 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/Murata-Electronics/GRM188R60E476ME15J?qs=sGAEpiMZZMsh%252B1woXyUXj%252BPOAS4JE4Y%252BO6TFXMM4y7M%3D"
+			(at 224.79 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "81-GRM188R60E476ME5J"
 			(at 224.79 60.96 0)
 			(effects
 				(font
@@ -8260,6 +8666,33 @@
 				(hide yes)
 			)
 		)
+		(property "Mfr. PN" "C0603C106M9PAC7411"
+			(at 119.38 48.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/KEMET/C0603C106M9PAC7411?qs=sGAEpiMZZMukHu%252BjC5l7YTwKPozCbOUkkO%252BcUlAin%2Fo%3D"
+			(at 119.38 48.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "80-C0603C106M9P7411"
+			(at 119.38 48.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "fc7759ca-05d0-419f-87a4-ea1a950be4d0")
 		)
@@ -8396,6 +8829,33 @@
 				(hide yes)
 			)
 		)
+		(property "Mfr. PN" "C0603C104M4RAC"
+			(at 261.62 26.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/KEMET/C0603C104M4RAC?qs=sykUljcfnH2CXqY4UGVWfw%3D%3D"
+			(at 261.62 26.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "80-C0603C104M4RAC"
+			(at 261.62 26.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "856da63b-9d6f-4c99-a57f-90a07ca71ef0")
 		)
@@ -8458,6 +8918,33 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 64.77 73.66 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/YAGEO/RT0603BRD0719K6L?qs=sGAEpiMZZMtlubZbdhIBIE441mth93wmBEJQhTgU7oI%3D"
+			(at 64.77 73.66 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "603-RT0603BRD0719K6L"
+			(at 64.77 73.66 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "RT0603BRD0719K6L"
 			(at 64.77 73.66 0)
 			(effects
 				(font
@@ -8668,6 +9155,33 @@
 				(hide yes)
 			)
 		)
+		(property "Mfr. PN" "C0603C106M9PAC7411"
+			(at 273.05 153.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/KEMET/C0603C106M9PAC7411?qs=sGAEpiMZZMukHu%252BjC5l7YTwKPozCbOUkkO%252BcUlAin%2Fo%3D"
+			(at 273.05 153.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "80-C0603C106M9P7411"
+			(at 273.05 153.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "0126372b-2bb3-4a16-a929-53e3598f2fa2")
 		)
@@ -8796,6 +9310,33 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 46.99 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/YAGEO/RC0603FR-07100KL?qs=e1ok2LiJcmaihem8Va5%2Fsw%3D%3D"
+			(at 46.99 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser PN" "603-RC0603FR-07100KL"
+			(at 46.99 60.96 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "RC0603FR-07100KL"
 			(at 46.99 60.96 0)
 			(effects
 				(font

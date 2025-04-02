@@ -6223,7 +6223,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://assets.nexperia.com/documents/data-sheet/BZX384_SER.pdf"
 			(at 71.12 189.23 0)
 			(effects
 				(font
@@ -6308,6 +6308,33 @@
 					(size 1.27 1.27)
 				)
 				(justify bottom)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "BZX384-C30,115"
+			(at 71.12 189.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Nexperia/BZX384-C30115?qs=me8TqzrmIYU4cfgnkiu4pg%3D%3D"
+			(at 71.12 189.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "771-BZX384-C30115"
+			(at 71.12 189.23 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
 				(hide yes)
 			)
 		)
@@ -6492,7 +6519,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://hr.mouser.com/datasheet/2/447/PYu_RT_1_to_0_01_RoHS_L_15-3461507.pdf"
 			(at 35.56 67.31 0)
 			(effects
 				(font
@@ -6502,6 +6529,33 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 35.56 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "RT0805DRE0711KL"
+			(at 35.56 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/YAGEO/RT0805DRE0711KL?qs=4CyHz7GXqSgP3nd8%252BmNqUg%3D%3D"
+			(at 35.56 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "603-RT0805DRE0711KL"
 			(at 35.56 67.31 0)
 			(effects
 				(font
@@ -6627,7 +6681,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "SI4909DY-T1-GE3"
+		(property "Datasheet" "https://www.vishay.com/doc?67077"
 			(at 142.24 101.6 0)
 			(effects
 				(font
@@ -6638,6 +6692,33 @@
 			)
 		)
 		(property "Description" ""
+			(at 142.24 101.6 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Vishay-Semiconductors/SI4909DY-T1-GE3?qs=FfLXECYddQSDxj1eo%2FTcsQ%3D%3D"
+			(at 142.24 101.6 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "SI4909DY-T1-GE3"
+			(at 142.24 101.6 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "78-SI4909DY-T1-GE3"
 			(at 142.24 101.6 0)
 			(effects
 				(font
@@ -6782,7 +6863,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://hr.mouser.com/datasheet/2/40/avx_04122018_part_number_explanation-1317646.pdf"
 			(at 39.37 58.42 0)
 			(effects
 				(font
@@ -6792,6 +6873,33 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 39.37 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "0805DC104MAT2A"
+			(at 39.37 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/KYOCERA-AVX/0805DC104MAT2A?qs=f21FSZc47PiwyLih6ldJRQ%3D%3D"
+			(at 39.37 58.42 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "581-0805DC104MAT2A"
 			(at 39.37 58.42 0)
 			(effects
 				(font
@@ -6918,7 +7026,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://www.vishay.com/doc?60026"
 			(at 67.31 135.89 0)
 			(effects
 				(font
@@ -6928,6 +7036,33 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 67.31 135.89 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "PTN0805E2463BST1"
+			(at 67.31 135.89 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Vishay-Thin-Film/PTN0805E2463BST1?qs=vtpzqDgAoblA2ujrggxmfQ%3D%3D"
+			(at 67.31 135.89 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "71-PTN0805E2463BST1"
 			(at 67.31 135.89 0)
 			(effects
 				(font
@@ -6989,7 +7124,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "SMM4F24A-TR"
+		(property "Datasheet" "https://hr.mouser.com/datasheet/2/389/smm4f10a-1849921.pdf"
 			(at 67.31 120.65 0)
 			(effects
 				(font
@@ -7000,6 +7135,33 @@
 			)
 		)
 		(property "Description" ""
+			(at 67.31 120.65 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "SMM4F24A-TR"
+			(at 67.31 120.65 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/STMicroelectronics/SMM4F24A-TR?qs=ppWA7IX8Fw7n6eOodwCgJg%3D%3D"
+			(at 67.31 120.65 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "511-SMM4F24A-TR"
 			(at 67.31 120.65 0)
 			(effects
 				(font
@@ -7127,7 +7289,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://www.vishay.com/doc?60026"
 			(at 205.74 139.7 0)
 			(effects
 				(font
@@ -7137,6 +7299,33 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 205.74 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "PTN0805E2463BST1"
+			(at 205.74 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Vishay-Thin-Film/PTN0805E2463BST1?qs=vtpzqDgAoblA2ujrggxmfQ%3D%3D"
+			(at 205.74 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "71-PTN0805E2463BST1"
 			(at 205.74 139.7 0)
 			(effects
 				(font
@@ -7197,7 +7386,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://hr.mouser.com/datasheet/2/40/avx_04122018_part_number_explanation-1317646.pdf"
 			(at 69.85 48.26 0)
 			(effects
 				(font
@@ -7207,6 +7396,33 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 69.85 48.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "0805DC104MAT2A"
+			(at 69.85 48.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/KYOCERA-AVX/0805DC104MAT2A?qs=f21FSZc47PiwyLih6ldJRQ%3D%3D"
+			(at 69.85 48.26 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "581-0805DC104MAT2A"
 			(at 69.85 48.26 0)
 			(effects
 				(font
@@ -7398,7 +7614,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://hr.mouser.com/datasheet/2/447/PYu_RT_1_to_0_01_RoHS_L_15-3461507.pdf"
 			(at 66.04 57.15 0)
 			(effects
 				(font
@@ -7408,6 +7624,33 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 66.04 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "RT0805DRE0711KL"
+			(at 66.04 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/YAGEO/RT0805DRE0711KL?qs=4CyHz7GXqSgP3nd8%252BmNqUg%3D%3D"
+			(at 66.04 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "603-RT0805DRE0711KL"
 			(at 66.04 57.15 0)
 			(effects
 				(font
@@ -7465,7 +7708,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://hr.mouser.com/datasheet/2/447/PYu_RT_1_to_0_01_RoHS_L_15-3461507.pdf"
 			(at 66.04 77.47 0)
 			(effects
 				(font
@@ -7475,6 +7718,33 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 66.04 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "RT0805DRE0711KL"
+			(at 66.04 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/YAGEO/RT0805DRE0711KL?qs=4CyHz7GXqSgP3nd8%252BmNqUg%3D%3D"
+			(at 66.04 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "603-RT0805DRE0711KL"
 			(at 66.04 77.47 0)
 			(effects
 				(font
@@ -7533,7 +7803,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://hr.mouser.com/datasheet/2/40/avx_04122018_part_number_explanation-1317646.pdf"
 			(at 134.62 121.92 0)
 			(effects
 				(font
@@ -7543,6 +7813,33 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 134.62 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "0805DC104MAT2A"
+			(at 134.62 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/KYOCERA-AVX/0805DC104MAT2A?qs=f21FSZc47PiwyLih6ldJRQ%3D%3D"
+			(at 134.62 121.92 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "581-0805DC104MAT2A"
 			(at 134.62 121.92 0)
 			(effects
 				(font
@@ -7800,7 +8097,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "SI4909DY-T1-GE3"
+		(property "Datasheet" "https://www.vishay.com/doc?67077"
 			(at 140.97 41.91 0)
 			(effects
 				(font
@@ -7811,6 +8108,33 @@
 			)
 		)
 		(property "Description" ""
+			(at 140.97 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "SI4909DY-T1-GE3"
+			(at 140.97 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Vishay-Semiconductors/SI4909DY-T1-GE3?qs=FfLXECYddQSDxj1eo%2FTcsQ%3D%3D"
+			(at 140.97 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "78-SI4909DY-T1-GE3"
 			(at 140.97 41.91 0)
 			(effects
 				(font
@@ -7908,6 +8232,33 @@
 				(hide yes)
 			)
 		)
+		(property "Manufacturer_Part_Number" "637-BC847B"
+			(at 80.01 161.29 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Diotec-Semiconductor/BC847B?qs=OlC7AqGiEDnZaP%2FmjLcN6A%3D%3D"
+			(at 80.01 161.29 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "BC847B"
+			(at 80.01 161.29 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "214138a3-1e58-4cbc-8516-24628103ba96")
 		)
@@ -7978,6 +8329,15 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/Vishay-Dale/TNPW0805246KBEEA?qs=FzhAKWsHbnDAG79jbLqF1w%3D%3D"
+			(at 43.18 64.77 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "6aee4edb-05d3-4a1c-8924-37c6de19e85e")
 		)
@@ -8027,7 +8387,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://hr.mouser.com/datasheet/2/447/PYu_RV_51_RoHS_L_10-3003066.pdf"
 			(at 73.66 77.47 0)
 			(effects
 				(font
@@ -8037,6 +8397,33 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 73.66 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "RV0805FR-0751KL"
+			(at 73.66 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/YAGEO/RV0805FR-0751KL?qs=eP2BKZSCXI4lt3RCa6oEFQ%3D%3D"
+			(at 73.66 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "603-RV0805FR-0751KL"
 			(at 73.66 77.47 0)
 			(effects
 				(font
@@ -8097,7 +8484,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://www.vishay.com/doc?60026"
 			(at 87.63 179.07 0)
 			(effects
 				(font
@@ -8107,6 +8494,33 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 87.63 179.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "PTN0805E2463BST1"
+			(at 87.63 179.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Vishay-Thin-Film/PTN0805E2463BST1?qs=vtpzqDgAoblA2ujrggxmfQ%3D%3D"
+			(at 87.63 179.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "71-PTN0805E2463BST1"
 			(at 87.63 179.07 0)
 			(effects
 				(font
@@ -8366,7 +8780,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "SI4909DY-T1-GE3"
+		(property "Datasheet" "https://www.vishay.com/doc?67077"
 			(at 142.24 71.12 0)
 			(effects
 				(font
@@ -8377,6 +8791,33 @@
 			)
 		)
 		(property "Description" ""
+			(at 142.24 71.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "SI4909DY-T1-GE3"
+			(at 142.24 71.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Vishay-Semiconductors/SI4909DY-T1-GE3?qs=FfLXECYddQSDxj1eo%2FTcsQ%3D%3D"
+			(at 142.24 71.12 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "78-SI4909DY-T1-GE3"
 			(at 142.24 71.12 0)
 			(effects
 				(font
@@ -8521,7 +8962,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://hr.mouser.com/datasheet/2/40/avx_04122018_part_number_explanation-1317646.pdf"
 			(at 69.85 68.58 0)
 			(effects
 				(font
@@ -8531,6 +8972,33 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 69.85 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "0805DC104MAT2A"
+			(at 69.85 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/KYOCERA-AVX/0805DC104MAT2A?qs=f21FSZc47PiwyLih6ldJRQ%3D%3D"
+			(at 69.85 68.58 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "581-0805DC104MAT2A"
 			(at 69.85 68.58 0)
 			(effects
 				(font
@@ -8590,7 +9058,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://assets.nexperia.com/documents/data-sheet/BZX384_SER.pdf"
 			(at 85.09 138.43 0)
 			(effects
 				(font
@@ -8675,6 +9143,33 @@
 					(size 1.27 1.27)
 				)
 				(justify bottom)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "BZX384-C30,115"
+			(at 85.09 138.43 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Nexperia/BZX384-C30115?qs=me8TqzrmIYU4cfgnkiu4pg%3D%3D"
+			(at 85.09 138.43 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "771-BZX384-C30115"
+			(at 85.09 138.43 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
 				(hide yes)
 			)
 		)
@@ -8797,7 +9292,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://assets.nexperia.com/documents/data-sheet/BZX384_SER.pdf"
 			(at 212.09 148.59 0)
 			(effects
 				(font
@@ -8885,6 +9380,33 @@
 				(hide yes)
 			)
 		)
+		(property "Manufacturer_Part_Number" "BZX384-C12,115"
+			(at 212.09 148.59 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Nexperia/BZX384-C12115?qs=me8TqzrmIYUt7sXqf4vYAA%3D%3D"
+			(at 212.09 148.59 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "771-BZX384-C12115"
+			(at 212.09 148.59 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "K"
 			(uuid "0242c5df-c746-4fa4-81d7-8599cb8cd7da")
 		)
@@ -8944,6 +9466,15 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 73.66 74.93 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/Vishay-Dale/TNPW0805246KBEEA?qs=FzhAKWsHbnDAG79jbLqF1w%3D%3D"
 			(at 73.66 74.93 0)
 			(effects
 				(font
@@ -9135,7 +9666,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "SQJQ141EL-T1_GE3"
+		(property "Datasheet" "https://www.vishay.com/doc?77935"
 			(at 234.95 142.24 0)
 			(effects
 				(font
@@ -9146,6 +9677,33 @@
 			)
 		)
 		(property "Description" ""
+			(at 234.95 142.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "SQJQ141EL-T1_GE3"
+			(at 234.95 142.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Vishay-Semiconductors/SQJQ141EL-T1_GE3?qs=Wj%2FVkw3K%252BMAXdwiziTgK2g%3D%3D"
+			(at 234.95 142.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "78-SQJQ141EL-T1_GE3"
 			(at 234.95 142.24 0)
 			(effects
 				(font
@@ -9212,7 +9770,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://hr.mouser.com/datasheet/2/447/PYu_RV_51_RoHS_L_10-3003066.pdf"
 			(at 73.66 57.15 0)
 			(effects
 				(font
@@ -9222,6 +9780,33 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 73.66 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "RV0805FR-0751KL"
+			(at 73.66 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/YAGEO/RV0805FR-0751KL?qs=eP2BKZSCXI4lt3RCa6oEFQ%3D%3D"
+			(at 73.66 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "603-RV0805FR-0751KL"
 			(at 73.66 57.15 0)
 			(effects
 				(font
@@ -9588,7 +10173,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "SMCJ28A"
+		(property "Datasheet" "https://hr.mouser.com/datasheet/2/54/SMCJ-778393.pdf"
 			(at 196.85 139.7 0)
 			(effects
 				(font
@@ -9599,6 +10184,33 @@
 			)
 		)
 		(property "Description" ""
+			(at 196.85 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "652-SMCJ33A"
+			(at 196.85 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Bourns/SMCJ33A?qs=%252Bf8Cd6aE5byBHFw3jHfWXQ%3D%3D"
+			(at 196.85 139.7 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "SMCJ33A"
 			(at 196.85 139.7 0)
 			(effects
 				(font
@@ -9674,6 +10286,15 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/Vishay-Dale/TNPW0805246KBEEA?qs=FzhAKWsHbnDAG79jbLqF1w%3D%3D"
+			(at 73.66 54.61 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "2e6049f4-b6a0-4c9d-acf1-1609ea6959bc")
 		)
@@ -9726,7 +10347,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://hr.mouser.com/datasheet/2/447/PYu_RT_1_to_0_01_RoHS_L_15-3461507.pdf"
 			(at 80.01 152.4 0)
 			(effects
 				(font
@@ -9736,6 +10357,33 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 80.01 152.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "RT0805DRE0711KL"
+			(at 80.01 152.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/YAGEO/RT0805DRE0711KL?qs=4CyHz7GXqSgP3nd8%252BmNqUg%3D%3D"
+			(at 80.01 152.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "603-RT0805DRE0711KL"
 			(at 80.01 152.4 0)
 			(effects
 				(font
@@ -9859,7 +10507,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://hr.mouser.com/datasheet/2/447/PYu_RV_51_RoHS_L_10-3003066.pdf"
 			(at 43.18 67.31 0)
 			(effects
 				(font
@@ -9869,6 +10517,33 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 43.18 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "RV0805FR-0751KL"
+			(at 43.18 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/YAGEO/RV0805FR-0751KL?qs=eP2BKZSCXI4lt3RCa6oEFQ%3D%3D"
+			(at 43.18 67.31 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "603-RV0805FR-0751KL"
 			(at 43.18 67.31 0)
 			(effects
 				(font
@@ -9927,7 +10602,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://hr.mouser.com/datasheet/2/40/avx_04122018_part_number_explanation-1317646.pdf"
 			(at 118.11 57.15 0)
 			(effects
 				(font
@@ -9937,6 +10612,33 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 118.11 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "0805DC104MAT2A"
+			(at 118.11 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/KYOCERA-AVX/0805DC104MAT2A?qs=f21FSZc47PiwyLih6ldJRQ%3D%3D"
+			(at 118.11 57.15 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "581-0805DC104MAT2A"
 			(at 118.11 57.15 0)
 			(effects
 				(font
@@ -9995,7 +10697,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://hr.mouser.com/datasheet/2/414/TTRB_S_A0010186342_1-2565648.pdf"
 			(at 143.51 167.64 0)
 			(effects
 				(font
@@ -10005,6 +10707,33 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 143.51 167.64 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "PCF0805R-100RBI"
+			(at 143.51 167.64 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/Welwyn-Components-TT-Electronics/PCF0805R-100RBI?qs=c9g5C7Q1WQsCuuCGUusejQ%3D%3D"
+			(at 143.51 167.64 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "756-PCF0805R100RBI"
 			(at 143.51 167.64 0)
 			(effects
 				(font
@@ -10062,7 +10791,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://hr.mouser.com/datasheet/2/40/avx_04122018_part_number_explanation-1317646.pdf"
 			(at 134.62 82.55 0)
 			(effects
 				(font
@@ -10072,6 +10801,33 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 134.62 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "0805DC104MAT2A"
+			(at 134.62 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://hr.mouser.com/ProductDetail/KYOCERA-AVX/0805DC104MAT2A?qs=f21FSZc47PiwyLih6ldJRQ%3D%3D"
+			(at 134.62 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "581-0805DC104MAT2A"
 			(at 134.62 82.55 0)
 			(effects
 				(font
@@ -10141,6 +10897,33 @@
 			)
 		)
 		(property "Description" "Prioritized PowerPath Controller, Selects Highest Priority Supply from Three Inputs, –40°C to 85°C, SSOP"
+			(at 93.98 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Manufacturer_Part_Number" "LTC4417IGN#PBF"
+			(at 93.98 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Analog-Devices/LTC4417IGNPBF?qs=hVkxg5c3xu9X%2F8Z6%252BaC4HA%3D%3D"
+			(at 93.98 72.39 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser Part Number" "584-LTC4417IGN#PBF"
 			(at 93.98 72.39 0)
 			(effects
 				(font
@@ -10464,6 +11247,15 @@
 					(size 1.27 1.27)
 				)
 				(justify left top)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Infineon-Technologies/IPF067N20NM6ATMA1?qs=1Kr7Jg1SGW%2FSD0HE9lRNRQ%3D%3D"
+			(at 43.18 170.18 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
 				(hide yes)
 			)
 		)

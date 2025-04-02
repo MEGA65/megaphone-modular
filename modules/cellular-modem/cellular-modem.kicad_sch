@@ -7262,7 +7262,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "C2012X7S1A156M125AC"
+		(property "Datasheet" "https://product.tdk.com/system/files/dam/doc/product/capacitor/ceramic/mlcc/catalog/mlcc_commercial_general_en.pdf?ref_disty=mouser"
 			(at 114.3 91.44 0)
 			(effects
 				(font
@@ -7272,6 +7272,33 @@
 			)
 		)
 		(property "Description" ""
+			(at 114.3 91.44 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "C2012X7S1A156M125AC"
+			(at 114.3 91.44 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/TDK/C2012X7S1A156M125AC?qs=xLDY6iXSiQb7j6N658Mn9w%3D%3D"
+			(at 114.3 91.44 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "810-C2012X7S1A156M1C"
 			(at 114.3 91.44 0)
 			(effects
 				(font
@@ -7528,7 +7555,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "GRM219R60J476ME44"
+		(property "Datasheet" "https://eu.mouser.com/datasheet/2/281/1/GRM219R60J476ME44_01A-1986316.pdf"
 			(at 44.45 91.44 0)
 			(effects
 				(font
@@ -7537,7 +7564,34 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Multilayer Ceramic Capacitors MLCC - SMD/SMT 47 uF 6.3 VDC 20% 0805 X5R"
+			(at 44.45 91.44 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "GRM219R60J476ME44D "
+			(at 44.45 91.44 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Murata-Electronics/GRM219R60J476ME44D?qs=I53XXhTNm8tggcUcTH0Mag%3D%3D"
+			(at 44.45 91.44 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "GRM219R60J476ME44"
 			(at 44.45 91.44 0)
 			(effects
 				(font
@@ -7598,7 +7652,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "~"
+		(property "Datasheet" "https://eu.mouser.com/datasheet/2/206/JAEI_S_A0001003620_1-2550612.pdf"
 			(at 118.11 184.15 0)
 			(effects
 				(font
@@ -7608,6 +7662,33 @@
 			)
 		)
 		(property "Description" "Mini-PCI Express bus connector"
+			(at 121.92 154.94 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "MM60-52B1-G1-R850"
+			(at 121.92 154.94 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/JAE-Electronics/MM60-52B1-G1-R850?qs=LBWgzgGgPo%252BV%252BU%2FdH2aUqA%3D%3D"
+			(at 121.92 154.94 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "656-MM6052B1G1R850"
 			(at 121.92 154.94 0)
 			(effects
 				(font
@@ -7896,7 +7977,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "DFE252012P-1R0M=P2"
+		(property "Datasheet" "https://eu.mouser.com/datasheet/2/281/1/J_E_TE243A_0024-2303178.pdf"
 			(at 97.79 26.67 0)
 			(effects
 				(font
@@ -7905,8 +7986,35 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Power Inductors - SMD 1 UH 20%"
 			(at 97.79 26.67 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Murata-Electronics/DFE252012P-1R0M%3dP2?qs=KuGPmAKtFKUHla8Odvjl9w%3D%3D"
+			(at 97.79 26.67 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" " 81-DFE252012P-1R0MP2 "
+			(at 97.79 26.67 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" " DFE252012P-1R0M=P2"
+			(at 97.79 26.67 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8097,7 +8205,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "GRM219R60J476ME44"
+		(property "Datasheet" "https://eu.mouser.com/datasheet/2/281/1/GRM219R60J476ME44_01A-1986316.pdf"
 			(at 46.99 25.4 0)
 			(effects
 				(font
@@ -8106,7 +8214,34 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Multilayer Ceramic Capacitors MLCC - SMD/SMT 47 uF 6.3 VDC 20% 0805 X5R"
+			(at 46.99 25.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Murata-Electronics/GRM219R60J476ME44D?qs=I53XXhTNm8tggcUcTH0Mag%3D%3D"
+			(at 46.99 25.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "GRM219R60J476ME44"
+			(at 46.99 25.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "GRM219R60J476ME44D "
 			(at 46.99 25.4 0)
 			(effects
 				(font
@@ -8399,7 +8534,7 @@
 		(at 36.83 153.67 0)
 		(unit 1)
 		(exclude_from_sim no)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
@@ -8605,7 +8740,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "CR10514J"
+		(property "Datasheet" "https://eu.mouser.com/datasheet/2/54/cr-1858361.pdf"
 			(at 57.15 24.13 0)
 			(effects
 				(font
@@ -8616,6 +8751,42 @@
 		)
 		(property "Description" "Resistor"
 			(at 57.15 24.13 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Bourns/CR0805-JW-514ELF?qs=sGAEpiMZZMukHu%252BjC5l7YeTlYklQq7xRDGXDXwhlzGw%3D"
+			(at 57.15 24.13 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "CR0805-JW-514ELF"
+			(at 57.15 24.13 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "CR0805-JW-514ELF "
+			(at 57.15 24.13 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN2" "CR10514J"
+			(at 57.15 24.13 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8674,7 +8845,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "TXV0108RGYR"
+		(property "Datasheet" "https://www.ti.com/lit/gpn/txv0108"
 			(at 220.98 127 0)
 			(effects
 				(font
@@ -8685,6 +8856,33 @@
 			)
 		)
 		(property "Description" ""
+			(at 220.98 127 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "TXV0108RGYR"
+			(at 220.98 127 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Texas-Instruments/TXV0108RGYR?qs=mELouGlnn3fUZeVXL0%2Frrg%3D%3D"
+			(at 220.98 127 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" " 595-TXV0108RGYR"
 			(at 220.98 127 0)
 			(effects
 				(font
@@ -8813,7 +9011,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "TXV0108RGYR"
+		(property "Datasheet" "https://www.ti.com/lit/gpn/txv0108"
 			(at 219.71 29.21 0)
 			(effects
 				(font
@@ -8824,6 +9022,33 @@
 			)
 		)
 		(property "Description" ""
+			(at 219.71 29.21 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "TXV0108RGYR"
+			(at 219.71 29.21 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Texas-Instruments/TXV0108RGYR?qs=mELouGlnn3fUZeVXL0%2Frrg%3D%3D"
+			(at 219.71 29.21 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" " 595-TXV0108RGYR"
 			(at 219.71 29.21 0)
 			(effects
 				(font
@@ -8953,7 +9178,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "CR10514J"
+		(property "Datasheet" "https://eu.mouser.com/datasheet/2/54/cr-1858361.pdf"
 			(at 104.14 30.48 0)
 			(effects
 				(font
@@ -8963,6 +9188,42 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 104.14 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "CR0805-JW-514ELF"
+			(at 104.14 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Bourns/CR0805-JW-514ELF?qs=sGAEpiMZZMukHu%252BjC5l7YeTlYklQq7xRDGXDXwhlzGw%3D"
+			(at 104.14 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "CR0805-JW-514ELF "
+			(at 104.14 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN2" "CR10514J"
 			(at 104.14 30.48 0)
 			(effects
 				(font
@@ -9286,7 +9547,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "CR10514J"
+		(property "Datasheet" "https://eu.mouser.com/datasheet/2/54/cr-1858361.pdf"
 			(at 101.6 96.52 0)
 			(effects
 				(font
@@ -9296,6 +9557,42 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 101.6 96.52 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Bourns/CR0805-JW-514ELF?qs=sGAEpiMZZMukHu%252BjC5l7YeTlYklQq7xRDGXDXwhlzGw%3D"
+			(at 101.6 96.52 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "CR0805-JW-514ELF"
+			(at 101.6 96.52 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "CR0805-JW-514ELF "
+			(at 101.6 96.52 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN2" "CR10514J"
 			(at 101.6 96.52 0)
 			(effects
 				(font
@@ -9324,7 +9621,7 @@
 		(at 132.08 21.59 0)
 		(unit 1)
 		(exclude_from_sim yes)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
@@ -9618,7 +9915,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "RC0805FR-07432KL"
+		(property "Datasheet" "https://eu.mouser.com/datasheet/2/447/YAGEO_PYu_RC_Group_51_RoHS_L_12-3313492.pdf"
 			(at 125.73 100.33 0)
 			(effects
 				(font
@@ -9628,6 +9925,33 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 125.73 100.33 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "RC0805FR-07432KL "
+			(at 125.73 100.33 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/YAGEO/RC0805FR-07432KL?qs=1iN9QGIZ5R%252BJduen8oKEUQ%3D%3D"
+			(at 125.73 100.33 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "603-RC0805FR-07432KL"
 			(at 125.73 100.33 0)
 			(effects
 				(font
@@ -9688,7 +10012,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "RMCF0805FT90K9"
+		(property "Datasheet" "https://eu.mouser.com/datasheet/2/447/pyu_re_105_rohs_l-3439885.pdf"
 			(at 104.14 38.1 0)
 			(effects
 				(font
@@ -9698,6 +10022,33 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 104.14 38.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "RE0805FRE0790K9L "
+			(at 104.14 38.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/YAGEO/RE0805FRE0790K9L?qs=k2KEx2DUIRRpBMY9mJJBPQ%3D%3D"
+			(at 104.14 38.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "603-RE0805FRE0790K9L"
 			(at 104.14 38.1 0)
 			(effects
 				(font
@@ -9758,7 +10109,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "RMCF0805FT90K9"
+		(property "Datasheet" "https://eu.mouser.com/datasheet/2/447/pyu_re_105_rohs_l-3439885.pdf"
 			(at 101.6 104.14 0)
 			(effects
 				(font
@@ -9768,6 +10119,33 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 101.6 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "RE0805FRE0790K9L "
+			(at 101.6 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/YAGEO/RE0805FRE0790K9L?qs=k2KEx2DUIRRpBMY9mJJBPQ%3D%3D"
+			(at 101.6 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "603-RE0805FRE0790K9L"
 			(at 101.6 104.14 0)
 			(effects
 				(font
@@ -9827,7 +10205,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://www.ti.com/lit/gpn/tps631000"
 			(at 76.2 97.79 0)
 			(effects
 				(font
@@ -9975,6 +10353,33 @@
 				(hide yes)
 			)
 		)
+		(property "Mfr. PN" "TPS631000DRLR"
+			(at 76.2 97.79 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Texas-Instruments/TPS631000DRLR?qs=rSMjJ%252B1ewcRYwoN2deTeNA%3D%3D"
+			(at 76.2 97.79 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "595-TPS631000DRLR"
+			(at 76.2 97.79 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "3"
 			(uuid "686ec425-1925-413f-850b-ec0d39e38fda")
 		)
@@ -10043,7 +10448,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "CR10514J"
+		(property "Datasheet" "https://eu.mouser.com/datasheet/2/54/cr-1858361.pdf"
 			(at 54.61 90.17 0)
 			(effects
 				(font
@@ -10053,6 +10458,42 @@
 			)
 		)
 		(property "Description" "Resistor"
+			(at 54.61 90.17 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Bourns/CR0805-JW-514ELF?qs=sGAEpiMZZMukHu%252BjC5l7YeTlYklQq7xRDGXDXwhlzGw%3D"
+			(at 54.61 90.17 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "CR0805-JW-514ELF"
+			(at 54.61 90.17 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "CR0805-JW-514ELF "
+			(at 54.61 90.17 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN2" "CR10514J"
 			(at 54.61 90.17 0)
 			(effects
 				(font
@@ -10179,7 +10620,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "C2012X7S1A156M125AC"
+		(property "Datasheet" "https://product.tdk.com/system/files/dam/doc/product/capacitor/ceramic/mlcc/catalog/mlcc_commercial_general_en.pdf?ref_disty=mouser"
 			(at 116.84 25.4 0)
 			(effects
 				(font
@@ -10189,6 +10630,33 @@
 			)
 		)
 		(property "Description" ""
+			(at 116.84 25.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "C2012X7S1A156M125AC"
+			(at 116.84 25.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/TDK/C2012X7S1A156M125AC?qs=xLDY6iXSiQb7j6N658Mn9w%3D%3D"
+			(at 116.84 25.4 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "810-C2012X7S1A156M1C"
 			(at 116.84 25.4 0)
 			(effects
 				(font
@@ -10217,7 +10685,7 @@
 		(at 146.05 87.63 0)
 		(unit 1)
 		(exclude_from_sim yes)
-		(in_bom yes)
+		(in_bom no)
 		(on_board yes)
 		(dnp no)
 		(fields_autoplaced yes)
@@ -10382,7 +10850,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://www.ti.com/lit/gpn/tps631000"
 			(at 78.74 31.75 0)
 			(effects
 				(font
@@ -10391,7 +10859,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "1.5-A output current, high-power-density buck-boost converter"
 			(at 78.74 31.75 0)
 			(effects
 				(font
@@ -10530,6 +10998,33 @@
 				(hide yes)
 			)
 		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Texas-Instruments/TPS631000DRLR?qs=rSMjJ%252B1ewcRYwoN2deTeNA%3D%3D"
+			(at 78.74 31.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "TPS631000DRLR"
+			(at 78.74 31.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "595-TPS631000DRLR"
+			(at 78.74 31.75 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "3"
 			(uuid "e75cad4d-5feb-4cb1-b42e-904318f27e86")
 		)
@@ -10601,7 +11096,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" ""
+		(property "Datasheet" "https://eu.mouser.com/datasheet/2/206/JAEIS04212_1-2550270.pdf"
 			(at 177.8 97.79 0)
 			(effects
 				(font
@@ -10656,6 +11151,33 @@
 					(size 1.27 1.27)
 				)
 				(justify bottom)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "MM60-EZH059-B5-R650"
+			(at 177.8 97.79 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/JAE-Electronics/MM60-EZH059-B5-R650?qs=ql1K%252BkDau3oEhJLiIdMucg%3D%3D"
+			(at 177.8 97.79 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" "656-MM60-EZH059-B5-R "
+			(at 177.8 97.79 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
 				(hide yes)
 			)
 		)
@@ -10787,7 +11309,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "TXV0108RGYR"
+		(property "Datasheet" "https://www.ti.com/lit/gpn/txv0108"
 			(at 219.71 77.47 0)
 			(effects
 				(font
@@ -10798,6 +11320,33 @@
 			)
 		)
 		(property "Description" ""
+			(at 219.71 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" "TXV0108RGYR"
+			(at 219.71 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Texas-Instruments/TXV0108RGYR?qs=mELouGlnn3fUZeVXL0%2Frrg%3D%3D"
+			(at 219.71 77.47 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" " 595-TXV0108RGYR"
 			(at 219.71 77.47 0)
 			(effects
 				(font
@@ -10991,7 +11540,7 @@
 				(hide yes)
 			)
 		)
-		(property "Datasheet" "DFE252012P-1R0M=P2"
+		(property "Datasheet" "https://eu.mouser.com/datasheet/2/281/1/J_E_TE243A_0024-2303178.pdf"
 			(at 95.25 92.71 0)
 			(effects
 				(font
@@ -11001,6 +11550,33 @@
 			)
 		)
 		(property "Description" ""
+			(at 95.25 92.71 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mfr. PN" " DFE252012P-1R0M=P2"
+			(at 95.25 92.71 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser" "https://eu.mouser.com/ProductDetail/Murata-Electronics/DFE252012P-1R0M%3dP2?qs=KuGPmAKtFKUHla8Odvjl9w%3D%3D"
+			(at 95.25 92.71 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Mouser_PN" " 81-DFE252012P-1R0MP2 "
 			(at 95.25 92.71 0)
 			(effects
 				(font
