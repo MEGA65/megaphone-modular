@@ -238,14 +238,10 @@ void screen_clear(void)
 }
 
 
-
-char draw_glyph(int x, int y, int font, unsigned long codepoint,unsigned char colour)
+unsigned char lookup_glyph(int font, unsigned long codepoint,unsigned char *pixels_used, unsigned int *glyph_id)
 {
   unsigned int i;
-  unsigned char table_index; 
 
-  colour &= 0x0f;
-  
   for(i=0;i<GLYPH_CACHE_SIZE;i++) {
     if (!cached_codepoints[i]) break;
     if (cached_codepoints[i]==codepoint&&cached_fontnums[i]==font) break;
@@ -265,6 +261,27 @@ char draw_glyph(int x, int y, int font, unsigned long codepoint,unsigned char co
     load_glyph(font, codepoint, i);
   } 
 
+  if (pixels_used) *pixels_used = cached_glyph_flags[i]&0x1f;
+
+  if (glyph_id) *glyph_id = i;
+  
+  // How many glyphs does it use?
+  if (cached_glyph_flags[i]>8) return 2; else return 1;
+}
+
+char draw_glyph(int x, int y, int font, unsigned long codepoint,unsigned char colour, unsigned char *pixels_used)
+{
+  unsigned int i = 0x7fff;
+  unsigned char table_index; 
+
+  colour &= 0x0f;
+
+  lookup_glyph(font, codepoint, NULL, &i);
+  if (i==0x7fff) {
+    // Could not find glyph
+    return 0;
+  }
+  
   /*
     Draw the glyph in the indicated position in the screen RAM.
     Note that it is not the actual pixel coordinates on the screen.
@@ -276,7 +293,7 @@ char draw_glyph(int x, int y, int font, unsigned long codepoint,unsigned char co
     byte values based on every possible glyph_flags byte value.
     
   */
-  
+
   // XXX -- Actually set the character pointers here
 
   // Construct 6-bit table index entry
@@ -294,6 +311,9 @@ char draw_glyph(int x, int y, int font, unsigned long codepoint,unsigned char co
   lpoke(colour_ram + row0_offset + 0, colour_ram_0_left[table_index]);
   lpoke(colour_ram + row0_offset + 1, colour_ram_1[table_index]+colour);
 
+  // Set the number of pixels wide
+  if (pixels_used) *pixels_used = cached_glyph_flags[i]&0x1f;
+  
   // And the 2nd column, if required
   if ((cached_glyph_flags[i]&0x1f)>8) {
     // Screen RAM
@@ -392,6 +412,46 @@ char hex(unsigned char c)
   else return 'A'+c-10;
 }
 
+char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start, // Starting coordinates in glyphs
+			unsigned char f, // font
+			unsigned char colour, // colour
+			unsigned char *utf8,		     // Number of pixels available for width
+			unsigned int x_pixels_viewport,
+			// Number of glyphs available
+			unsigned char x_glyphs_viewport,
+		     // And return the number of each consumed
+			unsigned int *pixels_used,
+			unsigned char *glyphs_used)
+{
+  unsigned char x=0;
+  unsigned long cp;
+  unsigned char *utf8_start = utf8;
+  unsigned int pixels_wide;
+  unsigned char glyph_pixels;
+
+  if (pixels_used) *pixels_used = 0;
+  
+  while (cp = utf8_next_codepoint(&utf8)) {
+    // unsigned char f = pick_font_by_codepoint(cp);
+
+    // Abort if the glyph won't fit.
+    if (lookup_glyph(f,cp,&glyph_pixels, NULL) + x >= x_glyphs_viewport) break;
+    if (glyph_pixels + pixels_wide > x_pixels_viewport) break;
+
+    // Glyph fits, so draw it, and update our dimension trackers
+    x += draw_glyph(x_glyph_start + x, y_glyph_start, f, cp, colour, &glyph_pixels);
+    pixels_wide += glyph_pixels;
+      
+    }    
+
+  if (glyphs_used) *glyphs_used = x;
+  if (pixels_used) *pixels_used = pixels_wide;
+
+  // Return the number of bytes of the string that were consumed
+  return utf8 - utf8_start;
+}
+
+
 void main(void)
 {
   shared_resource_dir d;
@@ -420,26 +480,40 @@ void main(void)
   }
 
   // Say hello to the world!
-  draw_glyph(0,1, FONT_UI, 'E',0x01);
-  draw_glyph(1,1, FONT_UI, 'm',0x01);
-  draw_glyph(3,1, FONT_UI, 'o',0x01);
-  draw_glyph(4,1, FONT_UI, 'j',0x01);
-  draw_glyph(5,1, FONT_UI, 'i',0x01);
-  draw_glyph(6,1, FONT_UI, '!',0x01);
-  draw_glyph(7,1, FONT_UI, ' ',0x01);
-  draw_glyph(8,1, FONT_EMOJI_COLOUR, 0x1f929L,0x01);
+  draw_glyph(0,1, FONT_UI, 'E',0x01,NULL);
+  draw_glyph(1,1, FONT_UI, 'm',0x01,NULL);
+  draw_glyph(3,1, FONT_UI, 'o',0x01,NULL);
+  draw_glyph(4,1, FONT_UI, 'j',0x01,NULL);
+  draw_glyph(5,1, FONT_UI, 'i',0x01,NULL);
+  draw_glyph(6,1, FONT_UI, '!',0x01,NULL);
+  draw_glyph(7,1, FONT_UI, ' ',0x01,NULL);
+  draw_glyph(8,1, FONT_EMOJI_COLOUR, 0x1f929L,0x01,NULL);
 
   {
     unsigned char *string="Ümlaute! 👀 😀 😎 🐶 🐙 🍕 🍣 ⚽️ 🎮 🛠️ 🚀 🎲 🧩 📚 🧪 🎵 🎯 💡 🔥 🌈 🪁";
     unsigned char *s=string;
     unsigned char x=0;
     unsigned long cp;
-    unsigned char w;
 
     while (cp = utf8_next_codepoint(&s)) {
       unsigned char f = pick_font_by_codepoint(cp);
-      x += draw_glyph(x, 4, f, cp, 0x01);
+      x += draw_glyph(x, 4, f, cp, 0x01,NULL);
     }
+  }
+
+  {
+    unsigned int pixels_used;
+    unsigned char glyphs_used;
+    draw_string_nowrap(0,8, // Starting coordinates
+		       FONT_UI, // font
+		       0x01, // colour
+		       "Hello world",
+		       // Number of pixels available for width
+		       720,
+		       // Number of glyphs available
+		       128,
+		       // And return the number of each consumed
+		       &pixels_used, &glyphs_used);
   }
   
   while(1) continue;
@@ -450,7 +524,7 @@ void main(void)
     unsigned long codepoint = 0x1f600L;
     while(1) {
       screen_clear();
-      draw_glyph(0,1, FONT_EMOJI_COLOUR, codepoint,0x01);
+      draw_glyph(0,1, FONT_EMOJI_COLOUR, codepoint,0x01,NULL);
       lpoke(screen_ram + 1024,codepoint&0x1f);
       while(PEEK(0xD610)) POKE(0xD610,0);
       while(!PEEK(0xD610)) continue;
