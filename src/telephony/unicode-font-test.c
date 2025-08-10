@@ -433,12 +433,14 @@ char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start
   unsigned int pixels_wide = 0;
   unsigned char glyph_pixels;
   unsigned char n=0;
+  unsigned char ff;
   
   if (pixels_used) *pixels_used = 0;
   
   while (cp = utf8_next_codepoint(&utf8)) {
-    // unsigned char f = pick_font_by_codepoint(cp);
-
+    // Fall-back to emoji font when required if using the UI font
+    if (f==FONT_UI) ff = pick_font_by_codepoint(cp);
+    
     // Abort if the glyph won't fit.
     if (lookup_glyph(f,cp,&glyph_pixels, NULL) + x >= x_glyphs_viewport) break;
     if (glyph_pixels + pixels_wide > x_pixels_viewport) break;
@@ -544,7 +546,7 @@ void main(void)
 
     while (cp = utf8_next_codepoint(&s)) {
       unsigned char f = pick_font_by_codepoint(cp);
-      x += draw_glyph(x, 4, f, cp, 0x01,NULL);
+      x += draw_glyph(x, 4, f, cp, 0x81,NULL);
     }
   }
 
