@@ -451,10 +451,52 @@ char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start
   return utf8 - utf8_start;
 }
 
+char *num_to_str(unsigned int n,char *s)
+{
+  char *start = s;
+  char active=0;
+  char c;
+  if (n>9999) {
+    c='1';
+    while(n>9999) { c++; n-=10000; }
+    *s = c;
+    s++;
+    active=1;
+  }
+  if (n>999||active) {
+    c='1';
+    while(n>999) { c++; n-=1000; }
+    *s = c;
+    s++;
+    active=1;
+  }
+  if (n>99||active) {
+    c='1';
+    while(n>99) { c++; n-=100; }
+    *s = c;
+    s++;
+    active=1;
+  }
+  if (n>9||active) {
+    c='1';
+    while(n>9) { c++; n-=10; }
+    *s = c;
+    s++;
+    active=1;
+  }
+  *s = '0'+n;
+  s++;
+  *s=0;
+
+  return start;
+}
+
+char msg[80];
 
 void main(void)
 {
   shared_resource_dir d;
+  unsigned char o=0;
 
   mega65_io_enable();
 
@@ -514,6 +556,23 @@ void main(void)
 		       128,
 		       // And return the number of each consumed
 		       &pixels_used, &glyphs_used);
+
+      msg[o++]='(';
+      num_to_str(pixels_used,&msg[o]); o=strlen(msg);
+      sprintf(&msg[o]," px, "); o=strlen(msg);
+      num_to_str(glyphs_used,&msg[o]); o=strlen(msg);
+      sprintf(&msg[o]," glyphs)"); o=strlen(msg);
+      draw_string_nowrap(0,9, // Starting coordinates
+			 FONT_UI, // font
+			 0x0e, // colour
+			 msg,
+			 // Number of pixels available for width
+			 720,
+			 // Number of glyphs available
+			 128,
+			 NULL,NULL);
+
+
   }
   
   while(1) continue;
