@@ -273,7 +273,11 @@ char draw_glyph(int x, int y, int font, unsigned long codepoint,unsigned char co
 {
   unsigned int i = 0x7fff;
   unsigned char table_index; 
+  unsigned char reverse = colour & 0x80; // MSB of colour indicates reverse
 
+  // Make reverse bit be in correct place for SEAM colour RAM byte 1 reverse flag
+  if (reverse) reverse = 0x20;
+  
   colour &= 0x0f;
 
   lookup_glyph(font, codepoint, NULL, &i);
@@ -309,7 +313,7 @@ char draw_glyph(int x, int y, int font, unsigned long codepoint,unsigned char co
 
   // Set colour RAM
   lpoke(colour_ram + row0_offset + 0, colour_ram_0_left[table_index]);
-  lpoke(colour_ram + row0_offset + 1, colour_ram_1[table_index]+colour);
+  lpoke(colour_ram + row0_offset + 1, colour_ram_1[table_index]+colour+reverse);
 
   // Set the number of pixels wide
   if (pixels_used) *pixels_used = cached_glyph_flags[i]&0x1f;
@@ -322,7 +326,7 @@ char draw_glyph(int x, int y, int font, unsigned long codepoint,unsigned char co
 
     // Colour Ram
     lpoke(colour_ram + row0_offset + 2, colour_ram_0_right[table_index]);
-    lpoke(colour_ram + row0_offset + 3, colour_ram_1[table_index]+colour);
+    lpoke(colour_ram + row0_offset + 3, colour_ram_1[table_index]+colour+reverse);
 
     // Rendered as 2 chars wide
     // XXX also report number of pixels consumed
@@ -565,7 +569,7 @@ void main(void)
       sprintf(&msg[o]," glyphs)"); o=strlen(msg);
       draw_string_nowrap(0,9, // Starting coordinates
 			 FONT_UI, // font
-			 0x0e, // colour
+			 0x8e, // colour
 			 msg,
 			 // Number of pixels available for width
 			 720,
