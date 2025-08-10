@@ -263,8 +263,6 @@ unsigned char lookup_glyph(int font, unsigned long codepoint,unsigned char *pixe
 
   if (pixels_used) *pixels_used = cached_glyph_flags[i]&0x1f;
 
-  if (codepoint<0x100) lpoke(0x18000L+codepoint,cached_glyph_flags[i]);
-
   if (glyph_id) *glyph_id = i;
   
   // How many glyphs does it use?
@@ -444,17 +442,11 @@ char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start
     // Glyph fits, so draw it, and update our dimension trackers
     glyph_pixels = 0;
     x += draw_glyph(x_glyph_start + x, y_glyph_start, f, cp, colour, &glyph_pixels);
-    pixels_wide += glyph_pixels;
-
-    lpoke(0x19000L+n, glyph_pixels); n++;
-    
-    
+    pixels_wide += glyph_pixels;    
     }    
 
   if (glyphs_used) *glyphs_used = x;
   if (pixels_used) *pixels_used = pixels_wide;
-
-  lpoke(0x190FFL,*pixels_used);
 
   // Return the number of bytes of the string that were consumed
   return utf8 - utf8_start;
@@ -566,10 +558,6 @@ void main(void)
 		       // And return the number of each consumed
 		       &pixels_used, &glyphs_used);
 
-    lcopy(0x19000L,0x19100L,0xff);
-    lpoke(0x19180L,pixels_used);
-    lpoke(0x19181L,glyphs_used);
-    
       msg[o++]='(';
       num_to_str(pixels_used,&msg[o]); o=strlen(msg);
       sprintf(&msg[o]," px, "); o=strlen(msg);
