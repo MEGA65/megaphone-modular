@@ -298,8 +298,6 @@ char draw_glyph(int x, int y, int font, unsigned long codepoint,unsigned char co
     
   */
 
-  // XXX -- Actually set the character pointers here
-
   // Construct 6-bit table index entry
   table_index = cached_glyph_flags[i]&0x1f;
   table_index |= (cached_glyph_flags[i]>>2)&0x20;
@@ -329,12 +327,10 @@ char draw_glyph(int x, int y, int font, unsigned long codepoint,unsigned char co
     lpoke(colour_ram + row0_offset + 3, colour_ram_1[table_index]+colour+reverse);
 
     // Rendered as 2 chars wide
-    // XXX also report number of pixels consumed
     return 2;
   }
 
   // Rendered as 1 char wide
-  // XXX also report number of pixels consumed
   return 1;
 }
 
@@ -525,7 +521,7 @@ char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start
 
   if (padP) {
     pad_string_viewport(x+ x_glyph_start, y_glyph_start, // Starting coordinates in glyphs
-			colour | 0x80, // XXX debug make padding reverse so it shows up
+			colour,
 		        x_pixels_viewport - pixels_wide,  // Pixels remaining in viewport
 			x_glyphs_viewport-x, // Number of glyphs remaining in viewport
 			x_pixels_viewport); // VIC-IV pixel column to point GOTOX to
@@ -631,8 +627,8 @@ void main(void)
 
   draw_string_nowrap(0,8, // Starting coordinates
 		     FONT_UI, // font
-		     0x01, // colour
-		     "Hello world",
+		     0x8a, // colour
+		     "  Hello world",
 		     // Number of pixels available for width
 		     120,
 		     // Number of glyphs available
@@ -643,8 +639,8 @@ void main(void)
   for(y=0;y<10;y++)
     draw_string_nowrap(0,9+y, // Starting coordinates
 		       FONT_UI, // font
-		       0x01, // colour
-		       "Mr. Potato",
+		       0x8a, // colour
+		       "  Mr. Potato",
 		       // Number of pixels available for width
 		       120L,
 		       // Number of glyphs available
