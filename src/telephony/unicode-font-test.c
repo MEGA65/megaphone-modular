@@ -416,6 +416,99 @@ char hex(unsigned char c)
   else return 'A'+c-10;
 }
 
+char pad_string_viewport(unsigned char x_glyph_start, unsigned char y_glyph, // Starting coordinates in glyphs
+			 unsigned char colour,
+			 unsigned int x_pixels_viewport,
+			 unsigned char x_glyphs_viewport,
+			 unsigned int x_viewport_absolute_end_pixel)
+{
+  unsigned int x = 0;
+  unsigned int x_g = x_glyph_start;
+  unsigned char px;
+  unsigned char reverse = 0;
+  unsigned int i;
+  if (colour&0x80) reverse = 0x20;
+  colour &= 0xf;
+
+  // Lookup space character from UI font -- doesn't actually matter which font is active right now,
+  // because we just need a blank glyph.
+  i = lookup_glyph(FONT_UI,' ',NULL,NULL);  
+
+  lpoke(0x19000L,x_glyph_start);
+  lpoke(0x19001L,y_glyph);
+  lpoke(0x19002L,x_pixels_viewport);
+  lpoke(0x19003L,x_pixels_viewport>>8);
+  lpoke(0x19004L,x_glyphs_viewport);
+  lpoke(0x19005L,x_viewport_absolute_end_pixel);
+  lpoke(0x19006L,x_viewport_absolute_end_pixel>>8);
+
+  while(PEEK(0xD610)) POKE(0xD610,0);
+  while(!PEEK(0xD610)) {
+    POKE(0xD020,PEEK(0xD020)+1);
+  }
+  while(PEEK(0xD610)) POKE(0xD610,0);
+  
+  
+#if 1
+  while(x<x_pixels_viewport) {
+    // How many pixels for this glyph
+    px=31;
+    if (px>(x_pixels_viewport-x)) px=x_pixels_viewport-x;
+
+    // Ran out of glyphs to make the alignment
+    if (x_g==x_glyphs_viewport) return 1;
+
+    // Get offset within screen and colour RAM for both rows of chars
+    row0_offset = (y_glyph<<9) + (x_g<<1);
+
+    lpoke(0x19010L,row0_offset);
+    lpoke(0x19011L,row0_offset>>8);
+    lpoke(0x19012L,x_g);
+    
+    // Set screen RAM
+    lpoke(screen_ram + row0_offset + 0, ((i&0x3f)<<2) + 0 );
+    lpoke(screen_ram + row0_offset + 1, screen_ram_1_left[px] + (i>>6) + 0x10);
+
+    // Set colour RAM
+    lpoke(colour_ram + row0_offset + 0, colour_ram_0_left[px]);
+    lpoke(colour_ram + row0_offset + 1, colour_ram_1[px]+colour+reverse);
+    
+    while(PEEK(0xD610)) POKE(0xD610,0);
+    while(!PEEK(0xD610)) {
+      POKE(0xD020,PEEK(0xD020)+1);
+    }
+    while(PEEK(0xD610)) POKE(0xD610,0);
+    
+    x_g++;
+    x+=px;
+  }
+#endif
+
+#if 0
+  // Write GOTOX to use up remainder of view port glyphs
+  while(x_g<x_glyphs_viewport) {
+
+    // Get offset within screen and colour RAM for both rows of chars
+    row0_offset = (y_glyph<<9) + (x<<1);
+
+    // Set screen RAM
+    lpoke(screen_ram + row0_offset + 0, x_viewport_absolute_end_pixel&0xff);
+    lpoke(screen_ram + row0_offset + 1, 0x00 + (x_viewport_absolute_end_pixel>>8)&0x3);
+
+    // Set colour RAM
+    lpoke(colour_ram + row0_offset + 0, 0x10);
+    lpoke(colour_ram + row0_offset + 1, 0x00);
+    
+    x_g++;
+  }
+#endif
+  
+  return 0;
+}
+
+#define VIEWPORT_PADDED 1
+#define VIEWPORT_UNPADDED 0
+
 char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start, // Starting coordinates in glyphs
 			unsigned char f, // font
 			unsigned char colour, // colour
@@ -423,6 +516,7 @@ char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start
 			unsigned int x_pixels_viewport,
 			// Number of glyphs available
 			unsigned char x_glyphs_viewport,
+			unsigned char padP,
 		     // And return the number of each consumed
 			unsigned int *pixels_used,
 			unsigned char *glyphs_used)
@@ -454,6 +548,15 @@ char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start
   if (glyphs_used) *glyphs_used = x;
   if (pixels_used) *pixels_used = pixels_wide;
 
+  if (padP) {
+    pad_string_viewport(x+ x_glyph_start, y_glyph_start, // Starting coordinates in glyphs
+			colour | 0x80, // XXX debug make padding reverse so it shows up
+		        x_pixels_viewport - pixels_wide,  // Pixels remaining in viewport
+			x_glyphs_viewport-x, // Number of glyphs remaining in viewport
+			x_pixels_viewport); // VIC-IV pixel column to point GOTOX to
+
+  }
+  
   // Return the number of bytes of the string that were consumed
   return utf8 - utf8_start;
 }
@@ -497,8 +600,6 @@ char *num_to_str(unsigned int n,char *s)
 
   return start;
 }
-
-char msg[80];
 
 void main(void)
 {
@@ -550,34 +651,45 @@ void main(void)
     }
   }
 
-  {
-    unsigned int pixels_used = 0;
-    unsigned char glyphs_used = 0;
-    draw_string_nowrap(0,8, // Starting coordinates
-		       FONT_UI, // font
-		       0x01, // colour
-		       "Hello world",
-		       // Number of pixels available for width
-		       720,
-		       // Number of glyphs available
-		       128,
+  draw_string_nowrap(0,8, // Starting coordinates
+		     FONT_UI, // font
+		     0x01, // colour
+		     "Hello world",
+		     // Number of pixels available for width
+		     720,
+		     // Number of glyphs available
+		     20,
+		     VIEWPORT_PADDED,
+		     // And don't return the number of each consumed
+		     NULL,NULL);
+  draw_string_nowrap(0,9, // Starting coordinates
+		     FONT_UI, // font
+		     0x01, // colour
+		     "Mr. Potato",
+		     // Number of pixels available for width
+		     720,
+		     // Number of glyphs available
+		     20,
+		     VIEWPORT_PADDED,
 		       // And return the number of each consumed
-		       &pixels_used, &glyphs_used);
+		     NULL,NULL);
 
-      msg[o++]='(';
-      num_to_str(pixels_used,&msg[o]); o=strlen(msg);
-      sprintf(&msg[o]," px, "); o=strlen(msg);
-      num_to_str(glyphs_used,&msg[o]); o=strlen(msg);
-      sprintf(&msg[o]," glyphs)"); o=strlen(msg);
-      draw_string_nowrap(0,9, // Starting coordinates
+  {
+    unsigned char y;
+    for(y=7;y<12;y++) {
+      draw_string_nowrap(20,y, // Starting coordinates
 			 FONT_UI, // font
-			 0x8e, // colour
-			 msg,
+			 0x01, // colour
+			 "|",
 			 // Number of pixels available for width
-			 720,
+			 720 - 150,
 			 // Number of glyphs available
-			 128,
+			 20,
+			 VIEWPORT_UNPADDED,
+			 // And return the number of each consumed
 			 NULL,NULL);
+
+    }
 
 
   }
