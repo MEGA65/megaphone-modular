@@ -448,8 +448,9 @@ char pad_string_viewport(unsigned char x_glyph_start, unsigned char y_glyph, // 
     row0_offset = (y_glyph<<9) + (x_g<<1);
     
     // Set screen RAM
+    // (Add $10 to make char data base = $40000)
     lpoke(screen_ram + row0_offset + 0, ((i&0x3f)<<2) + 0 );
-    lpoke(screen_ram + row0_offset + 1, (trim<<5) + (i>>6));
+    lpoke(screen_ram + row0_offset + 1, (trim<<5) + 0x10 + (i>>6));
 
     // Set colour RAM
     lpoke(colour_ram + row0_offset + 0, 0x08 + ((trim&8)>>1)); // NCM so we can do upto 16px per glyph
@@ -623,7 +624,8 @@ void main(void)
 
     while (cp = utf8_next_codepoint(&s)) {
       unsigned char f = pick_font_by_codepoint(cp);
-      x += draw_glyph(x, 4, f, cp, 0x81,NULL);
+      draw_glyph(x, 5, f, cp, 0x81,NULL);
+      x += draw_glyph(x, 4, f, cp, 0x01,NULL);
     }
   }
 
