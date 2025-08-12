@@ -83,14 +83,15 @@ src/telephony/linux/thread:	src/telephony/linux/thread.c $(SRC_TELEPHONY_COMMON)
 src/telephony/linux/sortd81:	src/telephony/sortd81.c $(SRC_TELEPHONY_COMMON) $(HDR_TELEPHONY_COMMON) $(SRC_TELEPHONY_COMMON_LINUX) $(HDR_TELEPHONY_COMMON_LINUX)
 	gcc -Wall -g $(HDR_PATH_LINUX) -o $@ src/telephony/sortd81.c $(SRC_TELEPHONY_COMMON) $(SRC_TELEPHONY_COMMON_LINUX)
 
-bin65/unicode-font-test.prg:	src/telephony/unicode-font-test.c src/telephony/attr_tables.c
+bin65/unicode-font-test.prg:	src/telephony/unicode-font-test.c src/telephony/attr_tables.c src/telephony/screen.c
 	mkdir -p bin65
 	$(CC65) -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.c
+	$(CC65) -Iinclude -Isrc/mega65-libc/include src/telephony/screen.c
 	$(CC65) -Iinclude -Isrc/mega65-libc/include src/telephony/attr_tables.c
 	$(CC65) -Iinclude -Isrc/mega65-libc/include src/mega65-libc/src/shres.c
 	$(CC65) -Iinclude -Isrc/mega65-libc/include src/mega65-libc/src/memory.c
 	$(CC65) -Iinclude -Isrc/mega65-libc/include src/mega65-libc/src/hal.c
-	$(CL65) -o bin65/unicode-font-test.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.s src/telephony/attr_tables.s src/mega65-libc/src/shres.s src/mega65-libc/src/cc65/shres_asm.s src/mega65-libc/src/memory.s src/mega65-libc/src/cc65/memory_asm.s src/mega65-libc/src/hal.s
+	$(CL65) -o bin65/unicode-font-test.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.s src/telephony/screen.s src/telephony/attr_tables.s src/mega65-libc/src/shres.s src/mega65-libc/src/cc65/shres_asm.s src/mega65-libc/src/memory.s src/mega65-libc/src/cc65/memory_asm.s src/mega65-libc/src/hal.s
 
 test:	$(LINUX_BINARIES)
 	src/telephony/linux/provision 5 10
