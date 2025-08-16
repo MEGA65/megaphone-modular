@@ -43,6 +43,9 @@ void screen_setup(void)
   // 16-bit text mode, alpha compositor, 40MHz
   POKE(0xD054,0xC5);
 
+  // BOLD = ALT PALETTE so that REVERSE works for FCM
+  POKE(0xD053,PEEK(0xD053)|0x10);
+  
   // PAL
   POKE(0xD06f,0x00);
   
