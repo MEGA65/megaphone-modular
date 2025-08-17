@@ -7,6 +7,7 @@
 #include "mega65/shres.h"
 #include "mega65/memory.h"
 
+#include "records.h"
 #include "screen.h"
 
 unsigned long screen_ram = 0x12000;
@@ -222,7 +223,119 @@ void load_glyph(int font, unsigned long codepoint, unsigned int cache_slot)
   cached_glyph_flags[cache_slot]=glyph_flags;
 }
 
+/* Tunable “penalties” (smaller = more preferred) */
+#define BREAK_FORBIDDEN   255  /* default: don't break here */
+#define BREAK_IDEAL         0  /* best places to break */
+#define BREAK_GOOD         10
+#define BREAK_OKAY         20
+#define BREAK_BAD         200  /* strongly discouraged but not impossible */
 
+
+/* Common Unicode code points we care about */
+#define CP_SPACE        0x0020L
+#define CP_NBSP         0x00A0L
+#define CP_HYPHEN       0x002DL
+#define CP_SOFT_HYPHEN  0x00ADL
+#define CP_ZWSP         0x200BL
+
+/* Simple classifier: return break cost for breaking AFTER cp, possibly using next_cp */
+unsigned char compute_break_cost(unsigned long cp,
+				 unsigned long next_cp,
+				 unsigned char prev_was_space)
+{
+  /* Disallow breaks after nothing */
+  if (cp == 0) return BREAK_FORBIDDEN;
+
+  /* Hard “don’t break” spots */
+  if (cp == CP_NBSP) return BREAK_FORBIDDEN;
+
+  /* Zero-width space explicitly allows a break */
+  if (cp == CP_ZWSP) return BREAK_IDEAL;
+
+  /* A normal space is an ideal break point. If there are multiple spaces,
+     prefer breaking after the LAST one (handled by prev_was_space logic below). */
+  if (cp == CP_SPACE) {
+    /* If the next cp is also a space, discourage breaking here to prefer the last space in the run. */
+    if (next_cp == CP_SPACE) return BREAK_BAD;
+    return BREAK_IDEAL;
+  }
+
+  /* Soft hyphen: okay to break here (render a hyphen when breaking), otherwise ignore.
+     We just mark it a good place; the actual rendering decision can be handled elsewhere. */
+  if (cp == CP_SOFT_HYPHEN) return BREAK_GOOD;
+
+  /* ASCII hyphen-minus: good place to break (will show the hyphen). */
+  if (cp == CP_HYPHEN) return BREAK_OKAY;
+
+  /* Lightly discourage breaking right after an opening punctuation if the next is space.
+     (Keeps lines from ending on an opening paren, etc., unless we must.) */
+  if (cp == '(' || cp == '[' || cp == '{' ||
+      cp == 0x201C || cp == 0x201D ||   /* “ ” */
+      cp == 0x2018 || cp == 0x2019)     /* ‘ ’ */
+    {
+      return BREAK_BAD;
+    }
+
+  /* Otherwise, default: don't break here. */
+  return BREAK_FORBIDDEN;
+}
+
+/* Returns 0 on success, non-zero on error. */
+char string_render_analyse(char *str,
+                           int font,
+                           unsigned int *len,
+                           unsigned char *pixel_widths, /* [RECORD_DATA_SIZE] */
+                           unsigned char *glyph_widths, /* [RECORD_DATA_SIZE] */
+                           unsigned char *break_costs   /* [RECORD_DATA_SIZE] */
+                           )
+{
+  unsigned char *s = (unsigned char*)str;
+  unsigned int o = 0;
+
+  if (!str) return 1;
+  
+  /* To compute break-after cost, we sometimes want to peek the next codepoint. */
+  while (*s && o < RECORD_DATA_SIZE) {
+    unsigned char pixel_count = 0;
+    unsigned char glyph_count = 0;
+
+    /* Decode current cp and remember where we are for peeking. */
+    unsigned char *save = s;
+    unsigned long cp = utf8_next_codepoint(&s);
+
+    /* Peek the next codepoint (without consuming original stream). */
+    unsigned char *peek = s;
+    unsigned long next_cp = *peek ? utf8_next_codepoint(&peek) : 0;
+
+    /* Measure glyph/pixel widths for this cp */
+    glyph_count = lookup_glyph(font, cp, &pixel_count, NULL);
+
+    if (pixel_widths) pixel_widths[o] = pixel_count;
+    if (glyph_widths) glyph_widths[o] = glyph_count;
+
+    /* Compute break cost AFTER this cp */
+    if (break_costs) {
+      /* If this is the very first character, never prefer a break (useless). */
+      unsigned char cost = compute_break_cost(cp, next_cp, /*prev_was_space=*/0);
+
+      /* Never allow a break at position 0 (no-op line) */
+      if (o == 0) cost = BREAK_FORBIDDEN;
+
+      break_costs[o] = cost;
+    }
+
+    o++;
+  }
+
+  if (len) *len = o;
+
+  /* If we stopped because RECORD_DATA_SIZE was reached but string continues, signal truncation. */
+  if (*s) return 2; /* truncated output */
+
+  return 0;
+}
+
+			   
 
 unsigned char lookup_glyph(int font, unsigned long codepoint,unsigned char *pixels_used, unsigned int *glyph_id)
 {
@@ -318,4 +431,75 @@ char draw_glyph(int x, int y, int font, unsigned long codepoint,unsigned char co
 
   // Rendered as 1 char wide
   return 1;
+}
+
+unsigned long utf8_next_codepoint(unsigned char **s)
+{
+  unsigned char *p;
+  unsigned long cp;
+
+  if (!s || !(*s)) return 0L;
+
+  p = *s;
+  
+  if (p[0] < 0x80) {
+    cp = p[0];
+    (*s)++;
+    return cp;
+  }
+
+  // 2-byte sequence: 110xxxxx 10xxxxxx
+  if ((p[0] & 0xE0) == 0xC0) {
+    if ((p[1] & 0xC0) != 0x80) return 0xFFFDL; // invalid continuation
+    cp = ((p[0] & 0x1F) << 6) | (p[1] & 0x3F);
+    *s += 2;
+    return cp;
+  }
+
+  // 3-byte sequence: 1110xxxx 10xxxxxx 10xxxxxx
+  if ((p[0] & 0xF0) == 0xE0) {
+    if ((p[1] & 0xC0) != 0x80 || (p[2] & 0xC0) != 0x80) return 0xFFFDL;
+    cp = ((p[0] & 0x0F) << 12) |
+         ((p[1] & 0x3F) << 6) |
+         (p[2] & 0x3F);
+    *s += 3;
+    return cp;
+  }
+
+  // 4-byte sequence: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+  if ((p[0] & 0xF8) == 0xF0) {
+    if ((p[1] & 0xC0) != 0x80 || (p[2] & 0xC0) != 0x80 || (p[3] & 0xC0) != 0x80)
+      return 0xFFFDL;
+    cp = ((unsigned long)(p[0] & 0x07) << 18) |
+      ((unsigned long)(p[1] & 0x3F) << 12) |
+      ((p[2] & 0x3F) << 6) |
+      (p[3] & 0x3F);
+    *s += 4;
+    return cp;
+  }
+
+  // Invalid or unsupported UTF-8 byte
+  (*s)++;
+  return 0xFFFDL;
+}
+
+char pick_font_by_codepoint(unsigned long cp)
+{
+    // Common emoji ranges
+    if ((cp >= 0x1F300 && cp <= 0x1F5FF) ||  // Misc Symbols and Pictographs
+        (cp >= 0x1F600 && cp <= 0x1F64F) ||  // Emoticons
+        (cp >= 0x1F680 && cp <= 0x1F6FF) ||  // Transport & Map Symbols
+        (cp >= 0x1F700 && cp <= 0x1F77F) ||  // Alchemical Symbols
+        (cp >= 0x1F780 && cp <= 0x1F7FF) ||  // Geometric Extended
+        (cp >= 0x1F800 && cp <= 0x1F8FF) ||  // Supplemental Arrows-C (used for emoji components)
+        (cp >= 0x1F900 && cp <= 0x1F9FF) ||  // Supplemental Symbols and Pictographs
+        (cp >= 0x1FA00 && cp <= 0x1FA6F) ||  // Symbols and Pictographs Extended-A
+        (cp >= 0x1FA70 && cp <= 0x1FAFF) ||  // Symbols and Pictographs Extended-B
+        (cp >= 0x2600 && cp <= 0x26FF)   ||  // Misc symbols (some emoji-like)
+        (cp >= 0x2700 && cp <= 0x27BF)   ||  // Dingbats
+        (cp >= 0xFE00 && cp <= 0xFE0F)   ||  // Variation Selectors (used with emoji)
+        (cp >= 0x1F1E6 && cp <= 0x1F1FF))    // Regional Indicator Symbols (🇦 – 🇿)
+        return FONT_EMOJI_COLOUR;    
+    
+    return FONT_TEXT;
 }

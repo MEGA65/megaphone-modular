@@ -37,77 +37,6 @@ struct text_box {
 
 
 
-unsigned long utf8_next_codepoint(unsigned char **s)
-{
-  unsigned char *p;
-  unsigned long cp;
-
-  if (!s || !(*s)) return 0L;
-
-  p = *s;
-  
-  if (p[0] < 0x80) {
-    cp = p[0];
-    (*s)++;
-    return cp;
-  }
-
-  // 2-byte sequence: 110xxxxx 10xxxxxx
-  if ((p[0] & 0xE0) == 0xC0) {
-    if ((p[1] & 0xC0) != 0x80) return 0xFFFDL; // invalid continuation
-    cp = ((p[0] & 0x1F) << 6) | (p[1] & 0x3F);
-    *s += 2;
-    return cp;
-  }
-
-  // 3-byte sequence: 1110xxxx 10xxxxxx 10xxxxxx
-  if ((p[0] & 0xF0) == 0xE0) {
-    if ((p[1] & 0xC0) != 0x80 || (p[2] & 0xC0) != 0x80) return 0xFFFDL;
-    cp = ((p[0] & 0x0F) << 12) |
-         ((p[1] & 0x3F) << 6) |
-         (p[2] & 0x3F);
-    *s += 3;
-    return cp;
-  }
-
-  // 4-byte sequence: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-  if ((p[0] & 0xF8) == 0xF0) {
-    if ((p[1] & 0xC0) != 0x80 || (p[2] & 0xC0) != 0x80 || (p[3] & 0xC0) != 0x80)
-      return 0xFFFDL;
-    cp = ((unsigned long)(p[0] & 0x07) << 18) |
-      ((unsigned long)(p[1] & 0x3F) << 12) |
-      ((p[2] & 0x3F) << 6) |
-      (p[3] & 0x3F);
-    *s += 4;
-    return cp;
-  }
-
-  // Invalid or unsupported UTF-8 byte
-  (*s)++;
-  return 0xFFFDL;
-}
-
-char pick_font_by_codepoint(unsigned long cp)
-{
-    // Common emoji ranges
-    if ((cp >= 0x1F300 && cp <= 0x1F5FF) ||  // Misc Symbols and Pictographs
-        (cp >= 0x1F600 && cp <= 0x1F64F) ||  // Emoticons
-        (cp >= 0x1F680 && cp <= 0x1F6FF) ||  // Transport & Map Symbols
-        (cp >= 0x1F700 && cp <= 0x1F77F) ||  // Alchemical Symbols
-        (cp >= 0x1F780 && cp <= 0x1F7FF) ||  // Geometric Extended
-        (cp >= 0x1F800 && cp <= 0x1F8FF) ||  // Supplemental Arrows-C (used for emoji components)
-        (cp >= 0x1F900 && cp <= 0x1F9FF) ||  // Supplemental Symbols and Pictographs
-        (cp >= 0x1FA00 && cp <= 0x1FA6F) ||  // Symbols and Pictographs Extended-A
-        (cp >= 0x1FA70 && cp <= 0x1FAFF) ||  // Symbols and Pictographs Extended-B
-        (cp >= 0x2600 && cp <= 0x26FF)   ||  // Misc symbols (some emoji-like)
-        (cp >= 0x2700 && cp <= 0x27BF)   ||  // Dingbats
-        (cp >= 0xFE00 && cp <= 0xFE0F)   ||  // Variation Selectors (used with emoji)
-        (cp >= 0x1F1E6 && cp <= 0x1F1FF))    // Regional Indicator Symbols (🇦 – 🇿)
-        return FONT_EMOJI_COLOUR;    
-    
-    return FONT_TEXT;
-}
-
 char hex(unsigned char c)
 {
   c&=0xf;
@@ -318,7 +247,7 @@ void main(void)
 
     while (cp = utf8_next_codepoint(&s)) {
       unsigned char f = pick_font_by_codepoint(cp);
-      draw_glyph(x, 5, f, cp, 0x81,NULL);
+      draw_glyph(x, 5, f, cp, 0x8d,NULL);
       x += draw_glyph(x, 4, f, cp, 0x01,NULL);
     }
   }

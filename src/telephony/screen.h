@@ -19,6 +19,9 @@ void reset_glyph_cache(void);
 void load_glyph(int font, unsigned long codepoint, unsigned int cache_slot);
 unsigned char lookup_glyph(int font, unsigned long codepoint,unsigned char *pixels_used, unsigned int *glyph_id);
 
+char pick_font_by_codepoint(unsigned long cp);
+unsigned long utf8_next_codepoint(unsigned char **s);
+
 extern unsigned long screen_ram;
 extern unsigned long colour_ram;
 
