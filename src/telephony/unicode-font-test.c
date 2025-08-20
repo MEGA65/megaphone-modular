@@ -8,6 +8,12 @@
 #include "mega65/memory.h"
 
 #include "screen.h"
+#include "records.h"
+
+unsigned int len;
+unsigned char pixel_widths[RECORD_DATA_SIZE];
+unsigned char glyph_widths[RECORD_DATA_SIZE];
+unsigned int break_costs[RECORD_DATA_SIZE];
 
 unsigned char buffer[128];
 
@@ -276,7 +282,12 @@ void main(void)
 		       // And return the number of each consumed
 		       NULL,NULL);
 
-#if 1
+  string_render_analyse("This is a string we want to wrap and display in a skinny box",
+                           FONT_UI,
+			&len,pixel_widths, glyph_widths, break_costs);
+
+  
+#if 0
     {
       for(y=7;y<12;y++) {
 	draw_string_nowrap(20,y, // Starting coordinates

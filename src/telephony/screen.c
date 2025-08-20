@@ -286,7 +286,7 @@ char string_render_analyse(char *str,
                            unsigned int *len,
                            unsigned char *pixel_widths, /* [RECORD_DATA_SIZE] */
                            unsigned char *glyph_widths, /* [RECORD_DATA_SIZE] */
-                           unsigned char *break_costs   /* [RECORD_DATA_SIZE] */
+                           unsigned int *break_costs   /* [RECORD_DATA_SIZE] */
                            )
 {
   unsigned char *s = (unsigned char*)str;

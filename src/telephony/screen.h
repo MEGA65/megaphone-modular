@@ -22,6 +22,14 @@ unsigned char lookup_glyph(int font, unsigned long codepoint,unsigned char *pixe
 char pick_font_by_codepoint(unsigned long cp);
 unsigned long utf8_next_codepoint(unsigned char **s);
 
+char string_render_analyse(char *str,
+                           int font,
+                           unsigned int *len,
+                           unsigned char *pixel_widths, /* [RECORD_DATA_SIZE] */
+                           unsigned char *glyph_widths, /* [RECORD_DATA_SIZE] */
+                           unsigned int *break_costs   /* [RECORD_DATA_SIZE] */
+                           );
+
 extern unsigned long screen_ram;
 extern unsigned long colour_ram;
 
