@@ -50,11 +50,13 @@ SRC_TELEPHONY_COMMON=	src/telephony/d81.c \
 			src/telephony/index.c \
 			src/telephony/buffers.c \
 			src/telephony/search.c \
+			src/telephony/screen.c \
 			src/telephony/sms.c \
 			src/telephony/slab.c
 
 OBJ_TELEPHONY_COMMON=	src/telephony/d81.s \
 			src/telephony/records.s \
+			src/telephony/screen.s \
 			src/telephony/contacts.s \
 			src/telephony/sort.s \
 			src/telephony/index.s \
@@ -71,6 +73,12 @@ HDR_TELEPHONY_COMMON=	src/telephony/records.h \
 			src/telephony/search.h \
 			src/telephony/sms.h \
 			src/telephony/slab.h
+
+OBJ_MEGA65_LIBC=	src/mega65-libc/src/shres.s \
+			src/mega65-libc/src/cc65/shres_asm.s \
+			src/mega65-libc/src/memory.s \
+			src/mega65-libc/src/cc65/memory_asm.s \
+			src/mega65-libc/src/hal.s
 
 SRC_TELEPHONY_COMMON_LINUX=	src/telephony/linux/hal.c
 
@@ -116,7 +124,7 @@ bin65/unicode-font-test.prg:	src/telephony/unicode-font-test.c $(SRC_TELEPHONY_C
 	$(CC65) $(COPT_M65) src/mega65-libc/src/shres.c
 	$(CC65) $(COPT_M65) src/mega65-libc/src/memory.c
 	$(CC65) $(COPT_M65) src/mega65-libc/src/hal.c
-	$(CL65) -o bin65/unicode-font-test.prg -Iinclude -Isrc/mega65-libc/include $(OBJ_TELEPHONY_COMMON) src/telephony/unicode-font-test.s src/mega65-libc/src/shres.s src/mega65-libc/src/memory.s src/mega65-libc/src/hal.s
+	$(CL65) -o bin65/unicode-font-test.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.s src/telephony/attr_tables.s $(OBJ_TELEPHONY_COMMON) $(OBJ_MEGA65_LIBC) 
 
 test:	$(LINUX_BINARIES)
 	src/telephony/linux/provision 5 10
