@@ -350,7 +350,7 @@ char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start
     pad_string_viewport(x+ x_glyph_start, y_glyph_start, // Starting coordinates in glyphs
 			colour,
 		        x_pixels_viewport - pixels_wide,  // Pixels remaining in viewport
-			x_glyphs_viewport-x, // Number of glyphs remaining in viewport
+			x_glyphs_viewport, // Right hand glyph of view port
 			x_pixels_viewport); // VIC-IV pixel column to point GOTOX to
 
   }
@@ -483,9 +483,6 @@ char calc_break_points(unsigned char *str,
       // If a line break is required, record it, and look for next line.
       buffers.textbox.line_offsets_in_bytes[buffers.textbox.line_count++]=(best_break_s-last_break_s);
 
-      lpoke(0x1B000L+buffers.textbox.line_count-1,(best_break_s-last_break_s));
-      lpoke(0x1B080L+buffers.textbox.line_count-1,w_px);
-      
       if (!best_break_ofs) {
 	return 5;
       }
@@ -526,13 +523,8 @@ char calc_break_points(unsigned char *str,
     // Emit final line
     buffers.textbox.line_offsets_in_bytes[buffers.textbox.line_count++]=(s-last_break_s);
     
-    lpoke(0x1B000L+buffers.textbox.line_count-1,(s-last_break_s));
-    
   }
 
-  // debug marker when we've output everything
-  lpoke(0x1B000L+buffers.textbox.line_count,0xff);
-  
 
   // Leave TEXTBOX buffer locked, because the caller presumably intends to use the result of our calculations.
   // buffer_unlock(LOCK_TEXTBOX);
@@ -540,7 +532,6 @@ char calc_break_points(unsigned char *str,
   ofs=0;
   for(j=0;j<buffers.textbox.line_count;j++)
     {
-      lpoke(0x1b040L+j,ofs);
       draw_string_nowrap(0,j+10,
 			 FONT_UI,
 			 0x8D,
@@ -552,18 +543,6 @@ char calc_break_points(unsigned char *str,
 			 NULL,
 			 NULL);
       ofs+=buffers.textbox.line_offsets_in_bytes[j];
-
-      draw_string_nowrap(31,j+10,
-			 FONT_UI,
-			 0x01,
-			 "| These should stay aligned",
-			 200,
-			 50,
-			 NULL,
-			 VIEWPORT_UNPADDED,
-			 NULL,
-			 NULL);
-
     }
 
   return 0;

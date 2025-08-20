@@ -158,8 +158,8 @@ void main(void)
  
   calc_break_points("This is a string we want to wrap and display in a skinny box",
 		    FONT_UI,
-		    50, // px width
-		    30   // glyph width
+		    100, // px width
+		    40   // glyph width
 		    );
   
   
