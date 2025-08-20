@@ -8,8 +8,12 @@
 
 #define SECTOR_BUFFER_ADDRESS 0xFFD6E00L
 
-#define WORK_BUFFER_SIZE (128*1024)
-#define WORK_BUFFER_ADDRESS 0x12000L
+// Requires ROM writeable.  C64 KERNAL is at 0x2E000L, so we have 
+#define WORK_BUFFER_SIZE (88*1024)
+#define WORK_BUFFER_ADDRESS 0x18000L
+// (Also note that 0x12000L is where the screen RAM is, and the glyph buffer is in 0x40000L-0x5FFFFL,
+//  so we have to dodge all that.
+
 
 void hal_init(void);
 char write_sector(unsigned char drive_id, unsigned char track, unsigned char sector);
