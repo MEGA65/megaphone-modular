@@ -224,6 +224,142 @@ void load_glyph(int font, unsigned long codepoint, unsigned int cache_slot)
   cached_glyph_flags[cache_slot]=glyph_flags;
 }
 
+char pad_string_viewport(unsigned char x_glyph_start, unsigned char y_glyph, // Starting coordinates in glyphs
+			 unsigned char colour,
+			 unsigned int x_pixels_viewport,
+			 unsigned char x_glyphs_viewport,
+			 unsigned int x_viewport_absolute_end_pixel)
+{
+  unsigned int x = 0;
+  unsigned int x_g = x_glyph_start;
+  unsigned char px, trim;
+  unsigned char reverse = 0;
+  unsigned int i = 0;
+  unsigned int row0_offset = 0;
+  if (colour&0x80) reverse = 0x20;
+  colour &= 0xf;
+
+  // Lookup space character from UI font -- doesn't actually matter which font is active right now,
+  // because we just need a blank glyph.
+  lookup_glyph(FONT_UI,' ',NULL,&i);  
+
+  while(x<x_pixels_viewport) {
+    // How many pixels for this glyph
+    px=16;
+    if (px>(x_pixels_viewport-x)) px=x_pixels_viewport-x;
+
+    trim = 16 - px;
+    
+    // Ran out of glyphs to make the alignment
+    if (x_g==x_glyphs_viewport) return 1;
+
+    // Get offset within screen and colour RAM for both rows of chars
+    row0_offset = (y_glyph<<9) + (x_g<<1);
+    
+    // Set screen RAM
+    // (Add $10 to make char data base = $40000)
+    lpoke(screen_ram + row0_offset + 0, ((i&0x3f)<<2) + 0 );
+    lpoke(screen_ram + row0_offset + 1, (trim<<5) + 0x10 + (i>>6));
+
+    // Set colour RAM
+    lpoke(colour_ram + row0_offset + 0, 0x08 + ((trim&8)>>1)); // NCM so we can do upto 16px per glyph
+    lpoke(colour_ram + row0_offset + 1, colour+reverse);
+
+    
+    x_g++;
+    x+=px;
+  }
+
+  // Write GOTOX to use up remainder of view port glyphs
+  while(x_g<x_glyphs_viewport) {
+
+    // Get offset within screen and colour RAM for both rows of chars
+    row0_offset = (y_glyph<<9) + (x_g<<1);
+
+    // Set screen RAM
+    lpoke(screen_ram + row0_offset + 0, x_viewport_absolute_end_pixel&0xff);
+    lpoke(screen_ram + row0_offset + 1, (x_viewport_absolute_end_pixel>>8)&0x3);
+
+    // Set colour RAM
+    lpoke(colour_ram + row0_offset + 0, 0x10);  // GOTOX flag
+    lpoke(colour_ram + row0_offset + 1, 0x00);
+        
+    x_g++;
+  }
+  
+  return 0;
+}
+
+char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start, // Starting coordinates in glyphs
+			unsigned char f, // font
+			unsigned char colour, // colour
+			unsigned char *utf8,		     // Number of pixels available for width
+			unsigned int x_pixels_viewport,
+			// Number of glyphs available
+			unsigned char x_glyphs_viewport,
+			unsigned char *str_end,
+			unsigned char padP,
+		     // And return the number of each consumed
+			unsigned int *pixels_used,
+			unsigned char *glyphs_used)
+{
+  unsigned char x=0;
+  unsigned long cp;
+  unsigned char *utf8_start = utf8;
+  unsigned int pixels_wide = 0;
+  unsigned char glyph_pixels;
+  unsigned char n=0;
+  unsigned char ff;
+  
+  if (pixels_used) *pixels_used = 0;
+
+  // Allow drawing of string segments
+  if (str_end) {
+    if (utf8>=str_end) return 0;
+  }
+
+  
+  while (cp = utf8_next_codepoint(&utf8)) {
+
+    // Fall-back to emoji font when required if using the UI font
+    if (f==FONT_UI) ff = pick_font_by_codepoint(cp);
+    
+    // Abort if the glyph won't fit.
+    if (lookup_glyph(f,cp,&glyph_pixels, NULL) + x >= x_glyphs_viewport) break;
+    if (glyph_pixels + pixels_wide > x_pixels_viewport) break;
+
+    // Glyph fits, so draw it, and update our dimension trackers
+    glyph_pixels = 0;
+    x += draw_glyph(x_glyph_start + x, y_glyph_start, f, cp, colour, &glyph_pixels);
+    pixels_wide += glyph_pixels;
+
+    // Allow drawing of string segments
+    if (str_end) {
+      if (utf8>=str_end) {
+	utf8=str_end;
+	break;
+      }
+    }
+    
+  }
+
+  if (glyphs_used) *glyphs_used = x;
+  if (pixels_used) *pixels_used = pixels_wide;
+
+  if (padP) {
+    pad_string_viewport(x+ x_glyph_start, y_glyph_start, // Starting coordinates in glyphs
+			colour,
+		        x_pixels_viewport - pixels_wide,  // Pixels remaining in viewport
+			x_glyphs_viewport-x, // Number of glyphs remaining in viewport
+			x_pixels_viewport); // VIC-IV pixel column to point GOTOX to
+
+  }
+  
+  // Return the number of bytes of the string that were consumed
+  return utf8 - utf8_start;
+}
+
+
 /* Tunable “penalties” (smaller = more preferred) */
 #define BREAK_FORBIDDEN   255  /* default: don't break here */
 #define BREAK_IDEAL         0  /* best places to break */
@@ -296,8 +432,10 @@ char calc_break_points(unsigned char *str,
   unsigned int best_break_ofs;
   unsigned char best_break_cost;
   unsigned char *best_break_s;
+  unsigned char *last_break_s;
   unsigned char break_required;
   unsigned int this_cost, underful_cost;
+  unsigned char j;
   
   // Box must be wide enough to take single widest glyph
   if (box_width_pixels<32) return 4;
@@ -325,10 +463,11 @@ char calc_break_points(unsigned char *str,
   best_break_ofs=0;
   best_break_cost=0xff;
   best_break_s=s;
+  last_break_s=s;
   
   line_start = s;
   line_end = s;
-  
+
   if (r) return r;
 
   buffers.textbox.line_count=0;
@@ -342,9 +481,14 @@ char calc_break_points(unsigned char *str,
 
     if (break_required) {
       // If a line break is required, record it, and look for next line.
-      buffers.textbox.line_offsets_in_bytes[buffers.textbox.line_count++]=(best_break_s-s);
+      buffers.textbox.line_offsets_in_bytes[buffers.textbox.line_count++]=(best_break_s-last_break_s);
+
+      lpoke(0x1B000L+buffers.textbox.line_count-1,(best_break_s-last_break_s));
+      lpoke(0x1B080L+buffers.textbox.line_count-1,w_px);
       
-      if (!best_break_ofs) return 5;
+      if (!best_break_ofs) {
+	return 5;
+      }
 
       w_px=0;
       w_g=0;
@@ -352,30 +496,77 @@ char calc_break_points(unsigned char *str,
       s=best_break_s;
       best_break_ofs=0;
       best_break_cost=0xff;
+      last_break_s = best_break_s;
       best_break_s = str;
     }
     else
       {
-      // Check if cost here is better than the previous cost
-
-      // Get base cost
-      this_cost = buffers.textbox.break_costs[ofs];
-      // Then add a penalty for unused pixels.
-      underful_cost = box_width_pixels - w_px;
-      
-      if (this_cost + underful_cost <= best_break_cost) {
-	best_break_cost = this_cost + underful_cost;
-	best_break_ofs = ofs + 1;
-	best_break_s = s;
+	// Check if cost here is better than the previous cost
+	
+	w_g+= buffers.textbox.glyph_widths[ofs];
+	w_px+= buffers.textbox.pixel_widths[ofs];
+	
+	// Get base cost
+	this_cost = buffers.textbox.break_costs[ofs];
+	// Then add a penalty for unused pixels.
+	underful_cost = box_width_pixels - w_px;
+	
+	if (this_cost + underful_cost <= best_break_cost) {
+	  best_break_cost = this_cost + underful_cost;
+	  best_break_ofs = ofs + 1;
+	  best_break_s = s;
+	}
+	
+	ofs++;
       }
-      
-      ofs++;
-    }
     
   }
 
+  if (*last_break_s) {
+    // Emit final line
+    buffers.textbox.line_offsets_in_bytes[buffers.textbox.line_count++]=(s-last_break_s);
+    
+    lpoke(0x1B000L+buffers.textbox.line_count-1,(s-last_break_s));
+    
+  }
+
+  // debug marker when we've output everything
+  lpoke(0x1B000L+buffers.textbox.line_count,0xff);
+  
+
   // Leave TEXTBOX buffer locked, because the caller presumably intends to use the result of our calculations.
   // buffer_unlock(LOCK_TEXTBOX);
+
+  ofs=0;
+  for(j=0;j<buffers.textbox.line_count;j++)
+    {
+      lpoke(0x1b040L+j,ofs);
+      draw_string_nowrap(0,j+10,
+			 FONT_UI,
+			 0x8D,
+			 &str[ofs],
+			 box_width_pixels,
+			 box_width_glyphs,
+			 &str[ofs+buffers.textbox.line_offsets_in_bytes[j]],
+			 VIEWPORT_PADDED,
+			 NULL,
+			 NULL);
+      ofs+=buffers.textbox.line_offsets_in_bytes[j];
+
+      draw_string_nowrap(31,j+10,
+			 FONT_UI,
+			 0x01,
+			 "| These should stay aligned",
+			 200,
+			 50,
+			 NULL,
+			 VIEWPORT_UNPADDED,
+			 NULL,
+			 NULL);
+
+    }
+
+  return 0;
 }
 
 /* Returns 0 on success, non-zero on error. */
@@ -422,7 +613,7 @@ char string_render_analyse(unsigned char *str,
       break_costs[o] = cost;
     }
 
-    o++;
+    o++;    
   }
 
   if (len) *len = o;

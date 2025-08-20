@@ -14,6 +14,21 @@ void generate_rgb332_palette(void);
 void screen_clear(void);
 void draw_goto(int x,int y, int goto_pos);
 char draw_glyph(int x, int y, int font, unsigned long codepoint,unsigned char colour, unsigned char *pixels_used);
+#define VIEWPORT_PADDED 1
+#define VIEWPORT_UNPADDED 0
+char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start, // Starting coordinates in glyphs
+			unsigned char f, // font
+			unsigned char colour, // colour
+			unsigned char *utf8,		     // Number of pixels available for width
+			unsigned int x_pixels_viewport,
+			// Number of glyphs available
+			unsigned char x_glyphs_viewport,
+		        unsigned char *str_end,
+			unsigned char padP,
+			// And return the number of each consumed
+			unsigned int *pixels_used,
+			unsigned char *glyphs_used);
+
 
 void reset_glyph_cache(void);
 void load_glyph(int font, unsigned long codepoint, unsigned int cache_slot);
