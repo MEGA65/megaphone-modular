@@ -71,7 +71,9 @@ char search_query_release(void)
 unsigned int search_get_diphthong(unsigned int offset)
 {
   if (offset>=(buffers.search.query_length-1)) {
+#ifdef CROSS_COMPILED
     log_error_(__FILE__,__FUNCTION__,__LINE__,100);
+#endif
     return BAD_DIPHTHONG;
   }
 
@@ -304,7 +306,8 @@ void search_swap_results(unsigned int i, unsigned int j)
 
 char search_sort_results_by_score(void)
 {
-
+  unsigned char low, high, pivot_val,i, j;
+  
   if (buffers.search.results_stale||buffers.search.score_recalculation_required) {
     // Reapply the whole query
     search_query_rerun();
@@ -318,16 +321,16 @@ char search_sort_results_by_score(void)
   
   while (buffers.search.stack_ptr > 0) {
     buffers.search.stack_ptr--;
-    unsigned char low  = buffers.search.stack[buffers.search.stack_ptr].low;
-    unsigned char high = buffers.search.stack[buffers.search.stack_ptr].high;
+    low  = buffers.search.stack[buffers.search.stack_ptr].low;
+    high = buffers.search.stack[buffers.search.stack_ptr].high;
     
     if (low >= high) continue;
     
     // Choose pivot = high
-    unsigned char pivot_val = buffers.search.scores[high];
-    unsigned char i = low;
+    pivot_val = buffers.search.scores[high];
+    i = low;
     
-    for (unsigned char j = low; j < high; j++) {
+    for (j = low; j < high; j++) {
       if (buffers.search.scores[j]>pivot_val) {
 	// Swap record numbers & scores
 	search_swap_results(i,j);
@@ -356,6 +359,9 @@ char search_sort_results_by_score(void)
 
 unsigned int search_contact_by_phonenumber(unsigned char *phoneNumber)
 {
+  unsigned int recordPhoneNumberLen;
+  unsigned char *recordPhoneNumber;
+  
   // Search for the phone number in contacts
   mega65_cdroot();
   mega65_chdir("PHONE");
@@ -384,8 +390,9 @@ unsigned int search_contact_by_phonenumber(unsigned char *phoneNumber)
 
     // Get the phone number field.
     // XXX - Support multiple phone numbers by checking each FIELD_PHONENUMBER
-    unsigned int recordPhoneNumberLen = 0;
-    unsigned char *recordPhoneNumber = find_field(buffers.search.sector_buffer,
+    
+    recordPhoneNumberLen = 0;
+    recordPhoneNumber = find_field(buffers.search.sector_buffer,
 						  RECORD_DATA_SIZE,
 						  FIELD_PHONENUMBER,
 						  &recordPhoneNumberLen);

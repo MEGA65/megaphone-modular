@@ -14,10 +14,11 @@ char sms_build_message(unsigned char buffer[RECORD_DATA_SIZE],unsigned int *byte
 		       unsigned char *messageBody
 		       )
 {
+  unsigned char timestamp_bin[4];
+
   // Reserve first two bytes for record number
   *bytes_used=2;
 
-  unsigned char timestamp_bin[4];
   timestamp_bin[0]=timestampAztecTime>>0;
   timestamp_bin[1]=timestampAztecTime>>8;
   timestamp_bin[2]=timestampAztecTime>>16;
@@ -44,8 +45,10 @@ char sms_log(unsigned char *phoneNumber, unsigned int timestampAztecTime,
   
   // 2. Retreive that contact (or if no such contact, then use the "UNKNOWN NUMBERS" pseudo-contact?)
   // contact_find_by_phonenumber() will return contact 1 always
+#ifdef CROSS_COMPILED
   fprintf(stderr,"DEBUG: Phone number '%s' is contact %d\n",phoneNumber,contact_ID);
-
+#endif
+  
   if (buffers_lock(LOCK_TELEPHONY)) fail(99);
   
   if (read_record_by_id(0, contact_ID,buffers.telephony.contact)) {
@@ -93,8 +96,10 @@ char sms_log(unsigned char *phoneNumber, unsigned int timestampAztecTime,
     // Write back updated BAM
     if (write_sector(0,1,0)) fail(5);
   }
+#ifdef CROSS_COMPILED
   fprintf(stderr,"DEBUG: Allocated message record #%d in contact #%d\n",
 	  record_number,contact_ID);
+#endif
   
   // 6. Build message and store.
   if (buffers_lock(LOCK_TELEPHONY)) fail(6);

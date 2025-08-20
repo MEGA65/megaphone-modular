@@ -9,7 +9,9 @@ int compare_records(unsigned char a_idx, unsigned char b_idx, unsigned char fiel
   unsigned int len_a = 0, len_b = 0, l;
   unsigned long addr;
   unsigned char *field_a, *field_b;
-
+  int min_len;
+  char cmp;
+  
   if (b_idx != buffers.sort.idx_b) {
     // B record cache invalid so desectorise from high RAM
     addr = WORK_BUFFER_ADDRESS + (((unsigned long)b_idx)<<9);
@@ -28,8 +30,8 @@ int compare_records(unsigned char a_idx, unsigned char b_idx, unsigned char fiel
   field_a = find_field(buffers.sort.rec_a, RECORD_DATA_SIZE, field_id, &len_a);
   field_b = find_field(buffers.sort.rec_b, RECORD_DATA_SIZE, field_id, &len_b);
   
-  int min_len = (len_a < len_b) ? len_a : len_b;
-  char cmp=0;
+  min_len = (len_a < len_b) ? len_a : len_b;
+  cmp=0;
   for(l=0;l<min_len;l++) {
     if (field_a[l]<field_b[l]) { cmp=-1; break;}
     if (field_a[l]>field_b[l]) { cmp=1; break;}
@@ -42,7 +44,8 @@ int compare_records(unsigned char a_idx, unsigned char b_idx, unsigned char fiel
 }
 
 unsigned char quicksort_indices(unsigned char field_id, unsigned char count) {
-
+  unsigned char low,high, pivot_idx, i, j, tmp;
+  
   // Initialize stack with full range
   buffers.sort.stack[0].low = 0;
   buffers.sort.stack[0].high = count - 1;
@@ -50,19 +53,19 @@ unsigned char quicksort_indices(unsigned char field_id, unsigned char count) {
   
   while (buffers.sort.stack_ptr > 0) {
     buffers.sort.stack_ptr--;
-    unsigned char low  = buffers.sort.stack[buffers.sort.stack_ptr].low;
-    unsigned char high = buffers.sort.stack[buffers.sort.stack_ptr].high;
+    low  = buffers.sort.stack[buffers.sort.stack_ptr].low;
+    high = buffers.sort.stack[buffers.sort.stack_ptr].high;
     
     if (low >= high) continue;
     
     // Choose pivot = high
-    unsigned char pivot_idx = buffers.sort.indices[high];
-    unsigned char i = low;
+    pivot_idx = buffers.sort.indices[high];
+   i = low;
     
-    for (unsigned char j = low; j < high; j++) {
+    for (j = low; j < high; j++) {
       if (compare_records(buffers.sort.indices[j], pivot_idx, field_id) <= 0) {
 	// Swap indices[i] and indices[j]
-	unsigned char tmp = buffers.sort.indices[i];
+	tmp = buffers.sort.indices[i];
 	buffers.sort.indices[i] = buffers.sort.indices[j];
 	buffers.sort.indices[j] = tmp;
 	i++;
@@ -70,7 +73,7 @@ unsigned char quicksort_indices(unsigned char field_id, unsigned char count) {
     }
     
     // Move pivot into correct location
-    unsigned char tmp = buffers.sort.indices[i];
+    tmp = buffers.sort.indices[i];
     buffers.sort.indices[i] = buffers.sort.indices[high];
     buffers.sort.indices[high] = tmp;
     

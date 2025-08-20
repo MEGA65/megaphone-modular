@@ -2,6 +2,7 @@
 #include "records.h"
 #include "slab.h"
 #include "buffers.h"
+#include "contacts.h"
 
 // 1 bit per diphthong. We use a mod 56 number space which
 // results in 56x56 = 3,136 values. One index per logical sector.
@@ -66,9 +67,14 @@ void index_buffer_update(unsigned char *d,unsigned int len)
     index_bitmap_last_val = index_mapping_table[*d];
 
     if (diphthong >= (56*56)) {
+#ifdef CROSS_COMPILED
       fprintf(stderr,"FATAL: Illegal diphthong 0x%04x. Should not be possible.\n",
 	      diphthong);
       exit(-1);
+#else
+      // Just fail silently on MEGA65. Not ideal. But it really shouldn't be possible
+      return;
+#endif
     }
     
     // Don't index diphthongs where both characters == 0x00
@@ -209,22 +215,25 @@ char disk_reindex(unsigned char field)
   return 0;
 }
 
+char contact_d81_name[13]="CONTACT0.D81";
+char   index_d81_name[13]="IDX00-0.D81";
+
 char contacts_reindex(unsigned char contacts_disk_id)
 {
   unsigned char field;
-  char d81name[16];
-  snprintf(d81name,16,"CONTACT%d.D81",contacts_disk_id);
+  contact_d81_name[7]='0'+contacts_disk_id;
   
   if (mega65_cdroot()) fail(1);
   if (mega65_chdir("PHONE")) fail(2);
 
-  if (mount_d81(d81name,0)) fail(3);
+  if (mount_d81(contact_d81_name,0)) fail(3);
 
   for(field=FIELD_FIRSTNAME;field<=FIELD_PHONENUMBER;field+=2) {
     // Get index D81 as disk 1
-    snprintf(d81name,16,"IDX%02X-%d.D81",
-	     field,contacts_disk_id);
-    if (mount_d81(d81name,1)) fail(4);
+    index_d81_name[6]='0'+contacts_disk_id;
+    index_d81_name[3]=to_hex(field>>4);
+    index_d81_name[4]=to_hex(field&0xf);
+    if (mount_d81(index_d81_name,1)) fail(4);
 
     if (disk_reindex(field)) fail(5);
   }

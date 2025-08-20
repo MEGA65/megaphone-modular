@@ -9,6 +9,7 @@
 
 #include "records.h"
 #include "screen.h"
+#include "buffers.h"
 
 unsigned long screen_ram = 0x12000;
 unsigned long colour_ram = 0xff80800L;
@@ -277,11 +278,108 @@ unsigned char compute_break_cost(unsigned long cp,
     }
 
   /* Otherwise, default: don't break here. */
-  return BREAK_FORBIDDEN;
+  return BREAK_BAD;
+}
+
+char calc_break_points(unsigned char *str,
+		       int font,
+		       unsigned int box_width_pixels,
+		       unsigned int box_width_glyphs)
+{
+  char r;
+  unsigned char *s;
+  unsigned int w_px;
+  unsigned int w_g;
+  unsigned char *line_start;
+  unsigned char *line_end;
+  unsigned int ofs;
+  unsigned int best_break_ofs;
+  unsigned char best_break_cost;
+  unsigned char *best_break_s;
+  unsigned char break_required;
+  unsigned int this_cost, underful_cost;
+  
+  // Box must be wide enough to take single widest glyph
+  if (box_width_pixels<32) return 4;
+  if (box_width_glyphs<2) return 4;
+  
+  buffers_lock(LOCK_TEXTBOX);
+
+  if (!str) return 3;
+  if (!*str) return 3;
+  
+  r = string_render_analyse(str, font,
+			    &buffers.textbox.len,
+			    buffers.textbox.pixel_widths,
+			    buffers.textbox.glyph_widths,
+			    buffers.textbox.break_costs);
+  lcopy((unsigned long)buffers.textbox.pixel_widths,0x18000L,RECORD_DATA_SIZE);
+  lcopy((unsigned long)buffers.textbox.glyph_widths,0x19000L,RECORD_DATA_SIZE);
+  lcopy((unsigned long)buffers.textbox.break_costs,0x1A000L,RECORD_DATA_SIZE);
+
+  w_g=0;
+  w_px=0;
+  ofs=0;
+  s = str;
+
+  best_break_ofs=0;
+  best_break_cost=0xff;
+  best_break_s=s;
+  
+  line_start = s;
+  line_end = s;
+  
+  if (r) return r;
+
+  buffers.textbox.line_count=0;
+  while(*s) {
+    unsigned long cp = utf8_next_codepoint(&s);
+
+    break_required=0;
+    // Run out of space yet? (we keep one glyph spare for a final GOTOX to ensure alignment)
+    if (w_g + buffers.textbox.glyph_widths[ofs] > (box_width_glyphs -1)) break_required=1;
+    if (w_px + buffers.textbox.pixel_widths[ofs] > box_width_pixels) break_required=1;
+
+    if (break_required) {
+      // If a line break is required, record it, and look for next line.
+      buffers.textbox.line_offsets_in_bytes[buffers.textbox.line_count++]=(best_break_s-s);
+      
+      if (!best_break_ofs) return 5;
+
+      w_px=0;
+      w_g=0;
+      ofs=best_break_ofs;
+      s=best_break_s;
+      best_break_ofs=0;
+      best_break_cost=0xff;
+      best_break_s = str;
+    }
+    else
+      {
+      // Check if cost here is better than the previous cost
+
+      // Get base cost
+      this_cost = buffers.textbox.break_costs[ofs];
+      // Then add a penalty for unused pixels.
+      underful_cost = box_width_pixels - w_px;
+      
+      if (this_cost + underful_cost <= best_break_cost) {
+	best_break_cost = this_cost + underful_cost;
+	best_break_ofs = ofs + 1;
+	best_break_s = s;
+      }
+      
+      ofs++;
+    }
+    
+  }
+
+  // Leave TEXTBOX buffer locked, because the caller presumably intends to use the result of our calculations.
+  // buffer_unlock(LOCK_TEXTBOX);
 }
 
 /* Returns 0 on success, non-zero on error. */
-char string_render_analyse(char *str,
+char string_render_analyse(unsigned char *str,
                            int font,
                            unsigned int *len,
                            unsigned char *pixel_widths, /* [RECORD_DATA_SIZE] */

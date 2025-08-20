@@ -22,7 +22,8 @@ unsigned char lookup_glyph(int font, unsigned long codepoint,unsigned char *pixe
 char pick_font_by_codepoint(unsigned long cp);
 unsigned long utf8_next_codepoint(unsigned char **s);
 
-char string_render_analyse(char *str,
+char calc_break_points(unsigned char *str,int font,unsigned int box_width_pixels, unsigned int box_width_glyphs);
+char string_render_analyse(unsigned char *str,
                            int font,
                            unsigned int *len,
                            unsigned char *pixel_widths, /* [RECORD_DATA_SIZE] */

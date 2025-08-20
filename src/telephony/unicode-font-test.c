@@ -3,17 +3,10 @@
 
 #include "ascii.h"
 
-#include "mega65/hal.h"
-#include "mega65/shres.h"
-#include "mega65/memory.h"
+#include "includes.h"
 
 #include "screen.h"
 #include "records.h"
-
-unsigned int len;
-unsigned char pixel_widths[RECORD_DATA_SIZE];
-unsigned char glyph_widths[RECORD_DATA_SIZE];
-unsigned int break_costs[RECORD_DATA_SIZE];
 
 unsigned char buffer[128];
 
@@ -258,6 +251,7 @@ void main(void)
     }
   }
 
+#if 0
   draw_string_nowrap(0,8, // Starting coordinates
 		     FONT_UI, // font
 		     0x01, // colour
@@ -281,11 +275,14 @@ void main(void)
 		       VIEWPORT_PADDED,
 		       // And return the number of each consumed
 		       NULL,NULL);
+#endif
 
-  string_render_analyse("This is a string we want to wrap and display in a skinny box",
-                           FONT_UI,
-			&len,pixel_widths, glyph_widths, break_costs);
-
+  calc_break_points("This is a string we want to wrap and display in a skinny box",
+		    FONT_UI,
+		    100, // px width
+		    20   // glyph width
+		    );
+  
   
 #if 0
     {

@@ -84,6 +84,16 @@ struct telephony_buffers {
   unsigned char sector_buffer[512];  
 };
 
+struct textbox {
+  unsigned int len;
+  unsigned char pixel_widths[RECORD_DATA_SIZE];
+  unsigned char glyph_widths[RECORD_DATA_SIZE];
+  unsigned int break_costs[RECORD_DATA_SIZE];
+
+  unsigned int line_count;
+  unsigned int line_offsets_in_bytes[RECORD_DATA_SIZE];
+};
+
 struct shared_buffers {
 
 #define LOCK_FREE 0x00
@@ -91,6 +101,7 @@ struct shared_buffers {
 #define LOCK_SORT 0x02
 #define LOCK_SEARCH 0x03
 #define LOCK_TELEPHONY 0x04
+#define LOCK_TEXTBOX 0x05
   unsigned char lock;
   
   union {
@@ -98,6 +109,7 @@ struct shared_buffers {
     struct index_buffers index;
     struct search_buffers search;
     struct telephony_buffers telephony;
+    struct textbox textbox;
   };
 };
 
