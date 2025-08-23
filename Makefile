@@ -64,7 +64,8 @@ OBJ_TELEPHONY_COMMON=	src/telephony/d81.s \
 			src/telephony/search.s \
 			src/telephony/sms.s \
 			src/telephony/slab.s \
-			src/telephony/mega65/hal.s
+			src/telephony/mega65/hal.s \
+			src/telephony/mega65/hal_asm.s \
 
 HDR_TELEPHONY_COMMON=	src/telephony/records.h \
 			src/telephony/contacts.h \
