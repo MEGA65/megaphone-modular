@@ -79,6 +79,7 @@ OBJ_MEGA65_LIBC=	src/mega65-libc/src/shres.s \
 			src/mega65-libc/src/cc65/shres_asm.s \
 			src/mega65-libc/src/memory.s \
 			src/mega65-libc/src/cc65/memory_asm.s \
+			src/mega65-libc/src/cc65/fileio.s \
 			src/mega65-libc/src/hal.s
 
 SRC_TELEPHONY_COMMON_LINUX=	src/telephony/linux/hal.c

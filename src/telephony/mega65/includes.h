@@ -5,6 +5,7 @@
 #include "mega65/hal.h"
 #include "mega65/shres.h"
 #include "mega65/memory.h"
+#include "mega65/fileio.h"
 
 #define SECTOR_BUFFER_ADDRESS 0xFFD6E00L
 
