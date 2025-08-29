@@ -61,7 +61,8 @@ _mountd81disk0:
 	jsr setname_0100	
 
 	;; Actually call mount
-	lda #$40
+	ldx #0
+	lda #$4a
 	sta $d640
 	clv
 	lda #$18
@@ -78,7 +79,8 @@ _mountd81disk1:
 	jsr setname_0100	
 
 	;; Actually call mount
-	lda #$46
+	ldx #1
+	lda #$4a
 	sta $d640
 	clv
 	lda #$18

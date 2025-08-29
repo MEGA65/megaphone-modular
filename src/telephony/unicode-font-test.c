@@ -91,7 +91,7 @@ void main(void)
   unsigned char o=0;
 
   mega65_io_enable();
-
+    
   screen_setup();
   screen_clear();
 
