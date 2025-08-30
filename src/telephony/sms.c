@@ -114,7 +114,7 @@ char sms_log(unsigned char *phoneNumber, unsigned int timestampAztecTime,
     buffers_unlock(LOCK_TELEPHONY);  
     fail(8);
   }
-  sectorise_record(buffers.telephony.message, buffers.telephony.sector_buffer);
+  sectorise_record(buffers.telephony.message, (unsigned long)&buffers.telephony.sector_buffer[0]);
   lcopy((unsigned long)buffers.telephony.sector_buffer,SECTOR_BUFFER_ADDRESS,512);
   if (write_record_by_id(0,record_number,buffers.telephony.message)) {
     buffers_unlock(LOCK_TELEPHONY);  

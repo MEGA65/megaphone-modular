@@ -50,9 +50,12 @@ SRC_TELEPHONY_COMMON=	src/telephony/d81.c \
 			src/telephony/index.c \
 			src/telephony/buffers.c \
 			src/telephony/search.c \
-			src/telephony/screen.c \
 			src/telephony/sms.c \
 			src/telephony/slab.c
+
+NATIVE_TELEPHONY_COMMON=	$(SRC_TELEPHONY_COMMON) \
+			src/telephony/screen.c \
+
 
 OBJ_TELEPHONY_COMMON=	src/telephony/d81.s \
 			src/telephony/records.s \
@@ -106,7 +109,7 @@ src/telephony/linux/thread:	src/telephony/linux/thread.c $(SRC_TELEPHONY_COMMON)
 src/telephony/linux/sortd81:	src/telephony/sortd81.c $(SRC_TELEPHONY_COMMON) $(HDR_TELEPHONY_COMMON) $(SRC_TELEPHONY_COMMON_LINUX) $(HDR_TELEPHONY_COMMON_LINUX)
 	gcc -Wall -g $(HDR_PATH_LINUX) -o $@ src/telephony/sortd81.c $(SRC_TELEPHONY_COMMON) $(SRC_TELEPHONY_COMMON_LINUX)
 
-bin65/unicode-font-test.prg:	src/telephony/unicode-font-test.c $(SRC_TELEPHONY_COMMON)
+bin65/unicode-font-test.prg:	src/telephony/unicode-font-test.c $(NATIVE_TELEPHONY_COMMON)
 	mkdir -p bin65
 
 
@@ -129,10 +132,15 @@ bin65/unicode-font-test.prg:	src/telephony/unicode-font-test.c $(SRC_TELEPHONY_C
 	$(CL65) -o bin65/unicode-font-test.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.s src/telephony/attr_tables.s $(OBJ_TELEPHONY_COMMON) $(OBJ_MEGA65_LIBC) 
 
 test:	$(LINUX_BINARIES)
-	src/telephony/linux/provision 5 10
+	src/telephony/linux/provision 
 	python3 src/telephony/sms-stim.py -o stim.txt 5 10
 	src/telephony/linux/import stim.txt
 	src/telephony/linux/search PHONE/CONTACT0.D81 PHONE/IDXALL-0.D81 "Nicole"
 	src/telephony/linux/search PHONE/CONTACT0.D81 PHONE/IDXALL-0.D81 "99"
 	src/telephony/linux/export export.txt
 	cat export.txt
+
+sdcardprep:	$(LINUX_BINARIES)
+	src/telephony/linux/provision /media/paul/MEGA65FDISK
+	python3 src/telephony/sms-stim.py -o stim.txt 10 100
+	src/telephony/linux/import stim.txt /media/paul/MEGA65FDISK

@@ -15,6 +15,13 @@ int main(int argc,char **argv)
   #define MAX_CONTACTS 1600
   unsigned short contact;
   char hex[2];
+
+  if (argc>1) {
+    if (chdir(argv[1])) {
+      fprintf(stderr,"FATAL: Could not chdir('%s')\n",argv[1]);
+      exit(-1);
+    }
+  }
   
   hal_init();
   mega65_mkdir("PHONE");
@@ -95,7 +102,7 @@ int main(int argc,char **argv)
   create_d81("SCRATCH.D81");
 
   // XXX - Make testing faster for now
-#define MAX_CONTACTS 10
+#define MAX_CONTACTS 100
   
   for(contact=0;contact<MAX_CONTACTS;contact++) {
 

@@ -55,7 +55,9 @@ char mega65_chdir(char *dir)
     fprintf(stderr,"INFO: Changing directory to '%s' in '%s'\n",
 	    dir,getcwd(cwd,sizeof(cwd)));
   int r= chdir(dir);
-  if (r) perror("chdir()");
+  if (r) {perror("chdir()");
+    fprintf(stderr,"INFO: Requested directory was '%s'\n",dir);
+  }
   return r;
 }
 

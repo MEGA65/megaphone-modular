@@ -17,17 +17,24 @@
 
 void usage(void)
 {
-  fprintf(stderr,"usage: stim-import <stim_file.txt>\n");
+  fprintf(stderr,"usage: stim-import <stim_file.txt> [path to phone instance]\n");
   exit(-1);
 }
 
 int main(int argc,char **argv)
 {
-  if (argc!=2) {
+  if (argc<2||argc>3) {
     usage();
   }
   
   FILE *f=fopen(argv[1],"rb");
+
+  if (argc==3) {
+    if (chdir(argv[2])) {
+      fprintf(stderr,"FATAL: Could not chdir('%s')\n",argv[2]);
+      exit(-1);
+    }
+  }
   
   hal_init();
   mega65_chdir("PHONE");

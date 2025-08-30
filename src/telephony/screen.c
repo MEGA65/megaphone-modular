@@ -3,9 +3,7 @@
 
 #include "ascii.h"
 
-#include "mega65/hal.h"
-#include "mega65/shres.h"
-#include "mega65/memory.h"
+#include "includes.h"
 
 #include "records.h"
 #include "screen.h"
