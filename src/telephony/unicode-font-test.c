@@ -5,6 +5,7 @@
 
 #include "includes.h"
 
+#include "buffers.h"
 #include "screen.h"
 #include "records.h"
 #include "contacts.h"
@@ -93,12 +94,6 @@ void main(void)
 
   mega65_io_enable();
   
-  // record = 0 BAM, 1 = unknown contact place-holder. 2 = first real contact
-  POKE(0xC001L,mount_contact_qso(2));
-  // record 0 = BAM, 1 = first actual message
-  POKE(0xC000L,read_record_by_id(0,1,(unsigned char *)0x0400));
-  return;
-  
   screen_setup();
   screen_clear();
 
@@ -162,13 +157,26 @@ void main(void)
 		       // And return the number of each consumed
 		       NULL,NULL);
 #endif
- 
-  calc_break_points("This is a string we want to wrap and display in a skinny box",
+
+  buffers_lock(LOCK_TEXTBOX);
+  
+  // record = 0 BAM, 1 = unknown contact place-holder. 2 = first real contact
+  mount_contact_qso(2);
+  // record 0 = BAM, 1 = first actual message
+  read_record_by_id(0,1,buffers.textbox.record);
+
+  buffers.textbox.field = *find_field(buffers.textbox.record,
+				      0,
+				      FIELD_BODYTEXT,
+				      &buffers.textbox.field_len);
+  
+  calc_break_points(buffers.textbox.field,
 		    FONT_UI,
 		    100, // px width
 		    40   // glyph width
 		    );
   
+  buffers_unlock(LOCK_TEXTBOX);
   
 #if 0
     {
