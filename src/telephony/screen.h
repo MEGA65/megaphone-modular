@@ -20,6 +20,7 @@ char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start
 			unsigned char f, // font
 			unsigned char colour, // colour
 			unsigned char *utf8,		     // Number of pixels available for width
+			unsigned int x_pixel_start,
 			unsigned int x_pixels_viewport,
 			// Number of glyphs available
 			unsigned char x_glyphs_viewport,
@@ -31,6 +32,7 @@ char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start
 
 char textbox_draw(unsigned char x_start,
 		  unsigned char y_start,
+		  unsigned int x_pixel_start,
 		  unsigned int box_width_pixels,
 		  unsigned int box_width_glyphs,
 		  unsigned char font,

@@ -108,7 +108,8 @@ void main(void)
   }
 
   screen_setup_fonts();
-  
+
+#if 0
   // Say hello to the world!
   draw_glyph(0,1, FONT_UI, 'E',0x01,NULL);
   draw_glyph(1,1, FONT_UI, 'm',0x01,NULL);
@@ -118,7 +119,7 @@ void main(void)
   draw_glyph(6,1, FONT_UI, '!',0x01,NULL);
   draw_glyph(7,1, FONT_UI, ' ',0x01,NULL);
   draw_glyph(8,1, FONT_EMOJI_COLOUR, 0x1f929L,0x01,NULL);
-
+  
   {
     unsigned char *string="Ümlaute! 👀 😀 😎 🐶 🐙 🍕 🍣 ⚽️ 🎮 🛠️ 🚀 🎲 🧩 📚 🧪 🎵 🎯 💡 🔥 🌈 🪁";
     unsigned char *s=string;
@@ -131,6 +132,7 @@ void main(void)
       x += draw_glyph(x, 4, f, cp, 0x01,NULL);
     }
   }
+#endif
 
 #if 0
   draw_string_nowrap(0,8, // Starting coordinates
@@ -177,7 +179,8 @@ void main(void)
 		    );
 
   textbox_draw(0, // column on screen
-	       10, // row on screen
+	       2, // row on screen
+	       0, // start pixel
 	       200, // px width
 	       60,   // glyph width
 	       FONT_UI,
@@ -187,6 +190,19 @@ void main(void)
 	       buffers.textbox.line_count-1, // Ending row of text box
 	       VIEWPORT_PADDED);
   
+  textbox_draw(4, // column on screen
+	       12, // row on screen
+	       64, // start pixel
+	       200, // px width
+	       60,   // glyph width
+	       FONT_UI,
+	       0x8D, // colour
+	       buffers.textbox.field,
+	       0, // Starting row of text box
+	       buffers.textbox.line_count-1, // Ending row of text box
+	       VIEWPORT_PADDED);
+  
+
   buffers_unlock(LOCK_TEXTBOX);
   
 #if 0

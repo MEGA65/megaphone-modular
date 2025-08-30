@@ -292,6 +292,7 @@ char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start
 			unsigned char f, // font
 			unsigned char colour, // colour
 			unsigned char *utf8,		     // Number of pixels available for width
+			unsigned int x_start_px,
 			unsigned int x_pixels_viewport,
 			// Number of glyphs available
 			unsigned char x_glyphs_viewport,
@@ -349,7 +350,7 @@ char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start
 			colour,
 		        x_pixels_viewport - pixels_wide,  // Pixels remaining in viewport
 			x_glyphs_viewport, // Right hand glyph of view port
-			x_pixels_viewport); // VIC-IV pixel column to point GOTOX to
+			x_start_px + x_pixels_viewport); // VIC-IV pixel column to point GOTOX to
 
   }
   
@@ -531,6 +532,7 @@ char calc_break_points(unsigned char *str,
 
 char textbox_draw(unsigned char x_start,
 		  unsigned char y_start,
+		  unsigned int x_start_px,
 		  unsigned int box_width_pixels,
 		  unsigned int box_width_glyphs,
 		  unsigned char font,
@@ -556,6 +558,7 @@ char textbox_draw(unsigned char x_start,
 			 font,
 			 colour,
 			 &str[ofs],
+			 x_start_px,
 			 box_width_pixels,
 			 box_width_glyphs,
 			 &str[ofs+buffers.textbox.line_offsets_in_bytes[j]],
