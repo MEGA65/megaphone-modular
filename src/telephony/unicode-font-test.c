@@ -93,7 +93,9 @@ void main(void)
 
   mega65_io_enable();
   
-  POKE(0xC001L,mount_contact_qso(0));
+  // record = 0 BAM, 1 = unknown contact place-holder. 2 = first real contact
+  POKE(0xC001L,mount_contact_qso(2));
+  // record 0 = BAM, 1 = first actual message
   POKE(0xC000L,read_record_by_id(0,1,(unsigned char *)0x0400));
   return;
   
