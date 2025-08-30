@@ -29,6 +29,16 @@ char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start
 			unsigned int *pixels_used,
 			unsigned char *glyphs_used);
 
+char textbox_draw(unsigned char x_start,
+		  unsigned char y_start,
+		  unsigned int box_width_pixels,
+		  unsigned int box_width_glyphs,
+		  unsigned char font,
+		  unsigned char colour,
+		  unsigned char *str,
+		  unsigned int first_row,
+		  unsigned int last_row,
+		  unsigned char padding);
 
 void reset_glyph_cache(void);
 void load_glyph(int font, unsigned long codepoint, unsigned int cache_slot);

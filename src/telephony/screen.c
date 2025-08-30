@@ -523,16 +523,38 @@ char calc_break_points(unsigned char *str,
     
   }
 
-
   // Leave TEXTBOX buffer locked, because the caller presumably intends to use the result of our calculations.
+
+  return 0;
+}
+
+
+char textbox_draw(unsigned char x_start,
+		  unsigned char y_start,
+		  unsigned int box_width_pixels,
+		  unsigned int box_width_glyphs,
+		  unsigned char font,
+		  unsigned char colour,
+		  unsigned char *str,
+		  unsigned int first_row,
+		  unsigned int last_row,
+		  unsigned char padding)
+{
+  unsigned int ofs,j;
+  
   // buffer_unlock(LOCK_TEXTBOX);
 
   ofs=0;
-  for(j=0;j<buffers.textbox.line_count;j++)
+  if (first_row) {
+    for(j=0;(j<buffers.textbox.line_count)&&(j<first_row);j++)
+    ofs+=buffers.textbox.line_offsets_in_bytes[j];
+  } else j=0;
+
+  for(;(j<=last_row)&&(j<buffers.textbox.line_count);j++)
     {
-      draw_string_nowrap(0,j+10,
-			 FONT_UI,
-			 0x8D,
+      draw_string_nowrap(x_start,y_start,
+			 font,
+			 colour,
 			 &str[ofs],
 			 box_width_pixels,
 			 box_width_glyphs,
@@ -541,6 +563,8 @@ char calc_break_points(unsigned char *str,
 			 NULL,
 			 NULL);
       ofs+=buffers.textbox.line_offsets_in_bytes[j];
+
+      y_start++;
     }
 
   return 0;

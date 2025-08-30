@@ -172,9 +172,20 @@ void main(void)
   
   calc_break_points(buffers.textbox.field,
 		    FONT_UI,
-		    100, // px width
-		    40   // glyph width
+		    200, // px width
+		    60   // glyph width
 		    );
+
+  textbox_draw(0, // column on screen
+	       10, // row on screen
+	       200, // px width
+	       60,   // glyph width
+	       FONT_UI,
+	       0x8D, // colour
+	       buffers.textbox.field,
+	       0, // Starting row of text box
+	       buffers.textbox.line_count-1, // Ending row of text box
+	       VIEWPORT_PADDED);
   
   buffers_unlock(LOCK_TEXTBOX);
   
