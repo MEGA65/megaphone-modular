@@ -35,7 +35,7 @@ void dump_sector_buffer(char *m);
 void dump_bytes(char *msg, unsigned char *d, int len);
 
 char log_error_(const char *file,const char *func,const unsigned int line,const unsigned char error_code);
-#define fail(X)
+#define fail(X) return X
 
 #endif
 
