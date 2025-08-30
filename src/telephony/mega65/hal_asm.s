@@ -65,9 +65,6 @@ _mountd81disk0:
 	lda #$4a
 	sta $d640
 	clv
-	lda #$18
-	sta $D640
-	clv
 	ldx #$00
 	rts
 
@@ -82,9 +79,6 @@ _mountd81disk1:
 	ldx #1
 	lda #$4a
 	sta $d640
-	clv
-	lda #$18
-	sta $D640
 	clv
 	ldx #$00
 	rts
