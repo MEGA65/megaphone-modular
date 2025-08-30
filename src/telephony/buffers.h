@@ -85,6 +85,11 @@ struct telephony_buffers {
 };
 
 struct textbox {
+  unsigned char record[RECORD_DATA_SIZE];
+
+  unsigned char *field;
+  unsigned int field_len;
+  
   unsigned int len;
   unsigned char pixel_widths[RECORD_DATA_SIZE];
   unsigned char glyph_widths[RECORD_DATA_SIZE];
