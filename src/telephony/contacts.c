@@ -1,3 +1,5 @@
+#include "ascii.h"
+
 #include "includes.h"
 #include "records.h"
 #include "search.h"
@@ -41,7 +43,7 @@ char to_hex(unsigned char v)
 char mount_contact_qso(unsigned int contact)
 {
   char hex[3];
-  mega65_cdroot();
+  if (mega65_cdroot()) fail(9);
   if (mega65_chdir("PHONE")) fail(1);
   if (mega65_chdir("THREADS")) fail(2);
   hex[0]=to_hex(contact>>12);
