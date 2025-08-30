@@ -28,8 +28,8 @@ char write_record_by_id(unsigned char drive_id,unsigned int id,unsigned char *bu
 char read_record_by_id(unsigned char drive_id,unsigned int id,unsigned char *buffer);
 
 void sectorise_record(unsigned char *record,
-		      unsigned char *sector_buffer);
-void desectorise_record(unsigned char *sector_buffer,
+		      unsigned long sector_buffer);
+void desectorise_record(unsigned long sector_buffer,
 			unsigned char *record);
 
 char append_field(unsigned char *record, unsigned int *bytes_used, unsigned int length,

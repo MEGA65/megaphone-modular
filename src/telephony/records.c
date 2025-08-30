@@ -55,17 +55,17 @@ char record_free(unsigned char *bam_sector,unsigned int record_num)
 }
 
 void sectorise_record(unsigned char *record,
-		      unsigned char *sector_buffer)
+		      unsigned long sector_buffer)
 {  
-  lcopy((unsigned long)&record[0],(unsigned long)&sector_buffer[2],254);
-  lcopy((unsigned long)&record[254],(unsigned long)&sector_buffer[256+2],254);
+  lcopy((unsigned long)&record[0],(unsigned long)sector_buffer+2,254);
+  lcopy((unsigned long)&record[254],(unsigned long)sector_buffer+256+2,254);
 }
 
-void desectorise_record(unsigned char *sector_buffer,
+void desectorise_record(unsigned long sector_buffer,
 			unsigned char *record)
 {
-  lcopy((unsigned long)&sector_buffer[2],(unsigned long)&record[0],254);
-  lcopy((unsigned long)&sector_buffer[256+2],(unsigned long)&record[254],254);
+  lcopy((unsigned long)sector_buffer+2,(unsigned long)&record[0],254);
+  lcopy((unsigned long)sector_buffer+256+2,(unsigned long)&record[254],254);
 }
 
 char append_field(unsigned char *record, unsigned int *bytes_used, unsigned int length,
@@ -145,7 +145,7 @@ char read_record_by_id(unsigned char drive_id,unsigned int id,unsigned char *buf
 
   if (read_sector(drive_id,track,sector)) fail(3);
 
-  desectorise_record((unsigned char *)SECTOR_BUFFER_ADDRESS,buffer);
+  desectorise_record(SECTOR_BUFFER_ADDRESS,buffer);
   
   return 0;
 }
@@ -170,7 +170,7 @@ char write_record_by_id(unsigned char drive_id,unsigned int id,unsigned char *bu
   if (read_sector(drive_id,track,sector)) fail(4);
 
   // Then write the contact body over the data area
-  sectorise_record(buffer,(unsigned char *)SECTOR_BUFFER_ADDRESS);
+  sectorise_record(buffer,SECTOR_BUFFER_ADDRESS);
 
   // dump_bytes("Sectorised Contact",(unsigned char *)SECTOR_BUFFER_ADDRESS,512);
 
