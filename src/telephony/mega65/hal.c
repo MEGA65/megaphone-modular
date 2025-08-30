@@ -21,6 +21,9 @@ char read_sector(unsigned char drive_id, unsigned char track, unsigned char sect
     with a deck of floppies.
    */
 
+  // Select FDC rather than SD card sector buffer
+  POKE(0xD689L,PEEK(0xD689L)&0x7f);
+  
   // Cancel any previous command
   POKE(0xD081L,0x00);
 
@@ -41,8 +44,11 @@ char read_sector(unsigned char drive_id, unsigned char track, unsigned char sect
   
   // Specify track, sector and side bytes for FDC to look for (note that physical
   // side selection happens above).
-  POKE(0xD084L,track);
-  // Sector numbers start at 1, not 0, and are 1-10 on each side.
+
+  // Physical tracks are 0-79 for logical tracks 1-80
+  POKE(0xD084L,track-1);
+
+  // Physical sector numbers start at 1, not 0, and are 1-10 on each side.
   if (sector>10) {
     POKE(0xD085L,1+sector-10);
     POKE(0xD086L,0x01); // reverse side

@@ -7,7 +7,8 @@
 #include "mega65/memory.h"
 #include "mega65/fileio.h"
 
-#define SECTOR_BUFFER_ADDRESS 0xFFD6E00L
+// 6E00 = SD card, 6C00 = FDC
+#define SECTOR_BUFFER_ADDRESS 0xFFD6C00L
 
 // Requires ROM writeable.  C64 KERNAL is at 0x2E000L, so we have 
 #define WORK_BUFFER_SIZE (88*1024)
