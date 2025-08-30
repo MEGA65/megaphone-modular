@@ -164,11 +164,11 @@ void main(void)
   mount_contact_qso(2);
   // record 0 = BAM, 1 = first actual message
   read_record_by_id(0,1,buffers.textbox.record);
-
-  buffers.textbox.field = *find_field(buffers.textbox.record,
-				      0,
-				      FIELD_BODYTEXT,
-				      &buffers.textbox.field_len);
+  
+  buffers.textbox.field = find_field(buffers.textbox.record,
+				     RECORD_DATA_SIZE,
+				     FIELD_BODYTEXT,
+				     &buffers.textbox.field_len);  
   
   calc_break_points(buffers.textbox.field,
 		    FONT_UI,
