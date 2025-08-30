@@ -7,6 +7,7 @@
 
 #include "screen.h"
 #include "records.h"
+#include "contacts.h"
 
 unsigned char buffer[128];
 
@@ -91,7 +92,11 @@ void main(void)
   unsigned char o=0;
 
   mega65_io_enable();
-    
+  
+  POKE(0xC001L,mount_contact_qso(0));
+  POKE(0xC000L,read_record_by_id(0,1,(unsigned char *)0x0400));
+  return;
+  
   screen_setup();
   screen_clear();
 
