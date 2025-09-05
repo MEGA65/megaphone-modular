@@ -45,6 +45,9 @@ void screen_setup(void)
 
   // BOLD = ALT PALETTE so that REVERSE works for FCM
   POKE(0xD053,PEEK(0xD053)|0x10);
+
+  // Disable RRB wrap-around
+  POKE(0xD07C,PEEK(0xD07C)|0x08);
   
   // PAL
   POKE(0xD06f,0x00);
@@ -138,12 +141,6 @@ void screen_clear(void)
   // Clear colour RAM
   lfill(colour_ram,0x01,(256*31*2));
 
-  // Fill off-screen with GOTOX's to right edge, so that we don't overflow the 1024px RRB size
-  for(y=0;y<30;y++) {
-    // Draw one GOTOX
-    draw_goto(RENDER_COLUMNS - 1,y,720);
-  }
-  
 }
 
 extern unsigned char screen_ram_1_left[64];
