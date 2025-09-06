@@ -179,10 +179,18 @@ void main(void)
   while(y>=2&&message_count>0) {
 
     unsigned int first_row = 0;
+    unsigned char we_sent_it = 0;
     
     // Read the message
     read_record_by_id(0,message_count,buffers.textbox.record);
 
+    // Get message direction
+    buffers.textbox.field = find_field(buffers.textbox.record,
+				       RECORD_DATA_SIZE,
+				       FIELD_MESSAGE_DIRECTION,
+				       &buffers.textbox.field_len);  
+    if (buffers.textbox.field&&buffers.textbox.field[0]) we_sent_it=1;      
+    
     // Get the message body
     buffers.textbox.field = find_field(buffers.textbox.record,
 				       RECORD_DATA_SIZE,
@@ -204,17 +212,17 @@ void main(void)
       first_row++;
     }
 
-    textbox_draw(360/8, // column on screen
-	       y, // row on screen
-	       360, // start pixel
-	       255, // px width
-	       RENDER_COLUMNS - 1 - 45,   // glyph width
-	       FONT_UI,
-	       0x8F, // colour
-	       buffers.textbox.field,
-	       first_row, // Starting row of text box
-	       buffers.textbox.line_count-1, // Ending row of text box
-	       VIEWPORT_PADDED);
+    textbox_draw(we_sent_it? 384/8 : 360/8, // column on screen
+		 y, // row on screen
+		 we_sent_it? 384 : 360, // start pixel
+		 255, // px width
+		 RENDER_COLUMNS - 1 - (we_sent_it? 48 : 45),   // glyph width
+		 FONT_UI,
+		 we_sent_it ? 0x8D : 0x8F, // colour
+		 buffers.textbox.field,
+		 first_row, // Starting row of text box
+		 buffers.textbox.line_count-1, // Ending row of text box
+		 VIEWPORT_PADDED);
 
     // Leave blank line between messages
     y--;
