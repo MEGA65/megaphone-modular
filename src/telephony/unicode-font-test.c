@@ -90,8 +90,10 @@ void main(void)
   shared_resource_dir d;
   unsigned char o=0;
   int y=28;
+  unsigned int bottom_row_available = 30; // allow all the way to bottom of screen for now.
+  unsigned int bottom_row;
   unsigned int message_count = 0;
-
+  
   
   mega65_io_enable();
   
@@ -175,7 +177,8 @@ void main(void)
   lcopy(&message_count,0x12000L,2);
 
   y = MAX_ROWS;
-  
+  bottom_row_available = MAX_ROWS;
+
   while(y>=2&&message_count>0) {
 
     unsigned int first_row = 0;
@@ -212,6 +215,9 @@ void main(void)
       first_row++;
     }
 
+    bottom_row = buffers.textbox.line_count-1;
+    while ((y+bottom_row) > bottom_row_available) bottom_row--;
+    
     textbox_draw(we_sent_it? 384/8 : 360/8, // column on screen
 		 y, // row on screen
 		 we_sent_it? 384 : 360, // start pixel
