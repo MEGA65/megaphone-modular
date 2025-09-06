@@ -84,7 +84,7 @@ struct telephony_buffers {
   unsigned char sector_buffer[512];  
 };
 
-struct textbox {
+struct textbox {  
   unsigned char record[RECORD_DATA_SIZE];
 
   unsigned char *field;

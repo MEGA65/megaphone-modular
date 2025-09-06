@@ -85,13 +85,14 @@ char *num_to_str(unsigned int n,char *s)
   return start;
 }
 
-unsigned char y;
-
 void main(void)
 {
   shared_resource_dir d;
   unsigned char o=0;
+  int y=28;
+  unsigned int message_count = 0;
 
+  
   mega65_io_enable();
   
   screen_setup();
@@ -164,6 +165,64 @@ void main(void)
   
   // record = 0 BAM, 1 = unknown contact place-holder. 2 = first real contact
   mount_contact_qso(2);
+
+  // Read BAM, find first free sector (if we don't write it back, it doesn't actually
+  // get allocated, thus saving the need for a separate get allocated count function).
+  read_sector(0,1,0);
+  message_count = record_allocate_next(SECTOR_BUFFER_ADDRESS);
+  message_count--; 
+
+  lcopy(&message_count,0x12000L,2);
+
+  y = MAX_ROWS;
+  
+  while(y>=2&&message_count>0) {
+
+    unsigned int first_row = 0;
+    
+    // Read the message
+    read_record_by_id(0,message_count,buffers.textbox.record);
+
+    // Get the message body
+    buffers.textbox.field = find_field(buffers.textbox.record,
+				       RECORD_DATA_SIZE,
+				       FIELD_BODYTEXT,
+				       &buffers.textbox.field_len);  
+
+    // And figure out how many lines it will take on the screen.
+    calc_break_points(buffers.textbox.field,
+		      FONT_UI,
+		      255, // px width
+		      60   // glyph width
+		      );
+
+    // Adjust y to the necessary starting row.    
+    y = y - buffers.textbox.line_count;
+    first_row = 0;
+    while(y<2) {
+      y++;
+      first_row++;
+    }
+
+    textbox_draw(360/8, // column on screen
+	       y, // row on screen
+	       360, // start pixel
+	       255, // px width
+	       RENDER_COLUMNS - 1 - 45,   // glyph width
+	       FONT_UI,
+	       0x8F, // colour
+	       buffers.textbox.field,
+	       first_row, // Starting row of text box
+	       buffers.textbox.line_count-1, // Ending row of text box
+	       VIEWPORT_PADDED);
+
+    // Leave blank line between messages
+    y--;
+    
+    message_count--;
+  }    
+
+#if 0
   // record 0 = BAM, 1 = first actual message
   read_record_by_id(0,1,buffers.textbox.record);
 
@@ -201,7 +260,7 @@ void main(void)
 	       0, // Starting row of text box
 	       buffers.textbox.line_count-1, // Ending row of text box
 	       VIEWPORT_PADDED);
-  
+#endif  
 
   buffers_unlock(LOCK_TEXTBOX);
   

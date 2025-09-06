@@ -89,7 +89,7 @@ char sms_log(unsigned char *phoneNumber, unsigned int timestampAztecTime,
   
   // 5. Allocate message record in conversation
   if (read_sector(0,1,0)) fail(3);
-  record_number = record_allocate_next( (unsigned char *)SECTOR_BUFFER_ADDRESS );
+  record_number = record_allocate_next( SECTOR_BUFFER_ADDRESS );
   if (!record_number) {
     fail(4);
   } else {    

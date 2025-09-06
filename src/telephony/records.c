@@ -3,7 +3,7 @@
 
 #include "records.h"
 
-unsigned int record_allocate_next(unsigned char *bam_sector)
+unsigned int record_allocate_next(unsigned long bam_sector_address)
 {
   /* Find an unallocated sector on the D81 using our native allocation method,
      not the D81's DOS BAM which we always have set to show as completely full.
@@ -19,12 +19,12 @@ unsigned int record_allocate_next(unsigned char *bam_sector)
   
   for(i=0;i<(USABLE_SECTORS_PER_DISK/8);i++) {
     // Found a BAM byte that's not full?
-    if (bam_sector[2+i]!=0xff) {
+    if (lpeek(bam_sector_address+2+i)!=0xff) {
       // Work out which bit is clear, set it, and return the allocated record.
-      b = bam_sector[2+i];
+      b = lpeek(bam_sector_address+2+i);
       for(j=0;j<8;j++) {
 	if (!(b&1)) {
-	  bam_sector[2+i]|=(1<<j);
+	  lpoke(bam_sector_address+2+i, lpeek(bam_sector_address+2+i) | (1<<j) );
 	  // Make sure we're not trying to allocate sector 0 (where the BAM lives)
 	  // (but note the line above means that we will implicitly mark sector 0 as allocated
 	  // in the process).

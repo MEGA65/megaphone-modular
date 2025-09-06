@@ -21,7 +21,7 @@
 #define SMS_DIRECTION_RX 0x00
 #define SMS_DIRECTION_TX 0x01
 
-unsigned int record_allocate_next(unsigned char *bam_sector);
+unsigned int record_allocate_next(unsigned long bam_sector_address);
 char record_free(unsigned char *bam_sector,unsigned int record_num);
 
 char write_record_by_id(unsigned char drive_id,unsigned int id,unsigned char *buffer);
