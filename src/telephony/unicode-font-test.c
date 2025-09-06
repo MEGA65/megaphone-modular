@@ -174,27 +174,27 @@ void main(void)
   
   calc_break_points(buffers.textbox.field,
 		    FONT_UI,
-		    200, // px width
+		    255, // px width
 		    60   // glyph width
 		    );
 
-  textbox_draw(45, // column on screen
+  textbox_draw(360/8, // column on screen
 	       2, // row on screen
 	       360, // start pixel
 	       255, // px width
-	       140 - 45,   // glyph width
+	       RENDER_COLUMNS - 1 - 45,   // glyph width
 	       FONT_UI,
 	       0x8F, // colour
 	       buffers.textbox.field,
 	       0, // Starting row of text box
 	       buffers.textbox.line_count-1, // Ending row of text box
 	       VIEWPORT_PADDED);
-  
-  textbox_draw(48, // column on screen
+
+  textbox_draw(384/8, // 384/8, // column on screen
 	       12, // row on screen
 	       384, // start pixel
-	       255, // px width
-	       140 - 48,   // glyph width
+	       270, // px width
+	       RENDER_COLUMNS - 1 - 48,   // glyph width
 	       FONT_UI,
 	       0x8D, // colour
 	       buffers.textbox.field,

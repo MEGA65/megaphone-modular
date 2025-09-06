@@ -37,8 +37,8 @@ void screen_setup(void)
   POKE(0xD020,0);
   POKE(0xD021,6);
 
-  // H640 + fast CPU + VIC-III extended attributes
-  POKE(0xD031,0xE0);  
+  // H640 + fast CPU + VIC-III extended attributes + Interlace
+  POKE(0xD031,0xE1);
   
   // 16-bit text mode, alpha compositor, 40MHz
   POKE(0xD054,0xC5);
@@ -426,7 +426,7 @@ char calc_break_points(unsigned char *str,
   unsigned char *line_end;
   unsigned int ofs;
   unsigned int best_break_ofs;
-  unsigned char best_break_cost;
+  unsigned int best_break_cost;
   unsigned char *best_break_s;
   unsigned char *last_break_s;
   unsigned char break_required;
@@ -457,7 +457,7 @@ char calc_break_points(unsigned char *str,
   s = str;
 
   best_break_ofs=0;
-  best_break_cost=0xff;
+  best_break_cost=0xfff;
   best_break_s=s;
   last_break_s=s;
   
@@ -488,7 +488,7 @@ char calc_break_points(unsigned char *str,
       ofs=best_break_ofs;
       s=best_break_s;
       best_break_ofs=0;
-      best_break_cost=0xff;
+      best_break_cost=0xfff;
       last_break_s = best_break_s;
       best_break_s = str;
     }

@@ -1,4 +1,4 @@
-#define RENDER_COLUMNS 255
+#define RENDER_COLUMNS 160
 #define MAX_ROWS 30
 
 #define NUM_FONTS 4
