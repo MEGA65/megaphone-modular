@@ -46,7 +46,7 @@ void reset_glyph_cache(void);
 void load_glyph(int font, unsigned long codepoint, unsigned int cache_slot);
 unsigned char lookup_glyph(int font, unsigned long codepoint,unsigned char *pixels_used, unsigned int *glyph_id);
 
-char pick_font_by_codepoint(unsigned long cp);
+char pick_font_by_codepoint(unsigned long cp, unsigned char default_font);
 unsigned long utf8_next_codepoint(unsigned char **s);
 
 char calc_break_points(unsigned char *str,int font,unsigned int box_width_pixels, unsigned int box_width_glyphs);

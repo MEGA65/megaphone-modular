@@ -318,15 +318,15 @@ char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start
   while (cp = utf8_next_codepoint(&utf8)) {
 
     // Fall-back to emoji font when required if using the UI font
-    if (f==FONT_UI) ff = pick_font_by_codepoint(cp);
+    ff = pick_font_by_codepoint(cp,f);
     
     // Abort if the glyph won't fit.
-    if (lookup_glyph(f,cp,&glyph_pixels, NULL) + x >= x_glyphs_viewport) break;
+    if (lookup_glyph(ff,cp,&glyph_pixels, NULL) + x >= x_glyphs_viewport) break;
     if (glyph_pixels + pixels_wide > x_pixels_viewport) break;
 
     // Glyph fits, so draw it, and update our dimension trackers
     glyph_pixels = 0;
-    x += draw_glyph(x_glyph_start + x, y_glyph_start, f, cp, colour, &glyph_pixels);
+    x += draw_glyph(x_glyph_start + x, y_glyph_start, ff, cp, colour, &glyph_pixels);
     pixels_wide += glyph_pixels;
 
     // Allow drawing of string segments
@@ -581,6 +581,7 @@ char string_render_analyse(unsigned char *str,
 {
   unsigned char *s = (unsigned char*)str;
   unsigned int o = 0;
+  unsigned char ff;
 
   if (!str) return 1;
   
@@ -598,7 +599,9 @@ char string_render_analyse(unsigned char *str,
     unsigned long next_cp = *peek ? utf8_next_codepoint(&peek) : 0;
 
     /* Measure glyph/pixel widths for this cp */
-    glyph_count = lookup_glyph(font, cp, &pixel_count, NULL);
+    ff = pick_font_by_codepoint(cp,font);
+    
+    glyph_count = lookup_glyph(ff, cp, &pixel_count, NULL);
 
     if (pixel_widths) pixel_widths[o] = pixel_count;
     if (glyph_widths) glyph_widths[o] = glyph_count;
@@ -726,7 +729,7 @@ char draw_glyph(int x, int y, int font, unsigned long codepoint,unsigned char co
 unsigned long utf8_next_codepoint(unsigned char **s)
 {
   unsigned char *p;
-  unsigned long cp;
+  unsigned long cp = 0;
 
   if (!s || !(*s)) return 0L;
 
@@ -749,20 +752,21 @@ unsigned long utf8_next_codepoint(unsigned char **s)
   // 3-byte sequence: 1110xxxx 10xxxxxx 10xxxxxx
   if ((p[0] & 0xF0) == 0xE0) {
     if ((p[1] & 0xC0) != 0x80 || (p[2] & 0xC0) != 0x80) return 0xFFFDL;
-    cp = ((p[0] & 0x0F) << 12) |
-         ((p[1] & 0x3F) << 6) |
+    cp = ((unsigned long)(p[0] & 0x0F) << 12) |
+      ((unsigned long)(p[1] & 0x3F) << 6) |
          (p[2] & 0x3F);
     *s += 3;
     return cp;
   }
 
   // 4-byte sequence: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+  // e.g., f0 9f 8d 92
   if ((p[0] & 0xF8) == 0xF0) {
     if ((p[1] & 0xC0) != 0x80 || (p[2] & 0xC0) != 0x80 || (p[3] & 0xC0) != 0x80)
       return 0xFFFDL;
-    cp = ((unsigned long)(p[0] & 0x07) << 18) |
-      ((unsigned long)(p[1] & 0x3F) << 12) |
-      ((p[2] & 0x3F) << 6) |
+    cp = (((unsigned long)(p[0] & 0x07)) << 18) |
+      (((unsigned long)(p[1] & 0x3F)) << 12) |
+       (((unsigned long)(p[2] & 0x3F)) << 6) |
       (p[3] & 0x3F);
     *s += 4;
     return cp;
@@ -773,23 +777,23 @@ unsigned long utf8_next_codepoint(unsigned char **s)
   return 0xFFFDL;
 }
 
-char pick_font_by_codepoint(unsigned long cp)
+char pick_font_by_codepoint(unsigned long cp, unsigned char default_font)
 {
     // Common emoji ranges
-    if ((cp >= 0x1F300 && cp <= 0x1F5FF) ||  // Misc Symbols and Pictographs
-        (cp >= 0x1F600 && cp <= 0x1F64F) ||  // Emoticons
-        (cp >= 0x1F680 && cp <= 0x1F6FF) ||  // Transport & Map Symbols
-        (cp >= 0x1F700 && cp <= 0x1F77F) ||  // Alchemical Symbols
-        (cp >= 0x1F780 && cp <= 0x1F7FF) ||  // Geometric Extended
-        (cp >= 0x1F800 && cp <= 0x1F8FF) ||  // Supplemental Arrows-C (used for emoji components)
-        (cp >= 0x1F900 && cp <= 0x1F9FF) ||  // Supplemental Symbols and Pictographs
-        (cp >= 0x1FA00 && cp <= 0x1FA6F) ||  // Symbols and Pictographs Extended-A
-        (cp >= 0x1FA70 && cp <= 0x1FAFF) ||  // Symbols and Pictographs Extended-B
+    if ((cp >= 0x1F300L && cp <= 0x1F5FFL) ||  // Misc Symbols and Pictographs
+        (cp >= 0x1F600L && cp <= 0x1F64FL) ||  // Emoticons
+        (cp >= 0x1F680L && cp <= 0x1F6FFL) ||  // Transport & Map Symbols
+        (cp >= 0x1F700L && cp <= 0x1F77FL) ||  // Alchemical Symbols
+        (cp >= 0x1F780L && cp <= 0x1F7FFL) ||  // Geometric Extended
+        (cp >= 0x1F800L && cp <= 0x1F8FFL) ||  // Supplemental Arrows-C (used for emoji components)
+        (cp >= 0x1F900L && cp <= 0x1F9FFL) ||  // Supplemental Symbols and Pictographs
+        (cp >= 0x1FA00L && cp <= 0x1FA6FL) ||  // Symbols and Pictographs Extended-A
+        (cp >= 0x1FA70L && cp <= 0x1FAFFL) ||  // Symbols and Pictographs Extended-B
         (cp >= 0x2600 && cp <= 0x26FF)   ||  // Misc symbols (some emoji-like)
         (cp >= 0x2700 && cp <= 0x27BF)   ||  // Dingbats
         (cp >= 0xFE00 && cp <= 0xFE0F)   ||  // Variation Selectors (used with emoji)
-        (cp >= 0x1F1E6 && cp <= 0x1F1FF))    // Regional Indicator Symbols (🇦 – 🇿)
+        (cp >= 0x1F1E6L && cp <= 0x1F1FFL))    // Regional Indicator Symbols (🇦 – 🇿)
         return FONT_EMOJI_COLOUR;    
     
-    return FONT_TEXT;
+    return default_font;
 }

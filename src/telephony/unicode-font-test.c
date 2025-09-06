@@ -166,7 +166,7 @@ void main(void)
   mount_contact_qso(2);
   // record 0 = BAM, 1 = first actual message
   read_record_by_id(0,1,buffers.textbox.record);
-  
+
   buffers.textbox.field = find_field(buffers.textbox.record,
 				     RECORD_DATA_SIZE,
 				     FIELD_BODYTEXT,
