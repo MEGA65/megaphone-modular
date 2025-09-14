@@ -51,6 +51,7 @@ SRC_TELEPHONY_COMMON=	src/telephony/d81.c \
 			src/telephony/buffers.c \
 			src/telephony/search.c \
 			src/telephony/sms.c \
+			src/telephony/smsscreens.c \
 			src/telephony/slab.c
 
 NATIVE_TELEPHONY_COMMON=	$(SRC_TELEPHONY_COMMON) \
@@ -66,6 +67,7 @@ OBJ_TELEPHONY_COMMON=	src/telephony/d81.s \
 			src/telephony/buffers.s \
 			src/telephony/search.s \
 			src/telephony/sms.s \
+			src/telephony/smsscreens.s \
 			src/telephony/slab.s \
 			src/telephony/mega65/hal.s \
 			src/telephony/mega65/hal_asm.s \
@@ -112,7 +114,6 @@ src/telephony/linux/sortd81:	src/telephony/sortd81.c $(SRC_TELEPHONY_COMMON) $(H
 bin65/unicode-font-test.prg:	src/telephony/unicode-font-test.c $(NATIVE_TELEPHONY_COMMON)
 	mkdir -p bin65
 
-
 	$(CC65) $(COPT_M65) src/telephony/unicode-font-test.c
 	$(CC65) $(COPT_M65) src/telephony/screen.c
 	$(CC65) $(COPT_M65) src/telephony/mega65/hal.c
@@ -122,6 +123,7 @@ bin65/unicode-font-test.prg:	src/telephony/unicode-font-test.c $(NATIVE_TELEPHON
 	$(CC65) $(COPT_M65) src/telephony/sort.c
 	$(CC65) $(COPT_M65) src/telephony/search.c
 	$(CC65) $(COPT_M65) src/telephony/sms.c
+	$(CC65) $(COPT_M65) src/telephony/smsscreens.c
 	$(CC65) $(COPT_M65) src/telephony/d81.c
 	$(CC65) $(COPT_M65) src/telephony/slab.c
 	$(CC65) $(COPT_M65) src/telephony/records.c

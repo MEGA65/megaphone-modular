@@ -42,6 +42,7 @@ char to_hex(unsigned char v)
 
 char mount_contact_qso(unsigned int contact)
 {
+  unsigned char r;
   char hex[3];
   if (mega65_cdroot()) fail(9);
   if (mega65_chdir("PHONE")) fail(1);
@@ -59,7 +60,10 @@ char mount_contact_qso(unsigned int contact)
   hex[1]=0;
   if (mega65_chdir(hex)) fail(6);
 
-  if (mount_d81("MESSAGES.D81",0)) fail(7);
+  if (r=mount_d81("MESSAGES.D81",0)) {
+    lpoke(0x12003L,r);
+    fail(10);
+  }
   if (mount_d81("MSGINDEX.D81",1)) fail(8);
 
   return 0;
