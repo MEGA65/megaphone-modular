@@ -79,11 +79,19 @@ char read_sector(unsigned char drive_id, unsigned char track, unsigned char sect
 
 char mount_d81(char *filename, unsigned char drive_id)
 {
+  unsigned char r;
   switch(drive_id) {
-  case 0: if(mountd81disk0(filename)==1) return 0; else return 2;
-  case 1: if(mountd81disk1(filename)==1) return 0; else return 2;
+  case 0: r=mountd81disk0(filename); break;
+  case 1: r=mountd81disk1(filename); break;
   default: return 1;
   }
+
+  if (r==1) {
+    return 0;
+  } else {
+    return 2;
+  }
+  
 }
 
 char create_d81(char *filename)

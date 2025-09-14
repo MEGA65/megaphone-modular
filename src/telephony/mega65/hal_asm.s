@@ -66,6 +66,13 @@ _mountd81disk0:
 	sta $d640
 	clv
 	ldx #$00
+	bcc fail
+success:
+	lda #$01
+	rts
+
+fail:
+	lda #$ff	
 	rts
 
 _mountd81disk1:
@@ -81,5 +88,6 @@ _mountd81disk1:
 	sta $d640
 	clv
 	ldx #$00
-	rts
+	bcc fail
+	bcs success
 	
