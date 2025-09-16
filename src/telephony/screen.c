@@ -84,6 +84,27 @@ void screen_setup(void)
   POKE(0xD061,((unsigned long)screen_ram)>>8);
   POKE(0xD062,((unsigned long)screen_ram)>>16);
 
+  // Turn off sprites initially
+  POKE(0xD015,0);
+
+  // But setup SMS and contact list scroll bar sprites
+  POKE(0xD055,3); // Extended sprite height
+  POKE(0xD056,255);  // Extended height sprites are 255px tall
+  POKE(0xD010,1); // SMS thread scroll bar goes on the right
+  POKE(0xD054,3); // H640 sprite resolution enable
+
+  // Set the sprite pointer somewhere convenient @ $F000
+  POKE(0xD06C,0x00);
+  POKE(0xD06D,0xF0);
+  POKE(0xD06E,0x80); // Use 16-bit sprite numbers
+
+  // Point the sprite data for sprites at $F100 & $F400
+  // to allow for 255x3 = ~$300 bytes
+  POKE(0xF000,(0xF100L>>6));
+  POKE(0xF001,(0xF100L>>(6+14)));
+  POKE(0xF002,(0xF400L>>6));
+  POKE(0xF003,(0xF400L>>(6+14)));
+  
 }
 
 unsigned char nybl_swap(unsigned char v) {
