@@ -111,11 +111,31 @@ void main(void)
     case 0x11: // down arrow
       if (position<-1) { redraw=1; position++; }
       break;
+    case 0x14: // DELETE
+      if (buffers.textbox.draft_cursor_position) {
+	lcopy(&buffers.textbox.draft[buffers.textbox.draft_cursor_position],
+	      &buffers.textbox.draft[buffers.textbox.draft_cursor_position-1],
+	      RECORD_DATA_SIZE - (buffers.textbox.draft_cursor_position));
+	buffers.textbox.draft_cursor_position--;
+	buffers.textbox.draft_len--;
+
+	redraw_draft=1;
+      }
+      break;
+      
+    case 0x93: // CLR+HOME
+      buffers.textbox.draft_len = 1;
+      buffers.textbox.draft_cursor_position = 0;
+      buffers.textbox.draft[0]='|';
+      buffers.textbox.draft[1]=0;
+
+      redraw_draft=1;      
+      break;
     case 0x91: // up arrow
       if (first_message_displayed>1) { redraw=1; position--; }
       break;
     case 0x1d: // cursor right
-      if (buffers.textbox.draft_cursor_position < buffers.textbox.draft_len) {
+      if (buffers.textbox.draft_cursor_position < (buffers.textbox.draft_len-1)) {
 	// XXX swap cursor byte with _codepoint_ to the right.
 	// This may require shifting more than 1 byte.
 	// For now, we just assume only ASCII chars, and move position 1 byte at a time.
