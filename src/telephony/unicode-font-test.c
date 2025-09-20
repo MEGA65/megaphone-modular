@@ -90,14 +90,17 @@ void main(void)
 
   hal_init();
 
+  
   // Set draft message to be empty, with just our hack of using a | as a pseudo-cursor
   buffers.textbox.draft_len = 1;
   buffers.textbox.draft_cursor_position = 0;
   buffers.textbox.draft[0]='|';
   buffers.textbox.draft[1]=0;
 
+  // Mount contact D81s, so that we can retreive draft
+  mount_contact_qso(3);
   // Read last record in disk to get any saved draft
-  read_record_by_id(0,USABLE_SECTORS_PER_DISK -1, buffers.textbox.draft);
+  read_record_by_id(0,USABLE_SECTORS_PER_DISK -1,buffers.textbox.draft);
   buffers.textbox.draft_len = strlen(buffers.textbox.draft);
   buffers.textbox.draft_cursor_position = strlen(buffers.textbox.draft) - 1;
   // Reposition cursor to first '|' character in the draft
