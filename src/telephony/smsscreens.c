@@ -10,14 +10,15 @@
 #include "contacts.h"
 
 char sms_thread_display(unsigned int contact,
-			unsigned int last_message,
+			int last_message,
 			char with_edit_box_P
 			)
 {
   int y=28;
   unsigned int bottom_row_available = 30; // allow all the way to bottom of screen for now.
   unsigned int bottom_row;
-  unsigned int message_count = 0; 
+  unsigned int message_count = 0;
+  unsigned int message = 0;
   unsigned char r;
 
   buffers_lock(LOCK_TEXTBOX);
@@ -37,7 +38,11 @@ char sms_thread_display(unsigned int contact,
   message_count = record_allocate_next(SECTOR_BUFFER_ADDRESS);
   message_count--; 
 
-  if (last_message < message_count) message_count = last_message;
+  // Allow negative positions to mean position from end of message stream
+  if (last_message<0) last_message = message_count + (1+last_message);
+  
+  if (last_message < message_count) message = last_message;
+  else message = message_count;
 
   lcopy(&message_count,0x12000L,2);
 
@@ -48,13 +53,13 @@ char sms_thread_display(unsigned int contact,
   lpoke(0xFFF1L,message_count>>8);
   lpoke(0xFFF2L,0x42);
   
-  while(y>=2&&message_count>0) {
+  while(y>=2&&message>0) {
 
     unsigned int first_row = 0;
     unsigned char we_sent_it = 0;
     
     // Read the message
-    read_record_by_id(0,message_count,buffers.textbox.record);
+    read_record_by_id(0,message,buffers.textbox.record);
 
     // Get message direction
     buffers.textbox.field = find_field(buffers.textbox.record,
@@ -102,9 +107,22 @@ char sms_thread_display(unsigned int contact,
     // Leave blank line between messages
     y--;
     
-    message_count--;
+    message--;
   }    
 
+  POKE(0xF080,message>>0);
+  POKE(0xF081,message>>8);
+  POKE(0xF082,last_message>>0);
+  POKE(0xF083,last_message>>8);
+  POKE(0xF084,message_count>>0);
+  POKE(0xF085,message_count>>8);
+
+  // Message 0 is not a real message, so adjust scroll bar accordingly
+  draw_scrollbar(0, // SMS thread scroll bar
+		 message-1,
+		 last_message-1,
+		 message_count-1);
+  
 #if 0
   // record 0 = BAM, 1 = first actual message
   read_record_by_id(0,1,buffers.textbox.record);

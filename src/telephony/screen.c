@@ -144,14 +144,20 @@ char draw_scrollbar(unsigned char sprite_num,
   if (!total) total=1;
   if (start>total) start=0;
   if (end>total) end=total;
-  
-  temp = start<<8;
-  temp /= total;
-  first = temp;
 
-  temp = end<<8;
-  temp /= total;
-  last = temp;
+  if (!start) first=0;
+  else {  
+    temp = start*240;
+    temp /= total;
+    first = temp;
+  }
+
+  if (end == total) last=240;
+  else {
+    temp = end*240;
+    temp /= total;
+    last = temp;
+  }
 
   lfill(0xf100 + (sprite_num*0x300), 0x55, 0x300);
   lfill(0xf100 + (sprite_num*0x300) + first*3, 0xAA, (last-first+1)*3);

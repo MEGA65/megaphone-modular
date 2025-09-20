@@ -86,7 +86,7 @@ void main(void)
 
   hal_init();
   
-  sms_thread_display(2,9999,0);
+  sms_thread_display(3,-1,0);
   
   while(1) continue;  
   
