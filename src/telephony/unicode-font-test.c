@@ -68,7 +68,7 @@ void main(void)
   unsigned char o=0;
   int position;
   char redraw, redraw_draft;
-  unsigned char old_line_count;
+  unsigned char old_draft_line_count;
   unsigned char temp;
   
   mega65_io_enable();
@@ -177,15 +177,13 @@ void main(void)
     if (redraw_draft) {
       redraw_draft = 0;
 
-      old_line_count = buffers.textbox.line_count;
-	
       calc_break_points(buffers.textbox.draft,
 			FONT_UI,
 			294, // text field in px
-			  RENDER_COLUMNS - 1 - 45);
-
+			  RENDER_COLUMNS - 1 - 45);      
+      
       // Only redraw the message draft if it hasn't changed how many lines it uses
-      if (buffers.textbox.line_count == old_line_count ) {
+      if (buffers.textbox.line_count == old_draft_line_count ) {
 	textbox_draw(360/8,
 		     MAX_ROWS - buffers.textbox.line_count,
 		     360,
@@ -200,6 +198,8 @@ void main(void)
       } else {
 	redraw = 1;
       }
+
+      old_draft_line_count = buffers.textbox.line_count;      
       
     }
     // Acknowledge key press
