@@ -67,7 +67,9 @@ void main(void)
   shared_resource_dir d;
   unsigned char o=0;
   int position;
-  char redraw;
+  char redraw, redraw_draft;
+  unsigned char old_line_count;
+  unsigned char temp;
   
   mega65_io_enable();
   
@@ -90,6 +92,13 @@ void main(void)
 
   position = -1;
   redraw = 1;
+  redraw_draft = 1;
+
+  // Set draft message to be empty, with just our hack of using a | as a pseudo-cursor
+  buffers.textbox.draft_len = 1;
+  buffers.textbox.draft_cursor_position = 0;
+  buffers.textbox.draft[0]='|';
+  buffers.textbox.draft[1]=0;
   
   while(1) {
     unsigned int first_message_displayed;
@@ -105,6 +114,73 @@ void main(void)
     case 0x91: // up arrow
       if (first_message_displayed>1) { redraw=1; position--; }
       break;
+    case 0x1d: // cursor right
+      if (buffers.textbox.draft_cursor_position < buffers.textbox.draft_len) {
+	// XXX swap cursor byte with _codepoint_ to the right.
+	// This may require shifting more than 1 byte.
+	// For now, we just assume only ASCII chars, and move position 1 byte at a time.
+	temp = buffers.textbox.draft[buffers.textbox.draft_cursor_position+1];
+	buffers.textbox.draft[buffers.textbox.draft_cursor_position+1] = '|';
+	buffers.textbox.draft[buffers.textbox.draft_cursor_position] = temp;
+	buffers.textbox.draft_cursor_position++;
+	redraw_draft = 1;
+      }
+      break;
+    case 0x9d: // cursor left
+      if (buffers.textbox.draft_cursor_position > 0) {
+	// XXX swap cursor byte with _codepoint_ to the right.
+	// This may require shifting more than 1 byte.
+	// For now, we just assume only ASCII chars, and move position 1 byte at a time.
+	temp = buffers.textbox.draft[buffers.textbox.draft_cursor_position-1];
+	buffers.textbox.draft[buffers.textbox.draft_cursor_position-1] = '|';
+	buffers.textbox.draft[buffers.textbox.draft_cursor_position] = temp;
+	buffers.textbox.draft_cursor_position--;
+	redraw_draft = 1;
+      }
+      break;
+    }
+    if (PEEK(0xD610)>=0x20 && PEEK(0xD610) < 0x7F) {
+      // It's a character to add to our draft message
+      if (buffers.textbox.draft_len < (RECORD_DATA_SIZE-1) ) {
+	// Shuffle from cursor
+	lcopy(&buffers.textbox.draft[buffers.textbox.draft_cursor_position],
+	      &buffers.textbox.draft[buffers.textbox.draft_cursor_position+1],
+	      RECORD_DATA_SIZE - (1 + buffers.textbox.draft_cursor_position));
+	buffers.textbox.draft[buffers.textbox.draft_cursor_position]=PEEK(0xD610);
+	buffers.textbox.draft_cursor_position++;
+	buffers.textbox.draft_len++;
+
+	redraw_draft = 1;
+      }
+    }
+
+    if (redraw_draft) {
+      redraw_draft = 0;
+
+      old_line_count = buffers.textbox.line_count;
+	
+      calc_break_points(buffers.textbox.draft,
+			FONT_UI,
+			294, // text field in px
+			  RENDER_COLUMNS - 1 - 45);
+
+      // Only redraw the message draft if it hasn't changed how many lines it uses
+      if (buffers.textbox.line_count == old_line_count ) {
+	textbox_draw(360/8,
+		     MAX_ROWS - buffers.textbox.line_count,
+		     360,
+		     294,
+		     RENDER_COLUMNS - 1 - 45,
+		     FONT_UI,
+		     0x8F,
+		     buffers.textbox.draft,
+		     0,
+		     buffers.textbox.line_count-1,
+		     VIEWPORT_PADDED);
+      } else {
+	redraw = 1;
+      }
+      
     }
     // Acknowledge key press
     POKE(0xD610,0);

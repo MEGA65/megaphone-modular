@@ -56,17 +56,32 @@ char sms_thread_display(unsigned int contact,
 
   lcopy(&message_count,0x12000L,2);
 
-  y = MAX_ROWS;
-  bottom_row_available = MAX_ROWS;
-
-  lpoke(0xFFF0L,message_count>>0);
-  lpoke(0xFFF1L,message_count>>8);
-  lpoke(0xFFF2L,0x42);
-
+  // Work out how many rows the message draft uses
+  calc_break_points(buffers.textbox.draft,
+		    FONT_UI,
+		    294, // text field in px
+		    RENDER_COLUMNS - 1 - 45);  
+  
+  y = MAX_ROWS - buffers.textbox.line_count - 1;
+  bottom_row_available = MAX_ROWS - buffers.textbox.line_count - 1;
+  
   // XXX - Remember what's on the screen already, and use DMA to scroll it up
   // and down, so that we don't need to redraw it all.
   // But for now, we don't have that, so just clear the thread area on the screen
   sms_thread_clear_screen_region(2,MAX_ROWS);
+
+  // Draw the message draft
+  textbox_draw(360/8,
+	       MAX_ROWS - buffers.textbox.line_count,
+	       360,
+	       294,
+	       RENDER_COLUMNS - 1 - 45,
+	       FONT_UI,
+	       0x8F,
+	       buffers.textbox.draft,
+	       0,
+	       buffers.textbox.line_count-1,
+	       VIEWPORT_PADDED);  
   
   while(y>=2&&message>0) {
 

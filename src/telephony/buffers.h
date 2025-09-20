@@ -97,6 +97,10 @@ struct textbox {
 
   unsigned int line_count;
   unsigned int line_offsets_in_bytes[RECORD_DATA_SIZE];
+
+  unsigned char draft[RECORD_DATA_SIZE];
+  unsigned int draft_len;
+  unsigned int draft_cursor_position;
 };
 
 struct shared_buffers {
