@@ -8,6 +8,7 @@ void hal_init(void) {
 
 char write_sector(unsigned char drive_id, unsigned char track, unsigned char sector)
 {
+
   // Select FDC rather than SD card sector buffer
   POKE(0xD689L,PEEK(0xD689L)&0x7f);
   
@@ -44,23 +45,16 @@ char write_sector(unsigned char drive_id, unsigned char track, unsigned char sec
     POKE(0xD086L,0x00); // front side
   }
 
-  POKE(0x0400,PEEK(0xD082L));
-  
-  // Buffered sector read
+  // Buffered sector write
   POKE(0xD081L,0x80);
 
-  POKE(0x0401,PEEK(0xD082L));
-  
   // Wait for BUSY to clear.
   // if RNF set, then it failed. If clear, then it was fine.
   while(PEEK(0xD082L) & 0x80) continue;
 
-  POKE(0x0402,PEEK(0xD082L));
-  
   if (PEEK(0xD082L) & 0x10) return 1;
-
   
-  return 1;
+  return 0;
 }
 
 char read_sector(unsigned char drive_id, unsigned char track, unsigned char sector)
