@@ -67,6 +67,7 @@ void main(void)
   shared_resource_dir d;
   unsigned char o=0;
   int position;
+  char redraw;
   
   mega65_io_enable();
   
@@ -88,19 +89,21 @@ void main(void)
   hal_init();
 
   position = -1;
+  redraw = 1;
   
   while(1) {
     unsigned int first_message_displayed;
-    sms_thread_display(3,position,0,&first_message_displayed);
+    if (redraw) sms_thread_display(3,position,0,&first_message_displayed);
+    redraw=0;
 
     // Wait for key press
     while(!PEEK(0xD610)) continue;
     switch(PEEK(0xD610)) {
     case 0x11: // down arrow
-      if (position<-1) position++;
+      if (position<-1) { redraw=1; position++; }
       break;
     case 0x91: // up arrow
-      if (first_message_displayed>1) position--;
+      if (first_message_displayed>1) { redraw=1; position--; }
       break;
     }
     // Acknowledge key press

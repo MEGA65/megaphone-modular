@@ -12,6 +12,9 @@ void screen_setup(void);
 char screen_setup_fonts(void);
 void generate_rgb332_palette(void);
 void screen_clear(void);
+void screen_clear_partial_line(unsigned char row,
+			       unsigned char first_col,
+			       unsigned char last_col);
 void draw_goto(int x,int y, int goto_pos);
 char draw_glyph(int x, int y, int font, unsigned long codepoint,unsigned char colour, unsigned char *pixels_used);
 #define VIEWPORT_PADDED 1

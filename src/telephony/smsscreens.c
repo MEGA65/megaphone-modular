@@ -9,6 +9,15 @@
 #include "records.h"
 #include "contacts.h"
 
+void sms_thread_clear_screen_region(unsigned char first_row, unsigned char last_row)
+{
+  while(first_row<=last_row) {
+    screen_clear_partial_line(first_row, 360/8, 255);
+    first_row++;
+  }
+}
+
+
 char sms_thread_display(unsigned int contact,
 			int last_message,
 			char with_edit_box_P,
@@ -53,6 +62,11 @@ char sms_thread_display(unsigned int contact,
   lpoke(0xFFF0L,message_count>>0);
   lpoke(0xFFF1L,message_count>>8);
   lpoke(0xFFF2L,0x42);
+
+  // XXX - Remember what's on the screen already, and use DMA to scroll it up
+  // and down, so that we don't need to redraw it all.
+  // But for now, we don't have that, so just clear the thread area on the screen
+  sms_thread_clear_screen_region(2,MAX_ROWS);
   
   while(y>=2&&message>0) {
 

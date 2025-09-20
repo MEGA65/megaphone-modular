@@ -205,6 +205,25 @@ void generate_rgb332_palette(void)
 
 }
 
+void screen_clear_partial_line(unsigned char row,
+			       unsigned char first_col,
+			       unsigned char last_col)
+{
+  unsigned int offset = row*(256*2) + first_col*2;
+  unsigned int count = (last_col-first_col+1)*2;
+
+  // Clear screen RAM using overlapping DMA  
+  lpoke(screen_ram + offset + 0,0x20);
+  lpoke(screen_ram + offset + 1,0x00);
+  if (last_col>first_col) {
+    lpoke(screen_ram + offset + 2,0x20);
+    lpoke(screen_ram + offset + 3,0x00);
+  }
+  if (count>4) lcopy(screen_ram + offset, screen_ram + offset + 4,count - 4);
+
+  // Clear colour RAM
+  lfill(colour_ram + offset,0x01,count);
+}
 
 void screen_clear(void)
 {
