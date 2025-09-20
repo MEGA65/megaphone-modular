@@ -90,15 +90,28 @@ void main(void)
 
   hal_init();
 
-  position = -1;
-  redraw = 1;
-  redraw_draft = 1;
-
   // Set draft message to be empty, with just our hack of using a | as a pseudo-cursor
   buffers.textbox.draft_len = 1;
   buffers.textbox.draft_cursor_position = 0;
   buffers.textbox.draft[0]='|';
   buffers.textbox.draft[1]=0;
+
+  // Read last record in disk to get any saved draft
+  read_record_by_id(0,USABLE_SECTORS_PER_DISK -1, buffers.textbox.draft);
+  buffers.textbox.draft_len = strlen(buffers.textbox.draft);
+  buffers.textbox.draft_cursor_position = strlen(buffers.textbox.draft) - 1;
+  // Reposition cursor to first '|' character in the draft
+  // XXX - We really need a better solution than using | as the cursor, but it works for now
+  for(position = 0; position<buffers.textbox.draft_len; position++) {
+    if (buffers.textbox.draft[position]=='|') {
+      buffers.textbox.draft_cursor_position = position;
+      break;
+    }
+  }
+  
+  position = -1;
+  redraw = 1;
+  redraw_draft = 1;
   
   while(1) {
     unsigned int first_message_displayed;
@@ -177,6 +190,9 @@ void main(void)
     if (redraw_draft) {
       redraw_draft = 0;
 
+      // Update saved draft in the D81
+      write_record_by_id(0,USABLE_SECTORS_PER_DISK -1, buffers.textbox.draft);
+      
       calc_break_points(buffers.textbox.draft,
 			FONT_UI,
 			294, // text field in px
