@@ -85,7 +85,7 @@ void screen_setup(void)
   POKE(0xD062,((unsigned long)screen_ram)>>16);
 
   // Turn off sprites initially
-  POKE(0xD015,3);
+  POKE(0xD015,0);
 
   // But setup SMS and contact list scroll bar sprites
   POKE(0xD055,3); // Extended sprite height
@@ -126,7 +126,6 @@ void screen_setup(void)
   POKE(0xD025,0x0B); // Sprite MCM 0 = dark grey 
   POKE(0xD026,0x06); // Sprite MCM 1 = blue
 
-  draw_scrollbar(0,40,49,100);
   
 }
 
@@ -139,6 +138,9 @@ char draw_scrollbar(unsigned char sprite_num,
   unsigned char last;
   unsigned long temp;
 
+  // Enable sprite for scroll bar
+  POKE(0xD015,PEEK(0xD015)|(1<<sprite_num));
+  
   if (!total) total=1;
   if (start>total) start=0;
   if (end>total) end=total;
