@@ -66,6 +66,7 @@ void main(void)
 {
   shared_resource_dir d;
   unsigned char o=0;
+  int position;
   
   mega65_io_enable();
   
@@ -85,10 +86,26 @@ void main(void)
   screen_setup_fonts();
 
   hal_init();
+
+  position = -1;
   
-  sms_thread_display(3,-1,0);
-  
-  while(1) continue;  
+  while(1) {
+    unsigned int first_message_displayed;
+    sms_thread_display(3,position,0,&first_message_displayed);
+
+    // Wait for key press
+    while(!PEEK(0xD610)) continue;
+    switch(PEEK(0xD610)) {
+    case 0x11: // down arrow
+      if (position<-1) position++;
+      break;
+    case 0x91: // up arrow
+      if (first_message_displayed>1) position--;
+      break;
+    }
+    // Acknowledge key press
+    POKE(0xD610,0);
+  }
   
   return;
 }

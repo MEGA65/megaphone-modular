@@ -11,7 +11,8 @@
 
 char sms_thread_display(unsigned int contact,
 			int last_message,
-			char with_edit_box_P
+			char with_edit_box_P,
+			unsigned int *first_message_displayed
 			)
 {
   int y=28;
@@ -122,6 +123,9 @@ char sms_thread_display(unsigned int contact,
 		 message-1,
 		 last_message-1,
 		 message_count-1);
+
+  // Note that this is 1-based, not 0-based, because of the reserved message 0
+  if (first_message_displayed) *first_message_displayed = message;
   
 #if 0
   // record 0 = BAM, 1 = first actual message
