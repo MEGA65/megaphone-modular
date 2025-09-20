@@ -58,6 +58,12 @@ char string_render_analyse(unsigned char *str,
                            unsigned int *break_costs   /* [RECORD_DATA_SIZE] */
                            );
 
+char draw_scrollbar(unsigned char sprite_num,
+		    unsigned int start,
+		    unsigned int end,
+		    unsigned int total);
+
+
 extern unsigned long screen_ram;
 extern unsigned long colour_ram;
 

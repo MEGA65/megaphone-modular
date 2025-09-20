@@ -89,7 +89,7 @@ void screen_setup(void)
 
   // But setup SMS and contact list scroll bar sprites
   POKE(0xD055,3); // Extended sprite height
-  POKE(0xD056,255);  // Extended height sprites are 255px tall
+  POKE(0xD056,240);  // Extended height sprites are 240px tall
   POKE(0xD010,1); // SMS thread scroll bar goes on the right
 
   // Set the sprite pointer somewhere convenient @ $F000
@@ -105,17 +105,56 @@ void screen_setup(void)
   POKE(0xF003,(0xF400L>>(6+8)));
 
   // XXX For testing fill the sprites with something we can see
-  lfill(0xF100L,0xFF,0x600);
+  lfill(0xF100L,0x55,0x600);
 
   // Position sprites appropriately
-  POKE(0xD000L,0xC7);
+  POKE(0xD000L,0xC9);
   POKE(0xD001L,0x1E);
   POKE(0xD002L,0x80);
   POKE(0xD003L,0x1E);
   POKE(0xD010L,0x00); // Sprite X MSBs all clear
   POKE(0xD05FL,0x01); // Sprite 0 X position super-MSB
+
+  // Scroll-bar Sprites are MCM
+  POKE(0xD01C,0x03);
   
+  // Sprites are light grey
+  POKE(0xD027,0x0F);
+  POKE(0xD028,0x0F);
+
+  // Sprite multi-colour 1 = black, so that we can draw scroll bars
+  POKE(0xD025,0x0B); // Sprite MCM 0 = dark grey 
+  POKE(0xD026,0x06); // Sprite MCM 1 = blue
+
+  draw_scrollbar(0,40,49,100);
   
+}
+
+char draw_scrollbar(unsigned char sprite_num,
+		    unsigned int start,
+		    unsigned int end,
+		    unsigned int total)
+{
+  unsigned char first;
+  unsigned char last;
+  unsigned long temp;
+
+  if (!total) total=1;
+  if (start>total) start=0;
+  if (end>total) end=total;
+  
+  temp = start<<8;
+  temp /= total;
+  first = temp;
+
+  temp = end<<8;
+  temp /= total;
+  last = temp;
+
+  lfill(0xf100 + (sprite_num*0x300), 0x55, 0x300);
+  lfill(0xf100 + (sprite_num*0x300) + first*3, 0xAA, (last-first+1)*3);
+  
+  return 0;  
 }
 
 unsigned char nybl_swap(unsigned char v) {
