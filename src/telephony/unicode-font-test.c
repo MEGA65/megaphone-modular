@@ -10,6 +10,7 @@
 #include "records.h"
 #include "contacts.h"
 #include "smsscreens.h"
+#include "sms.h"
 
 unsigned char buffer[128];
 
@@ -67,9 +68,10 @@ void main(void)
   shared_resource_dir d;
   unsigned char o=0;
   int position;
-  char redraw, redraw_draft;
+  char redraw, redraw_draft, reload_contact, erase_draft;
   unsigned char old_draft_line_count;
   unsigned char temp;
+  unsigned int contact_ID;
   
   mega65_io_enable();
   
@@ -90,40 +92,62 @@ void main(void)
 
   hal_init();
 
-  
-  // Set draft message to be empty, with just our hack of using a | as a pseudo-cursor
-  buffers.textbox.draft_len = 1;
-  buffers.textbox.draft_cursor_position = 0;
-  buffers.textbox.draft[0]='|';
-  buffers.textbox.draft[1]=0;
-
-  // Mount contact D81s, so that we can retreive draft
-  mount_contact_qso(3);
-  // Read last record in disk to get any saved draft
-  read_record_by_id(0,USABLE_SECTORS_PER_DISK -1,buffers.textbox.draft);
-  buffers.textbox.draft_len = strlen(buffers.textbox.draft);
-  buffers.textbox.draft_cursor_position = strlen(buffers.textbox.draft) - 1;
-  // Reposition cursor to first '|' character in the draft
-  // XXX - We really need a better solution than using | as the cursor, but it works for now
-  for(position = 0; position<buffers.textbox.draft_len; position++) {
-    if (buffers.textbox.draft[position]=='|') {
-      buffers.textbox.draft_cursor_position = position;
-      break;
-    }
-  }
+  contact_ID = 3;
   
   position = -1;
   redraw = 1;
   redraw_draft = 1;
+  reload_contact = 1;
+  erase_draft = 0;
   
   while(1) {
     unsigned int first_message_displayed;
-    if (redraw) sms_thread_display(3,position,0,&first_message_displayed);
+
+    if (reload_contact) {
+      reload_contact = 0;
+
+      // Clear draft initially
+      textbox_erase_draft();
+      
+      // Mount contact D81s, so that we can retreive draft
+      mount_contact_qso(contact_ID);
+      if (!erase_draft) {
+	// Read last record in disk to get any saved draft
+	read_record_by_id(0,USABLE_SECTORS_PER_DISK -1,buffers.textbox.draft);
+	buffers.textbox.draft_len = strlen(buffers.textbox.draft);
+	buffers.textbox.draft_cursor_position = strlen(buffers.textbox.draft) - 1;
+	// Reposition cursor to first '|' character in the draft
+	// XXX - We really need a better solution than using | as the cursor, but it works for now
+	for(buffers.textbox.draft_cursor_position = 0;
+	    buffers.textbox.draft_cursor_position<buffers.textbox.draft_len;
+	    buffers.textbox.draft_cursor_position++) {
+	  if (buffers.textbox.draft[position]=='|') break;
+	}
+      }
+      erase_draft = 0;
+
+      redraw = 1;      
+    }
+      
+    if (redraw) sms_thread_display(contact_ID,position,0,&first_message_displayed);
     redraw=0;
 
     // Wait for key press
     while(!PEEK(0xD610)) continue;
     switch(PEEK(0xD610)) {
+    case 0x0d: // RETURN = send message
+      // Don't send empty messages (or that just consist of the cursor)
+      if (buffers.textbox.draft_len<2) break;
+
+      buffers_unlock(LOCK_TEXTBOX);
+      // XXX Remove cursor first!
+      sms_send_to_contact(contact_ID,buffers.textbox.draft);
+      buffers_unlock(LOCK_TELEPHONY);
+      
+      reload_contact = 1;
+      erase_draft = 1;
+      
+      break;
     case 0x11: // down arrow
       if (position<-1) { redraw=1; position++; }
       break;
@@ -140,10 +164,7 @@ void main(void)
       break;
       
     case 0x93: // CLR+HOME
-      buffers.textbox.draft_len = 1;
-      buffers.textbox.draft_cursor_position = 0;
-      buffers.textbox.draft[0]='|';
-      buffers.textbox.draft[1]=0;
+      textbox_erase_draft();
 
       redraw_draft=1;      
       break;
@@ -193,6 +214,8 @@ void main(void)
     if (redraw_draft) {
       redraw_draft = 0;
 
+      lcopy(buffers.textbox.draft,0xf800,0x200);
+      
       // Update saved draft in the D81
       write_record_by_id(0,USABLE_SECTORS_PER_DISK -1, buffers.textbox.draft);
       

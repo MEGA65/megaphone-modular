@@ -101,6 +101,8 @@ struct textbox {
   unsigned char draft[RECORD_DATA_SIZE];
   unsigned int draft_len;
   unsigned int draft_cursor_position;
+
+  unsigned char contact_record[RECORD_DATA_SIZE];
 };
 
 struct shared_buffers {

@@ -3,3 +3,4 @@ char sms_thread_display(unsigned int contact,
 			char with_edit_box_P,
 			unsigned int *first_message_displayed
 			);
+void textbox_erase_draft(void);

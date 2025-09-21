@@ -6,11 +6,13 @@
 #include "records.h"
 #include "search.h"
 #include "index.h"
+#include "sms.h"
 
 char sms_build_message(unsigned char buffer[RECORD_DATA_SIZE],unsigned int *bytes_used,
 		       unsigned char txP,
 		       unsigned char *phoneNumber,
-		       unsigned long timestampAztecTime,
+		       unsigned long bcdDate,
+		       unsigned long bcdTime,
 		       unsigned char *messageBody
 		       )
 {
@@ -19,28 +21,67 @@ char sms_build_message(unsigned char buffer[RECORD_DATA_SIZE],unsigned int *byte
   // Reserve first two bytes for record number
   *bytes_used=2;
 
-  timestamp_bin[0]=timestampAztecTime>>0;
-  timestamp_bin[1]=timestampAztecTime>>8;
-  timestamp_bin[2]=timestampAztecTime>>16;
-  timestamp_bin[3]=timestampAztecTime>>24;
-  
   // Clear buffer (will intrinsically add an end of record marker = 0x00 byte)
   lfill((unsigned long)&buffer[0],0x00,RECORD_DATA_SIZE);
   
   // +1 so strings are null-terminated for convenience.
   if (append_field(buffer,bytes_used,RECORD_DATA_SIZE, FIELD_PHONENUMBER, phoneNumber, strlen((char *)phoneNumber)+1)) fail(1);
-  if (append_field(buffer,bytes_used,RECORD_DATA_SIZE, FIELD_TIMESTAMP, timestamp_bin, 4)) fail(2);  
-  if (append_field(buffer,bytes_used,RECORD_DATA_SIZE, FIELD_BODYTEXT, messageBody, strlen((char *)messageBody)+1)) fail(3);  
-  if (append_field(buffer,bytes_used,RECORD_DATA_SIZE, FIELD_MESSAGE_DIRECTION, &txP, 1)) fail(4);
+
+  timestamp_bin[0]=bcdDate>>0;  timestamp_bin[1]=bcdDate>>8;
+  timestamp_bin[2]=bcdDate>>16; timestamp_bin[3]=bcdDate>>24;
+  if (append_field(buffer,bytes_used,RECORD_DATA_SIZE, FIELD_BCDTIME, timestamp_bin, 4)) fail(2);  
+
+  timestamp_bin[0]=bcdTime>>0;  timestamp_bin[1]=bcdTime>>8;
+  timestamp_bin[2]=bcdTime>>16; timestamp_bin[3]=bcdTime>>24;
+  if (append_field(buffer,bytes_used,RECORD_DATA_SIZE, FIELD_BCDDATE, timestamp_bin, 4)) fail(3);  
+
+  if (append_field(buffer,bytes_used,RECORD_DATA_SIZE, FIELD_BODYTEXT, messageBody, strlen((char *)messageBody)+1)) fail(4);  
+  if (append_field(buffer,bytes_used,RECORD_DATA_SIZE, FIELD_MESSAGE_DIRECTION, &txP, 1)) fail(5);
 
   return 0;
 }
 
-char sms_log(unsigned char *phoneNumber, unsigned int timestampAztecTime,
+char sms_log(unsigned char *phoneNumber, unsigned long bcdDate,
+	     unsigned long bcdTime,
 	     unsigned char *message, char direction)
 {      
   // 1. Work out which contact the message is to/from
   unsigned int contact_ID = search_contact_by_phonenumber(phoneNumber);
+
+  return sms_log_to_contact(contact_ID,phoneNumber, bcdDate, bcdTime, message, direction);
+}
+
+char sms_send_to_contact(unsigned int contact_ID, unsigned char *message)
+{
+  unsigned char *phoneNumber = NULL;
+  unsigned long bcdDate, bcdTime;
+  unsigned int len;
+  
+  // Mount contact D81 to get phone number of this contact
+  mega65_cdroot();
+  mega65_chdir("PHONE");
+  mount_d81("CONTACT0.D81",0);
+
+  // XXX - Assume RTC is valid
+  bcdDate = mega65_bcddate();
+  bcdTime = mega65_bcdtime();
+  
+  if (read_record_by_id(contact_ID,0,buffers.textbox.contact_record)) fail(1);
+  phoneNumber = find_field(buffers.textbox.contact_record,RECORD_DATA_SIZE,FIELD_PHONENUMBER,&len);
+  if (!phoneNumber) phoneNumber="UNKNOWN";
+
+  return sms_log_to_contact(contact_ID,phoneNumber,bcdDate, bcdTime,
+			    message,SMS_DIRECTION_TX);
+  
+}
+
+char sms_log_to_contact(unsigned int contact_ID,
+			unsigned char *phoneNumber,
+			unsigned long bcdDate,
+			unsigned long bcdTime,
+			unsigned char *message, char direction)
+{      
+ 
   unsigned int record_number = 0;
   
   // 2. Retreive that contact (or if no such contact, then use the "UNKNOWN NUMBERS" pseudo-contact?)
@@ -110,7 +151,7 @@ char sms_log(unsigned char *phoneNumber, unsigned int timestampAztecTime,
   if (sms_build_message(buffers.telephony.message,
 			&buffers.telephony.message_bytes,			
 		        direction,
-			phoneNumber, timestampAztecTime, message)) {
+			phoneNumber, bcdDate, bcdTime, message)) {
     buffers_unlock(LOCK_TELEPHONY);  
     fail(8);
   }

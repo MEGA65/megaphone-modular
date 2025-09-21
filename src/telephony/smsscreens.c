@@ -17,6 +17,13 @@ void sms_thread_clear_screen_region(unsigned char first_row, unsigned char last_
   }
 }
 
+void textbox_erase_draft(void)
+{
+  buffers.textbox.draft_len = 1;
+  buffers.textbox.draft_cursor_position = 0;
+  lfill(buffers.textbox.draft,0x00,sizeof(buffers.textbox.draft));
+  buffers.textbox.draft[0]='|';
+}
 
 char sms_thread_display(unsigned int contact,
 			int last_message,

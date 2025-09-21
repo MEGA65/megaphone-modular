@@ -27,6 +27,8 @@ char mega65_mkdir(char *dir);
 char mega65_cdroot(void);
 char mega65_chdir(char *dir);
 
+unsigned long mega65_aztectime(void);
+
 #define WITH_SECTOR_MARKERS 1
 #define NO_SECTOR_MARKERS 0
 void format_image_fully_allocated(char drive_id,char *header, char withSectorMarkers);
@@ -40,3 +42,4 @@ char log_error_(const char *file,const char *func,const unsigned int line,const 
 #define fail(X) return(log_error_(__FILE__,__FUNCTION__,__LINE__,X))
 
 #endif
+

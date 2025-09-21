@@ -15,8 +15,10 @@
 
 // Fields used for messages
 #define FIELD_MESSAGE_DIRECTION 0x0c
-#define FIELD_TIMESTAMP 0x0e
+// #define FIELD_TIMESTAMP 0x0e Replaced by BCD fields below
 #define FIELD_BODYTEXT 0x10
+#define FIELD_BCDDATE 0x12
+#define FIELD_BCDTIME 0x14
 
 #define SMS_DIRECTION_RX 0x00
 #define SMS_DIRECTION_TX 0x01

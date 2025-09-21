@@ -6,6 +6,38 @@ unsigned char mountd81disk1(char *filename);
 void hal_init(void) {
 }
 
+unsigned char de_bcd(unsigned char in)
+{
+  return (in &0xf) + (in>>4)*10;  
+}
+
+unsigned long mega65_bcddate(void)
+{
+  // Format is 32-bit packed time.
+
+  // Naive would be:
+  // YEAR  = 16 bits BCD!
+  // MONTH = 8 bits BCD!
+  // DAY   = 8 bits BCD!
+
+  unsigned int year;
+  unsigned char month;
+  unsigned char day;
+
+  year = 0x2000 + lpeek(0xffd7115L);
+  month = lpeek(0xffd7114L);
+  day = lpeek(0xffd7113L);
+
+  return (((unsigned long)year)<<16) + (month << 8) + day;
+}
+
+unsigned long mega65_bcdtime(void)
+{
+  // Format is 32-bit BCD packed time (24 hour time)
+  return + (((unsigned long)(lpeek(0xffd7112L)&0x7f))<<16) + (lpeek(0xffd7111L)<<8) + lpeek(0xffd7110L);
+}
+
+
 char write_sector(unsigned char drive_id, unsigned char track, unsigned char sector)
 {
 

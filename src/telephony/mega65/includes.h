@@ -26,6 +26,9 @@ char mega65_mkdir(char *dir);
 char mega65_cdroot(void);
 char mega65_chdir(char *dir);
 
+unsigned long mega65_bcddate(void);
+unsigned long mega65_bcdtime(void);
+
 #define WITH_SECTOR_MARKERS 1
 #define NO_SECTOR_MARKERS 0
 void format_image_fully_allocated(char drive_id,char *header, char withSectorMarkers);
