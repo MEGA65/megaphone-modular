@@ -99,9 +99,9 @@ void screen_setup(void)
 
   // Point the sprite data for sprites at $F100 & $F400
   // to allow for 255x3 = ~$300 bytes
-  POKE(0xF000,(0xF100L>>6));
+  POKE(0xF000,((0xF100L>>6)) & 0xff);
   POKE(0xF001,(0xF100L>>(6+8)));
-  POKE(0xF002,(0xF400L>>6));
+  POKE(0xF002,((0xF400L>>6)) & 0xff);
   POKE(0xF003,(0xF400L>>(6+8)));
 
   // XXX For testing fill the sprites with something we can see
@@ -413,7 +413,7 @@ char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start
   }
 
   
-  while (cp = utf8_next_codepoint(&utf8)) {
+  while ( (cp = utf8_next_codepoint(&utf8)) != 0L ) {
 
     // Fall-back to emoji font when required if using the UI font
     ff = pick_font_by_codepoint(cp,f);
