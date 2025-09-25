@@ -273,7 +273,13 @@ unsigned char glyph_buffer[BYTES_PER_GLYPH];
 
 void reset_glyph_cache(void)
 {
-  lfill(GLYPH_DATA_START,0x00,GLYPH_CACHE_SIZE * BYTES_PER_GLYPH);
+  unsigned long ofs;
+  for(ofs=0;ofs<((uint32_t)GLYPH_CACHE_SIZE * BYTES_PER_GLYPH);) {
+    unsigned long count = ((uint32_t)GLYPH_CACHE_SIZE * BYTES_PER_GLYPH) - ofs;
+    if (count>65536) count=65536;
+    lfill(GLYPH_DATA_START,0x00,(size_t)count);
+    ofs+=count;
+  }
   lfill((unsigned long)cached_codepoints,0x00,GLYPH_CACHE_SIZE*sizeof(unsigned long));
 }
 

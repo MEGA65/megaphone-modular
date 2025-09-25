@@ -13,7 +13,8 @@ COPT_M65=	-Iinclude	-Isrc/telephony/mega65 -Isrc/mega65-libc/include
 
 COMPILER=llvm
 COMPILER_PATH=/usr/local/bin
-CC=   $(COMPILER_PATH)/mos-c64-clang -mcpu=mos45gs02 -Iinclude -Isrc/telephony/mega65 -Isrc/mega65-libc/include -DLLVM
+CC=   $(COMPILER_PATH)/mos-c64-clang -mcpu=mos45gs02 -Iinclude -Isrc/telephony/mega65 -Isrc/mega65-libc/include -DLLVM -fno-unroll-loops -ffunction-sections -fdata-sections -mllvm -inline-threshold=0 -fvisibility=hidden -Oz
+
 LD=   $(COMPILER_PATH)/ld.lld
 CL=   $(COMPILER_PATH)/mos-c64-clang -DLLVM -mcpu=mos45gs02
 MAPFILE=
