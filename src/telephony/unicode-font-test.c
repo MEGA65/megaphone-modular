@@ -63,7 +63,12 @@ char *num_to_str(unsigned int n,char *s)
   return start;
 }
 
-void main(void)
+#ifdef LLVM
+int
+#else
+void
+#endif
+main(void)
 {
   shared_resource_dir d;
   unsigned char o=0;
@@ -114,8 +119,8 @@ void main(void)
       if (!erase_draft) {
 	// Read last record in disk to get any saved draft
 	read_record_by_id(0,USABLE_SECTORS_PER_DISK -1,buffers.textbox.draft);
-	buffers.textbox.draft_len = strlen(buffers.textbox.draft);
-	buffers.textbox.draft_cursor_position = strlen(buffers.textbox.draft) - 1;
+	buffers.textbox.draft_len = strlen((char *)buffers.textbox.draft);
+	buffers.textbox.draft_cursor_position = strlen((char *)buffers.textbox.draft) - 1;
 	// Reposition cursor to first '|' character in the draft
 	// XXX - We really need a better solution than using | as the cursor, but it works for now
 	for(buffers.textbox.draft_cursor_position = 0;
@@ -153,8 +158,8 @@ void main(void)
       break;
     case 0x14: // DELETE
       if (buffers.textbox.draft_cursor_position) {
-	lcopy(&buffers.textbox.draft[buffers.textbox.draft_cursor_position],
-	      &buffers.textbox.draft[buffers.textbox.draft_cursor_position-1],
+	lcopy((uint32_t)&buffers.textbox.draft[buffers.textbox.draft_cursor_position],
+	      (uint32_t)&buffers.textbox.draft[buffers.textbox.draft_cursor_position-1],
 	      RECORD_DATA_SIZE - (buffers.textbox.draft_cursor_position));
 	buffers.textbox.draft_cursor_position--;
 	buffers.textbox.draft_len--;
@@ -200,8 +205,8 @@ void main(void)
       // It's a character to add to our draft message
       if (buffers.textbox.draft_len < (RECORD_DATA_SIZE-1) ) {
 	// Shuffle from cursor
-	lcopy(&buffers.textbox.draft[buffers.textbox.draft_cursor_position],
-	      &buffers.textbox.draft[buffers.textbox.draft_cursor_position+1],
+	lcopy((uint32_t)&buffers.textbox.draft[buffers.textbox.draft_cursor_position],
+	      (uint32_t)&buffers.textbox.draft[buffers.textbox.draft_cursor_position+1],
 	      RECORD_DATA_SIZE - (1 + buffers.textbox.draft_cursor_position));
 	buffers.textbox.draft[buffers.textbox.draft_cursor_position]=PEEK(0xD610);
 	buffers.textbox.draft_cursor_position++;
@@ -214,8 +219,6 @@ void main(void)
     if (redraw_draft) {
       redraw_draft = 0;
 
-      lcopy(buffers.textbox.draft,0xf800,0x200);
-      
       // Update saved draft in the D81
       write_record_by_id(0,USABLE_SECTORS_PER_DISK -1, buffers.textbox.draft);
       
@@ -248,5 +251,5 @@ void main(void)
     POKE(0xD610,0);
   }
   
-  return;
+  return 0;
 }

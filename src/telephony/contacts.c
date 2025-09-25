@@ -60,7 +60,7 @@ char mount_contact_qso(unsigned int contact)
   hex[1]=0;
   if (mega65_chdir(hex)) fail(6);
 
-  if (r=mount_d81("MESSAGES.D81",0)) {
+  if ((r=mount_d81("MESSAGES.D81",0))!=0) {
     lpoke(0x12003L,r);
     fail(10);
   }

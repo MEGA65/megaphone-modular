@@ -11,6 +11,21 @@ CL65=cl65 -t c64
 
 COPT_M65=	-Iinclude	-Isrc/telephony/mega65 -Isrc/mega65-libc/include
 
+COMPILER=llvm
+COMPILER_PATH=/usr/local/bin
+CC=   $(COMPILER_PATH)/mos-c64-clang -mcpu=mos45gs02 -Iinclude -Isrc/telephony/mega65 -Isrc/mega65-libc/include -DLLVM
+LD=   $(COMPILER_PATH)/ld.lld
+CL=   $(COMPILER_PATH)/mos-c64-clang -DLLVM -mcpu=mos45gs02
+MAPFILE=
+HELPERS=        src/helper-llvm.c
+
+As the MEGA65 libc has also advanced considerably since I last worked on GRAZE, I also reworked how I pull that in:
+
+M65LIBC_INC=-I $(SRCDIR)/mega65-libc/include
+M65LIBC_SRCS=$(wildcard $(SRCDIR)/mega65-libc/src/*.c) $(wildcard $(SRCDIR)/mega65-libc/src/$(COMPILER)/*.c) $(wildcard $(SRCDIR)/mega65-libc/src/$(COMPILER)/*.s)
+CL65+=-I include $(M65LIBC_INC)
+
+
 FONTS=fonts/twemoji/twemoji.MRF \
 	fonts/noto/NotoEmoji-VariableFont_wght.ttf.MRF \
 	fonts/noto/NotoSans-VariableFont_wdth,wght.ttf.MRF \
@@ -111,7 +126,7 @@ src/telephony/linux/thread:	src/telephony/linux/thread.c $(SRC_TELEPHONY_COMMON)
 src/telephony/linux/sortd81:	src/telephony/sortd81.c $(SRC_TELEPHONY_COMMON) $(HDR_TELEPHONY_COMMON) $(SRC_TELEPHONY_COMMON_LINUX) $(HDR_TELEPHONY_COMMON_LINUX)
 	gcc -Wall -g $(HDR_PATH_LINUX) -o $@ src/telephony/sortd81.c $(SRC_TELEPHONY_COMMON) $(SRC_TELEPHONY_COMMON_LINUX)
 
-bin65/unicode-font-test.prg:	src/telephony/unicode-font-test.c $(NATIVE_TELEPHONY_COMMON)
+bin65/unicode-font-test.cc65.prg:	src/telephony/unicode-font-test.c $(NATIVE_TELEPHONY_COMMON)
 	mkdir -p bin65
 
 	$(CC65) $(COPT_M65) src/telephony/unicode-font-test.c
@@ -132,6 +147,12 @@ bin65/unicode-font-test.prg:	src/telephony/unicode-font-test.c $(NATIVE_TELEPHON
 	$(CC65) $(COPT_M65) src/mega65-libc/src/memory.c
 	$(CC65) $(COPT_M65) src/mega65-libc/src/hal.c
 	$(CL65) -o bin65/unicode-font-test.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.s src/telephony/attr_tables.s $(OBJ_TELEPHONY_COMMON) $(OBJ_MEGA65_LIBC) 
+
+bin65/unicode-font-test.llvm.prg:	src/telephony/unicode-font-test.c $(NATIVE_TELEPHONY_COMMON)
+	mkdir -p bin65
+
+	$(CC) -o bin65/unicode-font-test.llvm.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.c src/telephony/attr_tables.c $(SRC_TELEPHONY_COMMON) # $(SRC_MEGA65_LIBC_LLVM) 
+
 
 test:	$(LINUX_BINARIES)
 	src/telephony/linux/provision 

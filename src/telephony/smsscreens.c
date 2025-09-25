@@ -21,7 +21,7 @@ void textbox_erase_draft(void)
 {
   buffers.textbox.draft_len = 1;
   buffers.textbox.draft_cursor_position = 0;
-  lfill(buffers.textbox.draft,0x00,sizeof(buffers.textbox.draft));
+  lfill((uint32_t)buffers.textbox.draft,0x00,sizeof(buffers.textbox.draft));
   buffers.textbox.draft[0]='|';
 }
 
@@ -61,7 +61,7 @@ char sms_thread_display(unsigned int contact,
   if (last_message < message_count) message = last_message;
   else message = message_count;
 
-  lcopy(&message_count,0x12000L,2);
+  lcopy((uint32_t)&message_count,0x12000L,2);
 
   // Work out how many rows the message draft uses
   calc_break_points(buffers.textbox.draft,
