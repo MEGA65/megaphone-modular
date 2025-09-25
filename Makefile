@@ -19,6 +19,9 @@ CL=   $(COMPILER_PATH)/mos-c64-clang -DLLVM -mcpu=mos45gs02
 MAPFILE=
 HELPERS=        src/helper-llvm.c
 
+LDFLAGS += -Wl,-Map,bin65/unicode-font-test.map
+LDFLAGS += -Wl,-T,src/telephony/asserts.ld
+
 As the MEGA65 libc has also advanced considerably since I last worked on GRAZE, I also reworked how I pull that in:
 
 M65LIBC_INC=-I $(SRCDIR)/mega65-libc/include
@@ -151,7 +154,7 @@ bin65/unicode-font-test.cc65.prg:	src/telephony/unicode-font-test.c $(NATIVE_TEL
 bin65/unicode-font-test.llvm.prg:	src/telephony/unicode-font-test.c $(NATIVE_TELEPHONY_COMMON)
 	mkdir -p bin65
 
-	$(CC) -o bin65/unicode-font-test.llvm.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.c src/telephony/attr_tables.c $(SRC_TELEPHONY_COMMON) # $(SRC_MEGA65_LIBC_LLVM) 
+	$(CC) -o bin65/unicode-font-test.llvm.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.c src/telephony/attr_tables.c src/telephony/helper-llvm.s $(SRC_TELEPHONY_COMMON) $(LDFLAGS) # $(SRC_MEGA65_LIBC_LLVM) 
 
 
 test:	$(LINUX_BINARIES)
