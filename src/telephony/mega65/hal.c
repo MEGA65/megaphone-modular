@@ -1,5 +1,7 @@
 #include "includes.h"
 
+extern const unsigned char __stack; 
+
 unsigned char mountd81disk0(char *filename);
 unsigned char mountd81disk1(char *filename);
 
@@ -200,7 +202,7 @@ char mega65_chdir(char *dir)
 }
 
 void mega65_uart_print(const char *s)
-{
+{  
   while(*s) {
     asm volatile (
         "sta $D643\n\t"   // write A to the trap register
@@ -210,29 +212,54 @@ void mega65_uart_print(const char *s)
         : "v", "memory"   // CLV changes V; 'memory' blocks reordering across the I/O write
     );
 
-    usleep(1000);
+    // Wait a bit between chars
+    for(char n=0;n<2;n++) {
+      asm volatile(
+		   "ldx $D012\n"
+		   "1:\n"
+		   "cpx $D012\n"
+		   "beq 1b\n"
+		   :
+		   :
+		   : "x"   // X is clobbered
+		   );
+    }
     
     s++;
   }
+
 }
 
 void mega65_uart_printhex(const unsigned char v)
 {
-  char hex[3];
-  hex[0]=to_hex(v>>4);
-  hex[1]=to_hex(v&0xf);
-  hex[2]=0;
-  mega65_uart_print(hex);
+  char hex_str[3];
+
+  hex_str[0]=to_hex(v>>4);
+  hex_str[1]=to_hex(v&0xf);
+  hex_str[2]=0;
+  mega65_uart_print(&hex_str[0]);
 }
 
 void mega65_fail(const char *file, const char *function, const char *line, unsigned char error_code)
 {
+
+  POKE(0x0428,PEEK(0x02));
+  POKE(0x0429,PEEK(0x03));
+
   mega65_uart_print(file);
+
   mega65_uart_print(":");
+
   mega65_uart_print(line);
   mega65_uart_print(":");
   mega65_uart_print(function);
-  mega65_uart_print(":");
+  mega65_uart_print("():0x");
+
   mega65_uart_printhex(error_code);
   mega65_uart_print("\n\r");
+
+
+  while(PEEK(0xD610)) POKE(0xD610,0);
+  while(!PEEK(0xD610)) POKE(0xD021,PEEK(0xD012));
+
 }

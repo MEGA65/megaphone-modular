@@ -82,7 +82,6 @@ void fatal(const char *file, const char *function, int line, unsigned char r)
   }
 }
 
-
 #ifdef LLVM
 int
 #else
@@ -113,11 +112,11 @@ main(void)
     while(PEEK(0xD680)&0x3) continue;
     usleep(500000L);
   }
-
+  
   // Wait for initial key press
   while(!PEEK(0xD610)) continue;
   POKE(0xD610,0);
-  
+
   screen_setup_fonts();
 
   hal_init();

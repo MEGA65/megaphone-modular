@@ -40,8 +40,10 @@ void dump_bytes(char *msg, unsigned char *d, int len);
 
 char to_hex(unsigned char v);
 
-#define STRINGIFY(X) #X
-#define fail(X) mega65_fail(__FILE__,__FUNCTION__,STRINGIFY(__LINE__),X)
+#define STR_HELPER(x) #x
+#define STR(x)        STR_HELPER(x)
+
+#define fail(X) mega65_fail(__FILE__,__FUNCTION__,STR(__LINE__),X)
 void mega65_fail(const char *file, const char *function, const char *line, unsigned char error_code);
 
 #endif

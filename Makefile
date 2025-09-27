@@ -13,7 +13,7 @@ COPT_M65=	-Iinclude	-Isrc/telephony/mega65 -Isrc/mega65-libc/include
 
 COMPILER=llvm
 COMPILER_PATH=/usr/local/bin
-CC=   $(COMPILER_PATH)/mos-c64-clang -mcpu=mos45gs02 -Iinclude -Isrc/telephony/mega65 -Isrc/mega65-libc/include -DLLVM -fno-unroll-loops -ffunction-sections -fdata-sections -mllvm -inline-threshold=0 -fvisibility=hidden -Oz
+CC=   $(COMPILER_PATH)/mos-c64-clang -mcpu=mos45gs02 -Iinclude -Isrc/telephony/mega65 -Isrc/mega65-libc/include -DLLVM -fno-unroll-loops -ffunction-sections -fdata-sections -mllvm -inline-threshold=0 -fvisibility=hidden -O3
 
 LD=   $(COMPILER_PATH)/ld.lld
 CL=   $(COMPILER_PATH)/mos-c64-clang -DLLVM -mcpu=mos45gs02
@@ -163,9 +163,7 @@ bin65/unicode-font-test.cc65.prg:	src/telephony/unicode-font-test.c $(NATIVE_TEL
 
 bin65/unicode-font-test.llvm.prg:	src/telephony/unicode-font-test.c $(NATIVE_TELEPHONY_COMMON)
 	mkdir -p bin65
-
 	$(CC) -o bin65/unicode-font-test.llvm.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.c src/telephony/attr_tables.c src/telephony/helper-llvm.s src/telephony/mega65/hal.c src/telephony/mega65/hal_asm_llvm.s $(SRC_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS)
-
 
 test:	$(LINUX_BINARIES)
 	src/telephony/linux/provision 
