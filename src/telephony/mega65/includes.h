@@ -38,8 +38,11 @@ char sort_d81(char *name_in, char *name_out, unsigned char field_id);
 void dump_sector_buffer(char *m);
 void dump_bytes(char *msg, unsigned char *d, int len);
 
-char log_error_(const char *file,const char *func,const unsigned int line,const unsigned char error_code);
-#define fail(X) return X
+char to_hex(unsigned char v);
+
+#define STRINGIFY(X) #X
+#define fail(X) mega65_fail(__FILE__,__FUNCTION__,STRINGIFY(__LINE__),X)
+void mega65_fail(const char *file, const char *function, const char *line, unsigned char error_code);
 
 #endif
 

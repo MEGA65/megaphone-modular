@@ -6,6 +6,14 @@ unsigned char mountd81disk1(char *filename);
 void hal_init(void) {
 }
 
+char to_hex(unsigned char v)
+{
+  v&=0xf;
+  if (v<0xa) return v+'0';
+  if (v>0xf) return 0;
+  return 'A'+(v-0xa);
+}
+
 unsigned char de_bcd(unsigned char in)
 {
   return (in &0xf) + (in>>4)*10;  
@@ -191,3 +199,40 @@ char mega65_chdir(char *dir)
   return 0;
 }
 
+void mega65_uart_print(const char *s)
+{
+  while(*s) {
+    asm volatile (
+        "sta $D643\n\t"   // write A to the trap register
+        "clv"             // must be the very next instruction
+        :
+        : "a"(*s) // put 'error_code' into A before the block
+        : "v", "memory"   // CLV changes V; 'memory' blocks reordering across the I/O write
+    );
+
+    usleep(1000);
+    
+    s++;
+  }
+}
+
+void mega65_uart_printhex(const unsigned char v)
+{
+  char hex[3];
+  hex[0]=to_hex(v>>4);
+  hex[1]=to_hex(v&0xf);
+  hex[2]=0;
+  mega65_uart_print(hex);
+}
+
+void mega65_fail(const char *file, const char *function, const char *line, unsigned char error_code)
+{
+  mega65_uart_print(file);
+  mega65_uart_print(":");
+  mega65_uart_print(line);
+  mega65_uart_print(":");
+  mega65_uart_print(function);
+  mega65_uart_print(":");
+  mega65_uart_printhex(error_code);
+  mega65_uart_print("\n\r");
+}

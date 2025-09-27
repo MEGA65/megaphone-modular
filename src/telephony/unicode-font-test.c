@@ -63,6 +63,26 @@ char *num_to_str(unsigned int n,char *s)
   return start;
 }
 
+void fatal(const char *file, const char *function, int line, unsigned char r)
+{
+  POKE(0xD031,0);
+  POKE(0xD054,0);
+  POKE(0xD016,0xC8);
+  POKE(0xD011,0x1B);
+  POKE(0xD018,0x21);
+
+  POKE(0x0400,r);
+  lcopy((uint32_t)file,0x500,64);
+  lcopy((uint32_t)function,0x600,64);
+  POKE(0x0401,line);
+  POKE(0x0402,line>>8);
+  
+  while(1) {
+    POKE(0xD020,PEEK(0xD012));
+  }
+}
+
+
 #ifdef LLVM
 int
 #else
@@ -77,12 +97,13 @@ main(void)
   unsigned char old_draft_line_count;
   unsigned char temp;
   unsigned int contact_ID;
+  unsigned char r;
   
   mega65_io_enable();
-  
-  screen_setup();
-  screen_clear();
 
+  screen_setup();  
+  screen_clear();    
+  
   generate_rgb332_palette();
   
   // Make sure SD card is idle
@@ -93,10 +114,14 @@ main(void)
     usleep(500000L);
   }
 
+  // Wait for initial key press
+  while(!PEEK(0xD610)) continue;
+  POKE(0xD610,0);
+  
   screen_setup_fonts();
 
   hal_init();
-
+  
   contact_ID = 3;
   
   position = -1;
@@ -115,7 +140,8 @@ main(void)
       textbox_erase_draft();
       
       // Mount contact D81s, so that we can retreive draft
-      mount_contact_qso(contact_ID);
+      r = mount_contact_qso(contact_ID);
+      if (r) fatal(__FILE__,__FUNCTION__,__LINE__,r);
       if (!erase_draft) {
 	// Read last record in disk to get any saved draft
 	read_record_by_id(0,USABLE_SECTORS_PER_DISK -1,buffers.textbox.draft);

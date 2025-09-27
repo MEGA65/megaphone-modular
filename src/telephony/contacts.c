@@ -32,22 +32,15 @@ char build_contact(unsigned char buffer[RECORD_DATA_SIZE],unsigned int *bytes_us
   return 0;
 }
 
-char to_hex(unsigned char v)
-{
-  v&=0xf;
-  if (v<0xa) return v+'0';
-  if (v>0xf) return 0;
-  return 'A'+(v-0xa);
-}
-
 char mount_contact_qso(unsigned int contact)
 {
   unsigned char r;
-  char hex[3];
+  char hex[2];
   if (mega65_cdroot()) fail(9);
   if (mega65_chdir("PHONE")) fail(1);
   if (mega65_chdir("THREADS")) fail(2);
   hex[0]=to_hex(contact>>12);
+  hex[0]='?';
   hex[1]=0;
   if (mega65_chdir(hex)) fail(3);
   hex[0]=to_hex(contact>>8);

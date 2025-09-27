@@ -20,13 +20,18 @@ char screen_setup_fonts(void)
 {
   char err=0;
   unsigned char i;
-  // Open the fonts
+  // Open the fonts    
+
   for(i=0;i<NUM_FONTS;i++) {
+
     if (shopen(font_files[i],7,&fonts[i])) {
       //      printf("ERROR: Failed to open font '%s'\n", font_files[i]);
       err++;
     }
+
   }
+  
+
   return err;
 }
 
