@@ -55,7 +55,17 @@ struct function_table {
   const char *function;
 };
 
+void dump_backtrace(void);
+
 #endif
 
 extern unsigned char tof_r;
 #define try_or_fail(X) if ((tof_r=X)!=0) fail(tof_r)
+void mega65_uart_print(const char *s);
+void mega65_uart_printhex(const unsigned char v);
+void mega65_uart_printptr(const void *v);
+void mega65_uart_printhex16(const uint16_t v);
+
+#define CHECKPOINT(X) { mega65_uart_print(__FILE__); mega65_uart_print(":"); mega65_uart_printhex16(__LINE__); mega65_uart_print(":"); mega65_uart_print(__FUNCTION__); mega65_uart_print(":"); mega65_uart_print(X); mega65_uart_print("\n\r"); }
+#define CHECKPOINT_WAIT(X) { CHECKPOINT(X); while(PEEK(0xD610)) POKE(0xD610,0); while(!PEEK(0xD610)) POKE(0xD020,PEEK(0xD020)+1); POKE(0xD610,0); }
+

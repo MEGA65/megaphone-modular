@@ -8,8 +8,6 @@ extern const unsigned char __stack;
 #include "function_table.c"
 #endif
 
-void dump_backtrace(void);
-
 unsigned char mountd81disk0(char *filename);
 unsigned char mountd81disk1(char *filename);
 
@@ -210,8 +208,6 @@ char mega65_chdir(char *dir)
   return chdir(dir);
 }
 
-#ifdef WITH_BACKTRACE
-
 __attribute__((no_instrument_function))
 void mega65_uart_print(const char *s)
 {  
@@ -225,7 +221,7 @@ void mega65_uart_print(const char *s)
     );
 
     // Wait a bit between chars
-    for(char n=0;n<2;n++) {
+    for(int n=0;n<2;n++) {
       asm volatile(
 		   "ldx $D012\n"
 		   "1:\n"
@@ -260,6 +256,16 @@ void mega65_uart_printptr(const void *v)
   mega65_uart_printhex(((unsigned int)v)>>8);
   mega65_uart_printhex(((unsigned int)v));
 }
+
+__attribute__((no_instrument_function))
+void mega65_uart_printhex16(const uint16_t v)
+{
+  mega65_uart_print("0x");
+  mega65_uart_printhex(((unsigned int)v)>>8);
+  mega65_uart_printhex(((unsigned int)v));
+}
+
+#ifdef WITH_BACKTRACE
 
 __attribute__((no_instrument_function))
 void mega65_fail(const char *file, const char *function, const char *line, unsigned char error_code)

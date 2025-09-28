@@ -131,7 +131,6 @@ void screen_setup(void)
   POKE(0xD025,0x0B); // Sprite MCM 0 = dark grey 
   POKE(0xD026,0x06); // Sprite MCM 1 = blue
 
-  
 }
 
 char draw_scrollbar(unsigned char sprite_num,
