@@ -60,3 +60,8 @@ mountd81disk1:
 	phx
 	jmp do_the_mount
 	
+
+	;;  Ensure Z is cleared on entry	
+	.section .init.000,"ax",@progbits
+	ldz #0			
+	cld			; Because I'm really paranoid
