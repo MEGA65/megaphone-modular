@@ -171,6 +171,7 @@ char mount_d81(char *filename, unsigned char drive_id)
   if (r==1) {
     return 0;
   } else {
+    fail(r);
     return 2;
   }
   

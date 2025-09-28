@@ -1,13 +1,13 @@
 	.global mountd81disk0,mountd81disk1
-
-	ptr1 = $fb
+	.type  mountd81disk0,@function
 	
-cc65_copy_ptr1_string_to_0100:	
+llvm_copy_arg1_to_0100:	
     ;; Copy file name
-	phy
+	phy	
+	
 	ldy #0
 NameCopyLoop:
-	lda (ptr1),y
+	lda (__rc2),y
 	sta $0100,y
 	iny
 	cmp #0
@@ -27,35 +27,18 @@ setname_0100:
 	lda #$ff
 setname_ok:
 	rts
-	
-
-dmalist_copysectorbuffer:
-	;; Copy $FFD6E00 - $FFD6FFF down to low memory 
-	;; MEGA65 Enhanced DMA options
-        .byte $0A  ;; Request format is F018A
-        .byte $80,$FF ;; Source is $FFxxxxx
-        .byte $81,$00 ;; Destination is $FF
-        .byte $00  ;; No more options
-        ;; F018A DMA list
-        ;; (MB offsets get set in routine)
-        .byte $00 ;; copy + last request in chain
-        .word $0200 ;; size of copy is 512 bytes
-        .word $6E00 ;; starting at $6E00
-        .byte $0D   ;; of bank $D
-copysectorbuffer_destaddr:	
-        .word $8000 ;; destination address is $8000
-        .byte $00   ;; of bank $0
-        .word $0000 ;; modulo (unused)
 
 mountd81disk0:
-	;; Get pointer to file name
-	sta ptr1+0
-	stx ptr1+1	
-	jsr cc65_copy_ptr1_string_to_0100
-	jsr setname_0100	
-
-	;; Actually call mount
+	;; Mount on drive 0
 	ldx #0
+	phx
+do_the_mount:
+	;; Get pointer to file name
+	jsr llvm_copy_arg1_to_0100
+	jsr setname_0100	
+	
+	;; Do the actual mount
+	plx
 	lda #$4a
 	sta $d640
 	clv
@@ -66,22 +49,14 @@ success:
 	rts
 
 fail:
-	lda #$ff	
+	;; Return HYPPO DOS error code
+	lda #$38
+	sta $d640
+	nop
 	rts
 
 mountd81disk1:
-	;; Get pointer to file name
-	sta ptr1+0
-	stx ptr1+1	
-	jsr cc65_copy_ptr1_string_to_0100
-	jsr setname_0100	
-
-	;; Actually call mount
 	ldx #1
-	lda #$4a
-	sta $d640
-	clv
-	ldx #$00
-	bcc fail
-	bcs success
+	phx
+	jmp do_the_mount
 	

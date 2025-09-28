@@ -40,7 +40,6 @@ char mount_contact_qso(unsigned int contact)
   if (mega65_chdir("PHONE")) fail(1);
   if (mega65_chdir("THREADS")) fail(2);
   hex[0]=to_hex(contact>>12);
-  hex[0]='?';
   hex[1]=0;
   if (mega65_chdir(hex)) fail(3);
   hex[0]=to_hex(contact>>8);
@@ -54,6 +53,7 @@ char mount_contact_qso(unsigned int contact)
   if (mega65_chdir(hex)) fail(6);
 
   if ((r=mount_d81("MESSAGES.D81",0))!=0) {
+    fail(r);
     lpoke(0x12003L,r);
     fail(10);
   }

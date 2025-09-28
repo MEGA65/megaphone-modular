@@ -72,7 +72,11 @@ success:
 	rts
 
 fail:
-	lda #$ff	
+	;; Return HYPPO DOS error code
+	lda #$38
+	sta $d640
+	nop
+
 	rts
 
 _mountd81disk1:
