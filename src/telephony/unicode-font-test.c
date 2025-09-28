@@ -97,12 +97,17 @@ main(void)
   unsigned char temp;
   unsigned int contact_ID;
   unsigned char r;
+
+#ifdef LLVM
+  // GO64 can leave Z register non-zero, which LLVM doesn't expect.  
+  __asm__ volatile ("ldz #0");
+#endif
   
   mega65_io_enable();
 
   screen_setup();  
   screen_clear();    
-  
+
   generate_rgb332_palette();
   
   // Make sure SD card is idle
@@ -112,7 +117,7 @@ main(void)
     while(PEEK(0xD680)&0x3) continue;
     usleep(500000L);
   }
-  
+
   // Wait for initial key press
   while(!PEEK(0xD610)) continue;
   POKE(0xD610,0);
@@ -128,7 +133,7 @@ main(void)
   redraw_draft = 1;
   reload_contact = 1;
   erase_draft = 0;
-  
+
   while(1) {
     unsigned int first_message_displayed;
 
