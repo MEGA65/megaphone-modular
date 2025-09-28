@@ -20,7 +20,6 @@ CC+=	-g -finstrument-functions -DWITH_BACKTRACE
 
 LD=   $(COMPILER_PATH)/ld.lld
 CL=   $(COMPILER_PATH)/mos-c64-clang -DLLVM -mcpu=mos45gs02
-MAPFILE=
 HELPERS=        src/helper-llvm.c
 
 LDFLAGS += -Wl,-Map,bin65/unicode-font-test.map

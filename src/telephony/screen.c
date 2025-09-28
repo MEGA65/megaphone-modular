@@ -554,7 +554,7 @@ char calc_break_points(unsigned char *str,
 
   if (!str) return 3;
   if (!*str) return 3;
-  
+
   r = string_render_analyse(str, font,
 			    &buffers.textbox.len,
 			    buffers.textbox.pixel_widths,
@@ -573,14 +573,16 @@ char calc_break_points(unsigned char *str,
   best_break_cost=0xfff;
   best_break_s=s;
   last_break_s=s;
-  
+
   line_start = s;
   line_end = s;
-
+  
   if (r) return r;
 
   buffers.textbox.line_count=0;
+  
   while(*s) {
+    
     unsigned long cp = utf8_next_codepoint(&s);
 
     break_required=0;

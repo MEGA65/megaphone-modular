@@ -270,10 +270,6 @@ void mega65_uart_printhex16(const uint16_t v)
 __attribute__((no_instrument_function))
 void mega65_fail(const char *file, const char *function, const char *line, unsigned char error_code)
 {
-
-  POKE(0x0428,PEEK(0x02));
-  POKE(0x0429,PEEK(0x03));
-
   mega65_uart_print(file);
 
   mega65_uart_print(":");
@@ -306,6 +302,19 @@ static uint8_t depth, sp;
 __attribute__((no_instrument_function))
 void __cyg_profile_func_enter(void) {
   if (depth>=MAX_BT) depth--;
+
+  uint8_t z;
+  __asm__ volatile("tza"         // Z -> A
+		   : "=a"(z)      // output: A goes into 'z'
+		   :              // no inputs
+		   : "cc");       // flags changed by TZA
+  if (z) {
+    POKE(0xD02f,'G');
+    POKE(0xD02f,'S');
+    mega65_uart_print("Z != $00\n\r");    
+    dump_backtrace();
+    while(1) continue;
+  }
   
   // Get SPL into sp variable declared above.
   __asm__ volatile ("tsx" : "=x"(sp));
@@ -355,4 +364,54 @@ void dump_backtrace(void) {
     mega65_uart_print("\n\r");
   } 
 }
+
+void nmi_catcher(void)
+{
+    uint8_t a,x,y,p,s, pcl, pch;
+    uint16_t pc_after, brk_addr, sp_before;
+
+    // Save A, X, Y; read S, saved PCL/PCH/P from the stack frame
+    __asm__ volatile ("tsx\n\ttxa" : "=a"(s) : : "x");          // get S (post-push)
+    
+    __asm__ volatile ("lda $0103,x" : "=a"(a)   : : "x","memory");
+    __asm__ volatile ("lda $0102,x" : "=a"(x)   : : "x","memory");
+    __asm__ volatile ("lda $0101,x" : "=a"(y)   : : "x","memory");
+    __asm__ volatile ("lda $0104,x" : "=a"(p)   : : "x","memory");
+    __asm__ volatile ("lda $0105,x" : "=a"(pcl) : : "x","memory");
+    __asm__ volatile ("lda $0106,x" : "=a"(pch) : : "x","memory");       
+    
+    pc_after  = (uint16_t)((pch << 8) | pcl);
+    brk_addr  = pc_after - 2;             // BRK opcode address
+    sp_before = (uint8_t)(s + 3 + 3);         // SP value before the CPU's pushes
+
+    mega65_uart_print(">>>\r\n\n>>> NMI/BRK triggered.\r\n");
+
+    mega65_uart_print(" A:"); mega65_uart_printhex(a);
+    mega65_uart_print(" X:"); mega65_uart_printhex(x);
+    mega65_uart_print(" Y:"); mega65_uart_printhex(y);
+    mega65_uart_print(" P:"); mega65_uart_printhex(p);
+    mega65_uart_print(" S:"); mega65_uart_printhex(s);
+    mega65_uart_print("\r\n");
+
+    // Find function in table
+    unsigned int func_num = 0;
+    while(func_num<(function_table_count-1) && function_table[func_num+1].addr < brk_addr)
+      func_num++;
+
+    // Display offset from function
+    mega65_uart_print("  BRK source @ ");
+
+    mega65_uart_printhex16(brk_addr);
+    mega65_uart_print(" ");
+    mega65_uart_print(function_table[func_num].function);
+    mega65_uart_print("+");
+    mega65_uart_printptr((void*)(brk_addr - function_table[func_num].addr));
+
+    mega65_uart_print("\r\n");
+
+    dump_backtrace();
+    while (1) { /* halt */ }
+}
+
 #endif
+

@@ -56,6 +56,7 @@ struct function_table {
 };
 
 void dump_backtrace(void);
+void nmi_catcher(void);
 
 #endif
 

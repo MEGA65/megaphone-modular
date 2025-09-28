@@ -84,8 +84,6 @@ void fatal(const char *file, const char *function, int line, unsigned char r)
 
 #ifdef LLVM
 
-extern void __copy_zp_data(void);
-
 int
 #else
 void
@@ -102,15 +100,15 @@ main(void)
   unsigned char r;
   
   mega65_io_enable();
+
+  // Install NMI/BRK catcher
+  POKE(0x0316,(uint8_t)&nmi_catcher);
+  POKE(0x0317,((uint16_t)&nmi_catcher)>>8);
+  POKE(0x0318,(uint8_t)&nmi_catcher);
+  POKE(0x0319,((uint16_t)&nmi_catcher)>>8);
+  POKE(0xFFFE,(uint8_t)&nmi_catcher);
+  POKE(0xFFFF,((uint16_t)&nmi_catcher)>>8);
   
-#ifdef LLVM
-  // GO64 can leave Z register non-zero, which LLVM doesn't expect.  
-  __asm__ volatile ("ldz #0");
-
-  // MOS-LLVM doesn't seem to reliably call this
-  __copy_zp_data();
-#endif
-
   screen_setup();  
   screen_clear();    
 
@@ -123,10 +121,6 @@ main(void)
     while(PEEK(0xD680)&0x3) continue;
     usleep(500000L);
   }
-
-  // Wait for initial key press
-  while(!PEEK(0xD610)) continue;
-  POKE(0xD610,0);
 
   screen_setup_fonts();
 
