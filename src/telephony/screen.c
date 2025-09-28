@@ -24,7 +24,8 @@ char screen_setup_fonts(void)
 
   for(i=0;i<NUM_FONTS;i++) {
 
-    if (shopen(font_files[i],7,&fonts[i])) {
+    try_or_fail(shopen(font_files[i],7,&fonts[i]));
+    if (tof_r) {
       //      printf("ERROR: Failed to open font '%s'\n", font_files[i]);
       err++;
     }
@@ -290,15 +291,18 @@ void reset_glyph_cache(void)
 void load_glyph(int font, unsigned long codepoint, unsigned int cache_slot)
 {
   unsigned char glyph_flags;
-
+  unsigned long offset = codepoint<<8;
+  
 #if 0
   // XXX DEBUG show gradiant glyph
   for(glyph_flags=0;glyph_flags<255;glyph_flags++) glyph_buffer[glyph_flags]=glyph_flags;
   glyph_buffer[0xff]=codepoint&0x1f;
 #else
   // Seek to and load glyph from font in shared resources
-  shseek(&fonts[font],codepoint<<8,SEEK_SET);
-  shread(glyph_buffer,256,&fonts[font]);
+
+  try_or_fail(shseek(&fonts[font],codepoint<<8,SEEK_SET));  
+  try_or_fail(shread(glyph_buffer,256,&fonts[font]));
+  
 #endif
 
   // Extract glyph flags
@@ -325,6 +329,7 @@ void load_glyph(int font, unsigned long codepoint, unsigned int cache_slot)
   cached_codepoints[cache_slot]=codepoint;
   cached_fontnums[cache_slot]=font;
   cached_glyph_flags[cache_slot]=glyph_flags;
+
 }
 
 char pad_string_viewport(unsigned char x_glyph_start, unsigned char y_glyph, // Starting coordinates in glyphs
@@ -710,7 +715,7 @@ char string_render_analyse(unsigned char *str,
     ff = pick_font_by_codepoint(cp,font);
     
     glyph_count = lookup_glyph(ff, cp, &pixel_count, NULL);
-
+    
     if (pixel_widths) pixel_widths[o] = pixel_count;
     if (glyph_widths) glyph_widths[o] = glyph_count;
 
@@ -741,7 +746,7 @@ char string_render_analyse(unsigned char *str,
 unsigned char lookup_glyph(int font, unsigned long codepoint,unsigned char *pixels_used, unsigned int *glyph_id)
 {
   unsigned int i;
-
+  
   for(i=0;i<GLYPH_CACHE_SIZE;i++) {
     if (!cached_codepoints[i]) break;
     if (cached_codepoints[i]==codepoint&&cached_fontnums[i]==font) break;
@@ -764,7 +769,7 @@ unsigned char lookup_glyph(int font, unsigned long codepoint,unsigned char *pixe
   if (pixels_used) *pixels_used = cached_glyph_flags[i]&0x1f;
 
   if (glyph_id) *glyph_id = i;
-  
+
   // How many glyphs does it use?
   if (cached_glyph_flags[i]>8) return 2; else return 1;
 }
