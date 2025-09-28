@@ -40,11 +40,22 @@ void dump_bytes(char *msg, unsigned char *d, int len);
 
 char to_hex(unsigned char v);
 
+#ifdef WITH_BACKTRACE
 #define STR_HELPER(x) #x
 #define STR(x)        STR_HELPER(x)
 
 #define fail(X) mega65_fail(__FILE__,__FUNCTION__,STR(__LINE__),X)
 void mega65_fail(const char *file, const char *function, const char *line, unsigned char error_code);
+#else
+#define fail(X)
+#endif
+
+struct function_table {
+  const uint16_t addr;
+  const char *function;
+};
 
 #endif
 
+extern unsigned char tof_r;
+#define try_or_fail(X) if ((tof_r=X)!=0) fail(tof_r)

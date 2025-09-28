@@ -34,30 +34,28 @@ char build_contact(unsigned char buffer[RECORD_DATA_SIZE],unsigned int *bytes_us
 
 char mount_contact_qso(unsigned int contact)
 {
-  unsigned char r;
   char hex[2];
-  if (mega65_cdroot()) fail(9);
-  if (mega65_chdir("PHONE")) fail(1);
-  if (mega65_chdir("THREADS")) fail(2);
+
+  try_or_fail(mega65_cdroot());
+
+  try_or_fail(mega65_chdir("PHONE"));
+  try_or_fail(mega65_chdir("THREADS"));
+
   hex[0]=to_hex(contact>>12);
   hex[1]=0;
-  if (mega65_chdir(hex)) fail(3);
+  try_or_fail(mega65_chdir(hex));
   hex[0]=to_hex(contact>>8);
   hex[1]=0;
-  if (mega65_chdir(hex)) fail(4);
+  try_or_fail(mega65_chdir(hex));
   hex[0]=to_hex(contact>>4);
   hex[1]=0;
-  if (mega65_chdir(hex)) fail(5);
+  try_or_fail(mega65_chdir(hex));
   hex[0]=to_hex(contact>>0);
   hex[1]=0;
-  if (mega65_chdir(hex)) fail(6);
+  try_or_fail(mega65_chdir(hex));
 
-  if ((r=mount_d81("MESSAGES.D81",0))!=0) {
-    fail(r);
-    lpoke(0x12003L,r);
-    fail(10);
-  }
-  if (mount_d81("MSGINDEX.D81",1)) fail(8);
+  try_or_fail(mount_d81("MESSAGES.D81",0));
+  try_or_fail(mount_d81("MSGINDEX.D81",1));
 
   return 0;
 }

@@ -1,9 +1,18 @@
 #include "includes.h"
 
+unsigned char tof_r;
+
 extern const unsigned char __stack; 
+
+#ifdef WITH_BACKTRACE
+#include "function_table.c"
+#endif
+
+void dump_backtrace(void);
 
 unsigned char mountd81disk0(char *filename);
 unsigned char mountd81disk1(char *filename);
+
 
 void hal_init(void) {
 }
@@ -198,10 +207,12 @@ char mega65_cdroot(void)
 
 char mega65_chdir(char *dir)
 {
-  if (chdir(dir)) return 1;
-  return 0;
+  return chdir(dir);
 }
 
+#ifdef WITH_BACKTRACE
+
+__attribute__((no_instrument_function))
 void mega65_uart_print(const char *s)
 {  
   while(*s) {
@@ -231,6 +242,7 @@ void mega65_uart_print(const char *s)
 
 }
 
+__attribute__((no_instrument_function))
 void mega65_uart_printhex(const unsigned char v)
 {
   char hex_str[3];
@@ -241,6 +253,15 @@ void mega65_uart_printhex(const unsigned char v)
   mega65_uart_print(&hex_str[0]);
 }
 
+__attribute__((no_instrument_function))
+void mega65_uart_printptr(const void *v)
+{
+  mega65_uart_print("0x");
+  mega65_uart_printhex(((unsigned int)v)>>8);
+  mega65_uart_printhex(((unsigned int)v));
+}
+
+__attribute__((no_instrument_function))
 void mega65_fail(const char *file, const char *function, const char *line, unsigned char error_code)
 {
 
@@ -259,8 +280,73 @@ void mega65_fail(const char *file, const char *function, const char *line, unsig
   mega65_uart_printhex(error_code);
   mega65_uart_print("\n\r");
 
+  dump_backtrace();
 
   while(PEEK(0xD610)) POKE(0xD610,0);
   while(!PEEK(0xD610)) POKE(0xD021,PEEK(0xD012));
 
 }
+
+/*
+  Stack back-trace facility to help debug error locations.
+
+*/
+
+#define MAX_BT 32
+struct frame { const void *site, *stack_pointer; };
+static struct frame callstack[MAX_BT];
+static uint8_t depth, sp;
+
+__attribute__((no_instrument_function))
+void __cyg_profile_func_enter(void) {
+  if (depth>=MAX_BT) depth--;
+  
+  // Get SPL into sp variable declared above.
+  __asm__ volatile ("tsx" : "=x"(sp));
+  // Now convert that in
+  const uint8_t *stack_pointer = (void *)(0x0100 + sp);
+  
+  void *call_site = (void *)((*((uint16_t *)&stack_pointer[1])) - 1);
+  
+  callstack[depth] = (struct frame){ call_site, &__stack };
+  depth++;
+}
+
+__attribute__((no_instrument_function))
+void __cyg_profile_func_exit(void) {
+  if (depth) --depth; // simple, assumes well-nested calls
+}
+
+__attribute__((no_instrument_function))
+void dump_backtrace(void) {
+  // For each frame, either:
+  //  - print raw addresses, or
+  //  - call your on-target addr2line() to print file:line + function
+
+  mega65_uart_print("Backtrace (most recent call first):\n\r");
+  unsigned char d= depth-1;
+
+  for(unsigned char d = depth-1;d!=0xff;d--) {
+    mega65_uart_print("[");
+    mega65_uart_printhex(d);
+    mega65_uart_print("] ");
+
+    // Find function in table
+    unsigned int func_num = 0;
+    while(func_num<(function_table_count-1) && function_table[func_num+1].addr < (uint16_t)callstack[d].site)
+      func_num++;
+
+    // Display offset from function
+    mega65_uart_printptr(callstack[d].site);
+    mega65_uart_print(" ");
+    mega65_uart_print(function_table[func_num].function);
+    mega65_uart_print("+");
+    mega65_uart_printptr((void*)((uint16_t)callstack[d].site - function_table[func_num].addr));
+
+    // Show stack pointer
+    mega65_uart_print(", SP=");
+    mega65_uart_printptr(callstack[d].stack_pointer);
+    mega65_uart_print("\n\r");
+  } 
+}
+#endif

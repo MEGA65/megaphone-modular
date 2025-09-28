@@ -13,7 +13,10 @@ COPT_M65=	-Iinclude	-Isrc/telephony/mega65 -Isrc/mega65-libc/include
 
 COMPILER=llvm
 COMPILER_PATH=/usr/local/bin
-CC=   $(COMPILER_PATH)/mos-c64-clang -mcpu=mos45gs02 -Iinclude -Isrc/telephony/mega65 -Isrc/mega65-libc/include -DLLVM -fno-unroll-loops -ffunction-sections -fdata-sections -mllvm -inline-threshold=0 -fvisibility=hidden -O3
+CC=   $(COMPILER_PATH)/mos-c64-clang -mcpu=mos45gs02 -Iinclude -Isrc/telephony/mega65 -Isrc/mega65-libc/include -DLLVM -fno-unroll-loops -ffunction-sections -fdata-sections -mllvm -inline-threshold=0 -fvisibility=hidden -Oz -Wall -Wextra -Wtype-limits
+
+# Uncomment to include stacktraces on calls to fail()
+CC+=	-g -finstrument-functions -DWITH_BACKTRACE
 
 LD=   $(COMPILER_PATH)/ld.lld
 CL=   $(COMPILER_PATH)/mos-c64-clang -DLLVM -mcpu=mos45gs02
@@ -161,8 +164,14 @@ bin65/unicode-font-test.cc65.prg:	src/telephony/unicode-font-test.c $(NATIVE_TEL
 	$(CC65) $(COPT_M65) src/mega65-libc/src/hal.c
 	$(CL65) -o bin65/unicode-font-test.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.s src/telephony/attr_tables.s $(OBJ_TELEPHONY_COMMON) $(OBJ_MEGA65_LIBC) 
 
+# For backtrace support we have to compile twice: Once to generate the map file, from which we
+# can generate the function list, and then a second time, where we link that in.
 bin65/unicode-font-test.llvm.prg:	src/telephony/unicode-font-test.c $(NATIVE_TELEPHONY_COMMON)
 	mkdir -p bin65
+	rm -f src/telephony/mega65/function_table.c
+	echo "struct function_table function_table[]={}; int function_table_count=0;" > src/telephony/mega65/function_table.c
+	$(CC) -o bin65/unicode-font-test.llvm.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.c src/telephony/attr_tables.c src/telephony/helper-llvm.s src/telephony/mega65/hal.c src/telephony/mega65/hal_asm_llvm.s $(SRC_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS)
+	tools/function_table.py bin65/unicode-font-test.map src/telephony/mega65/function_table.c
 	$(CC) -o bin65/unicode-font-test.llvm.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.c src/telephony/attr_tables.c src/telephony/helper-llvm.s src/telephony/mega65/hal.c src/telephony/mega65/hal_asm_llvm.s $(SRC_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS)
 
 test:	$(LINUX_BINARIES)
