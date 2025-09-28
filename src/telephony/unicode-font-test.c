@@ -83,6 +83,9 @@ void fatal(const char *file, const char *function, int line, unsigned char r)
 }
 
 #ifdef LLVM
+
+extern void __copy_zp_data(void);
+
 int
 #else
 void
@@ -97,13 +100,16 @@ main(void)
   unsigned char temp;
   unsigned int contact_ID;
   unsigned char r;
-
+  
+  mega65_io_enable();
+  
 #ifdef LLVM
   // GO64 can leave Z register non-zero, which LLVM doesn't expect.  
   __asm__ volatile ("ldz #0");
+
+  // MOS-LLVM doesn't seem to reliably call this
+  __copy_zp_data();
 #endif
-  
-  mega65_io_enable();
 
   screen_setup();  
   screen_clear();    
