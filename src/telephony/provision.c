@@ -10,9 +10,14 @@
   lack of working MKDIR hypervisor trap.
 */
 
+#define MAX_CONTACTS 1600
+
+// XXX - Make testing faster for now
+#undef MAX_CONTACTS
+#define MAX_CONTACTS 100  
+
 int main(int argc,char **argv)
 {
-  #define MAX_CONTACTS 1600
   unsigned short contact;
   char hex[2];
 
@@ -70,7 +75,7 @@ int main(int argc,char **argv)
   mega65_chdir("PHONE");
   mount_d81("CONTACT0.D81",0);
   read_sector(0,1,0);
-  unsigned int record_number = record_allocate_next( (unsigned char *)SECTOR_BUFFER_ADDRESS );
+  unsigned int record_number = record_allocate_next( SECTOR_BUFFER_ADDRESS );
   if (record_number!=1) {
     fprintf(stderr,"FATAL: FAiled to allocate contact 1 for UNKNOWN\n");
     exit(-1);
@@ -101,9 +106,6 @@ int main(int argc,char **argv)
   // And scratch disk image used during sorting
   create_d81("SCRATCH.D81");
 
-  // XXX - Make testing faster for now
-#define MAX_CONTACTS 100
-  
   for(contact=0;contact<MAX_CONTACTS;contact++) {
 
     printf("Populating directory structure for contact #%d\n",contact);
