@@ -173,10 +173,11 @@ char sms_log_to_contact(unsigned int contact_ID,
   index_buffer_clear();
   index_buffer_update(message,strlen((char *)message));
   index_update_from_buffer(1,record_number);
-  
+
   buffers_unlock(LOCK_TELEPHONY);    
+
+  // XXX Removing this POKE causes a linker error
+  POKE(0xFFFF,1);
   
-  POKE(0xF801,1);
-    
   return 0;
 }
