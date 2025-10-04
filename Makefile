@@ -172,6 +172,7 @@ bin65/unicode-font-test.llvm.prg:	src/telephony/unicode-font-test.c $(NATIVE_TEL
 	$(CC) -o bin65/unicode-font-test.llvm.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.c src/telephony/attr_tables.c src/telephony/helper-llvm.s src/telephony/mega65/hal.c src/telephony/mega65/hal_asm_llvm.s $(SRC_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS)
 	tools/function_table.py bin65/unicode-font-test.map src/telephony/mega65/function_table.c
 	$(CC) -o bin65/unicode-font-test.llvm.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.c src/telephony/attr_tables.c src/telephony/helper-llvm.s src/telephony/mega65/hal.c src/telephony/mega65/hal_asm_llvm.s $(SRC_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS)
+	llvm-objdump -drS -s --print-imm-hex bin65/unicode-font-test.llvm.prg.elf >bin65/unicode-font-test.llvm.dump
 
 test:	$(LINUX_BINARIES)
 	src/telephony/linux/provision 
