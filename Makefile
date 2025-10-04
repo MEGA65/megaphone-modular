@@ -72,12 +72,11 @@ SRC_TELEPHONY_COMMON=	src/telephony/d81.c \
 			src/telephony/buffers.c \
 			src/telephony/search.c \
 			src/telephony/sms.c \
-			src/telephony/screen.c \
-			src/telephony/smsscreens.c \
 			src/telephony/slab.c
 
 NATIVE_TELEPHONY_COMMON=	$(SRC_TELEPHONY_COMMON) \
 			src/telephony/screen.c \
+			src/telephony/smsscreens.c \
 
 
 OBJ_TELEPHONY_COMMON=	src/telephony/d81.s \
@@ -169,9 +168,9 @@ bin65/unicode-font-test.llvm.prg:	src/telephony/unicode-font-test.c $(NATIVE_TEL
 	mkdir -p bin65
 	rm -f src/telephony/mega65/function_table.c
 	echo "struct function_table function_table[]={}; int function_table_count=0; const unsigned char __wp_regs[9];" > src/telephony/mega65/function_table.c
-	$(CC) -o bin65/unicode-font-test.llvm.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.c src/telephony/attr_tables.c src/telephony/helper-llvm.s src/telephony/mega65/hal.c src/telephony/mega65/hal_asm_llvm.s $(SRC_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS)
+	$(CC) -o bin65/unicode-font-test.llvm.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.c src/telephony/attr_tables.c src/telephony/helper-llvm.s src/telephony/mega65/hal.c src/telephony/mega65/hal_asm_llvm.s $(NATIVE_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS)
 	tools/function_table.py bin65/unicode-font-test.map src/telephony/mega65/function_table.c
-	$(CC) -o bin65/unicode-font-test.llvm.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.c src/telephony/attr_tables.c src/telephony/helper-llvm.s src/telephony/mega65/hal.c src/telephony/mega65/hal_asm_llvm.s $(SRC_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS)
+	$(CC) -o bin65/unicode-font-test.llvm.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.c src/telephony/attr_tables.c src/telephony/helper-llvm.s src/telephony/mega65/hal.c src/telephony/mega65/hal_asm_llvm.s $(NATIVE_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS)
 	llvm-objdump -drS -s --print-imm-hex bin65/unicode-font-test.llvm.prg.elf >bin65/unicode-font-test.llvm.dump
 
 test:	$(LINUX_BINARIES)
