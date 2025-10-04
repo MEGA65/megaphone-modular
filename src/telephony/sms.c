@@ -58,8 +58,6 @@ char sms_send_to_contact(unsigned int contact_ID, unsigned char *message)
   unsigned int len;
   unsigned char r;
   
-  POKE(0xf802,1);
-  
   // Mount contact D81 to get phone number of this contact
   mega65_cdroot();
   mega65_chdir("PHONE");
@@ -69,18 +67,12 @@ char sms_send_to_contact(unsigned int contact_ID, unsigned char *message)
   bcdDate = mega65_bcddate();
   bcdTime = mega65_bcdtime();
 
-  POKE(0xf803,1);
-  
   r=read_record_by_id(contact_ID,0,buffers.textbox.contact_record);
-  POKE(0xf806,r);
   if (r) fail(1);
-  POKE(0xf804,1);
 
   phoneNumber = find_field(buffers.textbox.contact_record,RECORD_DATA_SIZE,FIELD_PHONENUMBER,&len);
   if (!phoneNumber) phoneNumber=(unsigned char *)"UNKNOWN";
 
-  POKE(0xf805,1);
-  
   return sms_log_to_contact(contact_ID,phoneNumber,bcdDate, bcdTime,
 			    message,SMS_DIRECTION_TX);
   
@@ -95,8 +87,6 @@ char sms_log_to_contact(unsigned int contact_ID,
  
   unsigned int record_number = 0;
 
-  POKE(0xF800,1);
-  
   // 2. Retreive that contact (or if no such contact, then use the "UNKNOWN NUMBERS" pseudo-contact?)
   // contact_find_by_phonenumber() will return contact 1 always
 #ifdef CROSS_COMPILED
@@ -185,7 +175,8 @@ char sms_log_to_contact(unsigned int contact_ID,
   index_update_from_buffer(1,record_number);
   
   buffers_unlock(LOCK_TELEPHONY);    
+  
   POKE(0xF801,1);
-
+    
   return 0;
 }
