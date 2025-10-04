@@ -1,5 +1,7 @@
 #include "includes.h"
 #include <string.h>
+#include <time.h>
+#include <sys/time.h>
 
 #include "buffers.h"
 #include "search.h"
@@ -101,15 +103,33 @@ int main(int argc,char **argv)
 	    unsigned char *bodyText = find_field(record,RECORD_DATA_SIZE,FIELD_BODYTEXT,&bodyTextLen);
 	    unsigned char *phoneNumber = find_field(record,RECORD_DATA_SIZE,FIELD_PHONENUMBER,&phoneNumberLen);
 	    unsigned char *messageDirection = find_field(record,RECORD_DATA_SIZE,FIELD_MESSAGE_DIRECTION,&messageDirectionLen);
-	    unsigned char *timestampAztecTime = find_field(record,RECORD_DATA_SIZE,FIELD_TIMESTAMP,&timestampLen);
+	    unsigned char *bcdTime = find_field(record,RECORD_DATA_SIZE,FIELD_BCDTIME,&timestampLen);
+	    unsigned char *bcdDate = find_field(record,RECORD_DATA_SIZE,FIELD_BCDDATE,&timestampLen);
 
 	    unsigned long timestampAztecTimeSec =0;
-	    timestampAztecTimeSec |= timestampAztecTime[0]<<0;
-	    timestampAztecTimeSec |= timestampAztecTime[1]<<8;
-	    timestampAztecTimeSec |= timestampAztecTime[2]<<16;
-	    timestampAztecTimeSec |= timestampAztecTime[3]<<24;
-	    
-	    if (phoneNumber||bodyText||timestampAztecTime) {
+
+	    struct tm t;
+	    t.tm_year = 2012 - 1900;
+	    t.tm_mon = 12 - 1;
+	    t.tm_mday = 1;
+	    t.tm_hour = 0;
+	    t.tm_min = 0;
+	    t.tm_sec = 0;
+	    if (bcdDate) {
+	      t.tm_year = de_bcd(bcdDate[2]) + 100* de_bcd(bcdDate[3]) - 1900;
+	      t.tm_mon  = de_bcd(bcdDate[1]) - 1;
+	      t.tm_mday = de_bcd(bcdDate[0]);
+	    }
+	    if (bcdTime) {
+	      t.tm_hour = de_bcd(bcdTime[2]);
+	      t.tm_min  = de_bcd(bcdTime[1]);
+	      t.tm_sec  = de_bcd(bcdTime[0]);
+	    }
+
+	    timestampAztecTimeSec = mktime(&t);
+	    timestampAztecTimeSec -= 1356048000L;
+	    	    
+	    if (phoneNumber||bodyText||bcdTime||bcdDate) {
 	      if (messageDirection[0]==SMS_DIRECTION_TX)
 		printf("MESSAGETX:");
 	      else

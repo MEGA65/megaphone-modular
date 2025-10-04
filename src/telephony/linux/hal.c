@@ -7,8 +7,12 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/time.h>
+#include <time.h>
 
 int verbose = 0;
+
+unsigned char tof_r;
 
 unsigned char sector_buffer[512];
 unsigned char work_buffer[WORK_BUFFER_SIZE];
@@ -29,6 +33,19 @@ void hal_init(void)
 
   // Start with shared data structure unlocked
   buffers.lock = LOCK_FREE;
+}
+
+char to_hex(unsigned char v)
+{
+  v&=0xf;
+  if (v<0xa) return v+'0';
+  if (v>0xf) return 0;
+  return 'A'+(v-0xa);
+}
+
+unsigned char de_bcd(unsigned char in)
+{
+  return (in &0xf) + (in>>4)*10;  
 }
 
 char mega65_mkdir(char *dir)
@@ -60,6 +77,55 @@ char mega65_chdir(char *dir)
   }
   return r;
 }
+
+uint16_t to_bcd(unsigned int in)
+{
+  return (in%10) + 0x10 * ((in/10)%10) + 0x100 * ((in/100)%10) + 0x1000 * ((in/1000)%10);
+}
+
+unsigned long mega65_bcddate(void)
+{
+  // Format is 32-bit packed time.
+
+  // Naive would be:
+  // YEAR  = 16 bits BCD!
+  // MONTH = 8 bits BCD!
+  // DAY   = 8 bits BCD!
+
+  // Format is 32-bit BCD packed time (24 hour time)
+
+  time_t now;
+  struct tm *local;
+  time(&now);
+  local = localtime(&now);
+ 
+  unsigned long bcd_year, bcd_month, bcd_day;
+
+  bcd_year = to_bcd(local->tm_year + 1900);
+  bcd_month = to_bcd(local->tm_mon + 1);
+  bcd_day = to_bcd(local->tm_mday);
+  
+  return (((unsigned long)bcd_year)<<16) + (bcd_month << 8) + bcd_day;
+}
+
+unsigned long mega65_bcdtime(void)
+{ 
+  // Format is 32-bit BCD packed time (24 hour time)
+
+  time_t now;
+  struct tm *local;
+  time(&now);
+  local = localtime(&now);
+ 
+  unsigned long bcd_hour, bcd_min, bcd_sec;
+
+  bcd_hour = to_bcd(local->tm_hour);
+  bcd_min = to_bcd(local->tm_min);
+  bcd_sec = to_bcd(local->tm_sec);
+    
+  return (((unsigned long)(bcd_hour))<<16) + (bcd_min<<8) + bcd_sec;
+}
+
 
 
 void lpoke(unsigned long long addr, unsigned char val)
