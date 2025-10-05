@@ -87,11 +87,15 @@ char write_sector(unsigned char drive_id, unsigned char track, unsigned char sec
   mega65_uart_printhex(drive_id);
   mega65_uart_print(" is ");
   mega65_uart_print(cwd);
-  mega65_uart_print(drive0file);
+  switch(drive_id) {
+  case 0:  mega65_uart_print(drive0file); break;
+  case 1:  mega65_uart_print(drive1file); break;
+  default: mega65_uart_print("<illegal drive>"); break;
+  }
   mega65_uart_print("\r\n");
   
   dump_bytes("Writing sector data beginning with", SECTOR_BUFFER_ADDRESS,16);
-  
+
   // Select FDC rather than SD card sector buffer
   POKE(0xD689L,PEEK(0xD689L)&0x7f);
   
@@ -106,6 +110,7 @@ char write_sector(unsigned char drive_id, unsigned char track, unsigned char sec
   
   // Select and start drive 
   POKE(0xD080L,
+       drive_id + 
        0x60 + // Motor, select
        ((sector>10)?0x00:0x08) // Side select based on sector number
        );
