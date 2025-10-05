@@ -331,7 +331,7 @@ void __cyg_profile_func_enter(void) {
   // Now convert that in
   const uint8_t *stack_pointer = (void *)(0x0100 + sp);
   
-  void *call_site = (void *)((*((uint16_t *)&stack_pointer[1])) - 1);
+  void *call_site = (void *)((*((uint16_t *)&stack_pointer[1])) - 2);
   
   callstack[depth] = (struct frame){ call_site, &__stack };
   depth++;
