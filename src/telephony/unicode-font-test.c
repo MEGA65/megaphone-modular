@@ -174,8 +174,11 @@ main(void)
       // Don't send empty messages (or that just consist of the cursor)
       if (buffers.textbox.draft_len<2) break;
 
+      // Remove cursor before sending
+      textbox_hide_cursor();
+
       buffers_unlock(LOCK_TEXTBOX);
-      // XXX Remove cursor first!
+
       // XXX Display busy status
       sms_send_to_contact(contact_ID,buffers.textbox.draft);
       buffers_unlock(LOCK_TELEPHONY);      

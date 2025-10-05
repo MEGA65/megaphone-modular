@@ -19,10 +19,27 @@ void sms_thread_clear_screen_region(unsigned char first_row, unsigned char last_
 
 void textbox_erase_draft(void)
 {
+  buffers_lock(LOCK_TEXTBOX);
   buffers.textbox.draft_len = 1;
   buffers.textbox.draft_cursor_position = 0;
   lfill((uint32_t)buffers.textbox.draft,0x00,sizeof(buffers.textbox.draft));
   buffers.textbox.draft[0]='|';
+}
+
+void textbox_hide_cursor(void)
+{
+  buffers_lock(LOCK_TEXTBOX);
+  for(int i=0;i<buffers.textbox.draft_len;i++) {
+    if (buffers.textbox.draft[i]=='|') {
+      lcopy((unsigned long) &buffers.textbox.draft[i+1],
+	    (unsigned long) &buffers.textbox.draft[i],
+	    buffers.textbox.draft_len - i);
+      if (buffers.textbox.draft_len>0) buffers.textbox.draft_len--;
+      i--;
+    }
+  }
+  buffers.textbox.draft[buffers.textbox.draft_len]=0;
+  return;
 }
 
 char sms_thread_display(unsigned int contact,
