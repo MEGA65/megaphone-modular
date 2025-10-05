@@ -30,7 +30,7 @@ void hal_init(void) {
   while(PEEK(0xD610)) POKE(0xD610,0);
 }
 
-unsigned int strlen(char *s)
+unsigned int mega65_strlen(char *s)
 {
   uint16_t len=0;
   while (*s) {
@@ -83,6 +83,7 @@ unsigned long mega65_bcdtime(void)
 char write_sector(unsigned char drive_id, unsigned char track, unsigned char sector)
 {
 
+#if 0
   mega65_uart_print("Image in drive ");
   mega65_uart_printhex(drive_id);
   mega65_uart_print(" is ");
@@ -95,7 +96,8 @@ char write_sector(unsigned char drive_id, unsigned char track, unsigned char sec
   mega65_uart_print("\r\n");
   
   dump_bytes("Writing sector data beginning with", SECTOR_BUFFER_ADDRESS,16);
-
+#endif
+  
   // Select FDC rather than SD card sector buffer
   POKE(0xD689L,PEEK(0xD689L)&0x7f);
   
@@ -210,19 +212,19 @@ char mount_d81(char *filename, unsigned char drive_id)
 {
   unsigned char r;
 
-  if (strlen(filename)>=MAX_PATH_LEN) { fail(3); return 3; }
+  if (mega65_strlen(filename)>=MAX_PATH_LEN) { fail(3); return 3; }
   
   switch(drive_id) {
   case 0:
     r=mountd81disk0(filename);
     if (r==1) {
-      lcopy((unsigned long)filename,(unsigned long) drive0file, strlen(filename)+1);
+      lcopy((unsigned long)filename,(unsigned long) drive0file, mega65_strlen(filename)+1);
     }
     break;
   case 1:
     r=mountd81disk1(filename);
     if (r==1) {
-      lcopy((unsigned long)filename,(unsigned long) drive1file, strlen(filename)+1);
+      lcopy((unsigned long)filename,(unsigned long) drive1file, mega65_strlen(filename)+1);
     }
     break;
   default:
@@ -241,11 +243,17 @@ char mount_d81(char *filename, unsigned char drive_id)
 
 char create_d81(char *filename)
 {
+  mega65_uart_print("WARNING: create_d81(\"");
+  mega65_uart_print(filename);
+  mega65_uart_print("\") not implemented.\r\n");
   return 1;
 }
 
 char mega65_mkdir(char *dir)
 {
+  mega65_uart_print("WARNING: mega65_mkdir(\"");
+  mega65_uart_print(dir);
+  mega65_uart_print("\") not implemented.\r\n");
   return 1;
 }
 
@@ -265,12 +273,12 @@ char mega65_cdroot(void)
 char mega65_chdir(char *dir)
 {
   // Abort if path too long
-  if ( (strlen(dir) + cwd_len) >= (MAX_PATH_LEN - 2)) { fail(1); return 1; }
+  if ( (mega65_strlen(dir) + cwd_len) >= (MAX_PATH_LEN - 2)) { fail(1); return 1; }
   
   uint8_t r = chdir(dir);
   if (!r) {
-    lcopy((unsigned long)dir, (unsigned long)&cwd[cwd_len],strlen(dir)+1);
-    cwd_len+=strlen(dir);
+    lcopy((unsigned long)dir, (unsigned long)&cwd[cwd_len],mega65_strlen(dir)+1);
+    cwd_len+=mega65_strlen(dir);
     cwd[cwd_len++]='/';
     cwd[cwd_len]=0;
   }
@@ -409,7 +417,6 @@ void dump_backtrace(void) {
   //  - call your on-target addr2line() to print file:line + function
 
   mega65_uart_print("Backtrace (most recent call first):\n\r");
-  unsigned char d= depth-1;
 
   for(unsigned char d = depth-1;d!=0xff;d--) {
     mega65_uart_print("[");
@@ -418,7 +425,8 @@ void dump_backtrace(void) {
 
     // Find function in table
     unsigned int func_num = 0;
-    while(func_num<(function_table_count-1) && function_table[func_num+1].addr < (uint16_t)callstack[d].site)
+    while((func_num+1)<function_table_count
+	  && function_table[func_num+1].addr < (uint16_t)callstack[d].site)
       func_num++;
 
     // Display offset from function
@@ -438,7 +446,7 @@ void dump_backtrace(void) {
 void nmi_catcher(void)
 {
     uint8_t a,x,y,p,s, pcl, pch;
-    uint16_t pc_after, brk_addr, sp_before;
+    uint16_t pc_after, brk_addr;
 
     // Save A, X, Y; read S, saved PCL/PCH/P from the stack frame
     __asm__ volatile ("tsx\n\ttxa" : "=a"(s) : : "x");          // get S (post-push)
@@ -452,7 +460,6 @@ void nmi_catcher(void)
     
     pc_after  = (uint16_t)((pch << 8) | pcl);
     brk_addr  = pc_after - 2;             // BRK opcode address
-    sp_before = (uint8_t)(s + 3 + 3);         // SP value before the CPU's pushes
 
     mega65_uart_print(">>>\r\n\n>>> NMI/BRK triggered.\r\n");
 
@@ -491,9 +498,7 @@ unsigned char as_printable(unsigned char c)
 }
 
 void dump_bytes(char *msg, unsigned long d_in, int len)
-{
-  unsigned char *d = (unsigned char *)d_in;
-  
+{  
   mega65_uart_print("DEBUG: ");
   mega65_uart_print(msg);
   mega65_uart_print("\r\n");

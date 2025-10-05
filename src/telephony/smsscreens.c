@@ -29,7 +29,7 @@ void textbox_erase_draft(void)
 void textbox_hide_cursor(void)
 {
   buffers_lock(LOCK_TEXTBOX);
-  for(int i=0;i<buffers.textbox.draft_len;i++) {
+  for(unsigned int i=0;i<buffers.textbox.draft_len;i++) {
     if (buffers.textbox.draft[i]=='|') {
       lcopy((unsigned long) &buffers.textbox.draft[i+1],
 	    (unsigned long) &buffers.textbox.draft[i],
@@ -51,7 +51,7 @@ char sms_thread_display(unsigned int contact,
   int y=28;
   unsigned int bottom_row_available = 30; // allow all the way to bottom of screen for now.
   unsigned int bottom_row;
-  unsigned int message_count = 0;
+  int message_count = 0;
   unsigned int message = 0;
   unsigned char r;
 
@@ -80,32 +80,38 @@ char sms_thread_display(unsigned int contact,
 
   lcopy((uint32_t)&message_count,0x12000L,2);
 
-  // Work out how many rows the message draft uses
-  calc_break_points(buffers.textbox.draft,
-		    FONT_UI,
-		    294, // text field in px
-		    RENDER_COLUMNS - 1 - 45);  
-  
-  y = MAX_ROWS - buffers.textbox.line_count - 1;
-  bottom_row_available = MAX_ROWS - buffers.textbox.line_count - 1;
-  
-  // XXX - Remember what's on the screen already, and use DMA to scroll it up
-  // and down, so that we don't need to redraw it all.
-  // But for now, we don't have that, so just clear the thread area on the screen
-  sms_thread_clear_screen_region(2,MAX_ROWS);
-
-  // Draw the message draft
-  textbox_draw(360/8,
-	       MAX_ROWS - buffers.textbox.line_count,
-	       360,
-	       294,
-	       RENDER_COLUMNS - 1 - 45,
-	       FONT_UI,
-	       0x8F,
-	       buffers.textbox.draft,
-	       0,
-	       buffers.textbox.line_count-1,
-	       VIEWPORT_PADDED);  
+  if (with_edit_box_P) {  
+    // Work out how many rows the message draft uses
+    calc_break_points(buffers.textbox.draft,
+		      FONT_UI,
+		      294, // text field in px
+		      RENDER_COLUMNS - 1 - 45);  
+    
+    y = MAX_ROWS - buffers.textbox.line_count - 1;
+    bottom_row_available = MAX_ROWS - buffers.textbox.line_count - 1;
+    
+    // XXX - Remember what's on the screen already, and use DMA to scroll it up
+    // and down, so that we don't need to redraw it all.
+    // But for now, we don't have that, so just clear the thread area on the screen
+    sms_thread_clear_screen_region(2,MAX_ROWS);
+    
+    // Draw the message draft
+    textbox_draw(360/8,
+		 MAX_ROWS - buffers.textbox.line_count,
+		 360,
+		 294,
+		 RENDER_COLUMNS - 1 - 45,
+		 FONT_UI,
+		 0x8F,
+		 buffers.textbox.draft,
+		 0,
+		 buffers.textbox.line_count-1,
+		 VIEWPORT_PADDED);
+  } else {
+    // No message editing text box visible
+    y = MAX_ROWS - 1;
+    bottom_row_available = MAX_ROWS - 1;    
+  }
   
   while(y>=2&&message>0) {
 

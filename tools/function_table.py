@@ -93,7 +93,7 @@ with open(outfile, "w") as out:
     for addr, name in entries:
         out.write(f"  {{ 0x{addr:04x}, \"{name}\" }},\n")
     out.write("};\n")
-    out.write(f"const unsigned function_table_count = {len(entries)};\n\n")
+    out.write(f"const unsigned int function_table_count = {len(entries)};\n\n")
 
     # WP register bytes (ready to lcopy in one shot)
     out.write("/* write-protect register bytes computed from linker map */\n")

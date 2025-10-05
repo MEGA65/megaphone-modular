@@ -232,8 +232,6 @@ void screen_clear_partial_line(unsigned char row,
 
 void screen_clear(void)
 {
-  unsigned char y;
-
   // Clear screen RAM using overlapping DMA  
   lpoke(screen_ram + 0,0x20);
   lpoke(screen_ram + 1,0x00);
@@ -291,7 +289,6 @@ void reset_glyph_cache(void)
 void load_glyph(int font, unsigned long codepoint, unsigned int cache_slot)
 {
   unsigned char glyph_flags;
-  unsigned long offset = codepoint<<8;
   
 #if 0
   // XXX DEBUG show gradiant glyph
@@ -417,7 +414,6 @@ char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start
   unsigned char *utf8_start = utf8;
   unsigned int pixels_wide = 0;
   unsigned char glyph_pixels;
-  unsigned char n=0;
   unsigned char ff;
   
   if (pixels_used) *pixels_used = 0;
@@ -486,8 +482,7 @@ char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start
 
 /* Simple classifier: return break cost for breaking AFTER cp, possibly using next_cp */
 unsigned char compute_break_cost(unsigned long cp,
-				 unsigned long next_cp,
-				 unsigned char prev_was_space)
+				 unsigned long next_cp)
 {
   /* Disallow breaks after nothing */
   if (cp == 0) return BREAK_FORBIDDEN;
@@ -535,8 +530,6 @@ char calc_break_points(unsigned char *str,
   unsigned char *s;
   unsigned int w_px;
   unsigned int w_g;
-  unsigned char *line_start;
-  unsigned char *line_end;
   unsigned int ofs;
   unsigned int best_break_ofs;
   unsigned int best_break_cost;
@@ -544,7 +537,6 @@ char calc_break_points(unsigned char *str,
   unsigned char *last_break_s;
   unsigned char break_required;
   unsigned int this_cost, underful_cost;
-  unsigned char j;
   
   // Box must be wide enough to take single widest glyph
   if (box_width_pixels<32) return 4;
@@ -574,16 +566,16 @@ char calc_break_points(unsigned char *str,
   best_break_s=s;
   last_break_s=s;
 
-  line_start = s;
-  line_end = s;
-  
   if (r) return r;
 
   buffers.textbox.line_count=0;
   
   while(*s) {
-    
-    unsigned long cp = utf8_next_codepoint(&s);
+
+    // Advance through the string, one unicode code point at a time.
+    // We don't need to know the code-point, because we have already done the code-point
+    // sensitive analysis in string_render_analyse().
+    utf8_next_codepoint(&s);
 
     break_required=0;
     // Run out of space yet? (we keep one glyph spare for a final GOTOX to ensure alignment)
@@ -674,7 +666,7 @@ char textbox_draw(unsigned char x_start,
 			 box_width_pixels,
 			 box_width_glyphs,
 			 &str[ofs+buffers.textbox.line_offsets_in_bytes[j]],
-			 VIEWPORT_PADDED,
+			 padding,
 			 NULL,
 			 NULL);
       ofs+=buffers.textbox.line_offsets_in_bytes[j];
@@ -705,8 +697,7 @@ char string_render_analyse(unsigned char *str,
     unsigned char pixel_count = 0;
     unsigned char glyph_count = 0;
 
-    /* Decode current cp and remember where we are for peeking. */
-    unsigned char *save = s;
+    /* Decode current cp */
     unsigned long cp = utf8_next_codepoint(&s);
 
     /* Peek the next codepoint (without consuming original stream). */
@@ -724,7 +715,7 @@ char string_render_analyse(unsigned char *str,
     /* Compute break cost AFTER this cp */
     if (break_costs) {
       /* If this is the very first character, never prefer a break (useless). */
-      unsigned char cost = compute_break_cost(cp, next_cp, /*prev_was_space=*/0);
+      unsigned char cost = compute_break_cost(cp, next_cp);
 
       /* Never allow a break at position 0 (no-op line) */
       if (o == 0) cost = BREAK_FORBIDDEN;

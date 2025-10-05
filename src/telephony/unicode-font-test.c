@@ -90,8 +90,6 @@ void
 #endif
 main(void)
 {
-  shared_resource_dir d;
-  unsigned char o=0;
   int position;
   char redraw, redraw_draft, reload_contact, erase_draft;
   unsigned char old_draft_line_count;
@@ -102,12 +100,12 @@ main(void)
   mega65_io_enable();
 
   // Install NMI/BRK catcher
-  POKE(0x0316,(uint8_t)&nmi_catcher);
-  POKE(0x0317,((uint16_t)&nmi_catcher)>>8);
-  POKE(0x0318,(uint8_t)&nmi_catcher);
-  POKE(0x0319,((uint16_t)&nmi_catcher)>>8);
-  POKE(0xFFFE,(uint8_t)&nmi_catcher);
-  POKE(0xFFFF,((uint16_t)&nmi_catcher)>>8);
+  POKE(0x0316,(uint8_t)(((uint16_t)&nmi_catcher)>>0));
+  POKE(0x0317,(uint8_t)(((uint16_t)&nmi_catcher)>>8));
+  POKE(0x0318,(uint8_t)(((uint16_t)&nmi_catcher)>>0));
+  POKE(0x0319,(uint8_t)(((uint16_t)&nmi_catcher)>>8));
+  POKE(0xFFFE,(uint8_t)(((uint16_t)&nmi_catcher)>>0));
+  POKE(0xFFFF,(uint8_t)(((uint16_t)&nmi_catcher)>>8));
   
   screen_setup();  
   screen_clear();    
@@ -172,10 +170,6 @@ main(void)
     switch(PEEK(0xD610)) {
     case 0x0d: // RETURN = send message
       // Don't send empty messages (or that just consist of the cursor)
-      if (buffers.textbox.draft_len<2) break;
-
-      // Remove cursor before sending
-      textbox_hide_cursor();
 
       buffers_unlock(LOCK_TEXTBOX);
 

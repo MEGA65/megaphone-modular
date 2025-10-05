@@ -9,7 +9,7 @@ int compare_records(unsigned char a_idx, unsigned char b_idx, unsigned char fiel
   unsigned int len_a = 0, len_b = 0, l;
   unsigned long addr;
   unsigned char *field_a, *field_b;
-  int min_len;
+  unsigned int min_len;
   char cmp;
   
   if (b_idx != buffers.sort.idx_b) {
