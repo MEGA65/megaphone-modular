@@ -18,6 +18,9 @@ void hal_init(void) {
 
   // Write protect text (code) and rodata segments  
   lcopy((uint16_t)&__wp_regs[0],0xffd5000L,9);
+
+  // Flush hardware keyboard input buffer
+  while(PEEK(0xD610)) POKE(0xD610,0);
 }
 
 char to_hex(unsigned char v)
