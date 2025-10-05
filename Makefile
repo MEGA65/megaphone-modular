@@ -24,6 +24,9 @@ HELPERS=        src/helper-llvm.c
 
 LDFLAGS += -Wl,-Map,bin65/unicode-font-test.map
 LDFLAGS += -Wl,-T,src/telephony/asserts.ld
+# Produce reproducer tar when required for assisting with debugging
+LDFLAGS += -Wl,--reproduce=repro.tar
+
 
 As the MEGA65 libc has also advanced considerably since I last worked on GRAZE, I also reworked how I pull that in:
 
