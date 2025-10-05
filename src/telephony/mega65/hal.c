@@ -169,6 +169,7 @@ char read_sector(unsigned char drive_id, unsigned char track, unsigned char sect
   
   // Select and start drive 
   POKE(0xD080L,
+       drive_id +
        0x60 + // Motor, select
        ((sector>10)?0x00:0x08) // Side select based on sector number
        );
