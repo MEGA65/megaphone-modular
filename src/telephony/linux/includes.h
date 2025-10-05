@@ -38,7 +38,7 @@ void format_image_fully_allocated(char drive_id,char *header, char withSectorMar
 char sort_d81(char *name_in, char *name_out, unsigned char field_id);
 
 void dump_sector_buffer(char *m);
-void dump_bytes(char *msg, unsigned char *d, int len);
+void dump_bytes(char *msg, unsigned lond d, int len);
 
 char to_hex(unsigned char v);
 

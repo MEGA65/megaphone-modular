@@ -132,13 +132,23 @@ char sms_log_to_contact(unsigned int contact_ID,
   if (mount_contact_qso(contact_ID)) fail(2);
   
   // 5. Allocate message record in conversation
-  if (read_sector(0,1,0)) fail(3);
+  if (read_sector(DRIVE_0,1,0)) fail(3);
+  dump_bytes("BAM sector before allocation", SECTOR_BUFFER_ADDRESS,16);
   record_number = record_allocate_next( SECTOR_BUFFER_ADDRESS );
+  dump_bytes("BAM sector after allocation", SECTOR_BUFFER_ADDRESS,16);
+  
   if (!record_number) {
     fail(4);
   } else {    
     // Write back updated BAM
-    if (write_sector(0,1,0)) fail(5);
+    if (write_sector(DRIVE_0,1,0)) fail(5);
+    mega65_uart_print("Allocated record ");
+    mega65_uart_printhex16(record_number);
+    mega65_uart_print(" for new SMS message\r\n");
+    lfill(SECTOR_BUFFER_ADDRESS,0x00,512);
+    if (read_sector(DRIVE_0,1,0)) fail(51);
+    dump_bytes("BAM sector read back after", SECTOR_BUFFER_ADDRESS,16);
+    
   }
 #ifdef CROSS_COMPILED
   fprintf(stderr,"DEBUG: Allocated message record #%d in contact #%d\n",
@@ -168,12 +178,14 @@ char sms_log_to_contact(unsigned int contact_ID,
   // 7. Update used message count in conversation (2nd half of BAM sector?)
   // XXX - Don't need it, because we have the allocation stuff.
   // XXX - But it could still make it a little more efficient.
-  
+
+#if 0
   // 8. Update thread index for this message
   index_buffer_clear();
   index_buffer_update(message,strlen((char *)message));
   index_update_from_buffer(1,record_number);
-
+#endif
+  
   buffers_unlock(LOCK_TELEPHONY);    
 
   // XXX Removing this POKE causes a linker error

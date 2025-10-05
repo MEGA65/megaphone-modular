@@ -8,6 +8,13 @@ extern const unsigned char __stack;
 #include "function_table.c"
 #endif
 
+#define MAX_PATH_LEN 256
+char cwd[MAX_PATH_LEN];
+int cwd_len = 0;
+
+char drive0file[MAX_PATH_LEN]="<not mounted>";
+char drive1file[MAX_PATH_LEN]="<not mounted>";
+
 unsigned char mountd81disk0(char *filename);
 unsigned char mountd81disk1(char *filename);
 
@@ -21,6 +28,16 @@ void hal_init(void) {
 
   // Flush hardware keyboard input buffer
   while(PEEK(0xD610)) POKE(0xD610,0);
+}
+
+unsigned int strlen(char *s)
+{
+  uint16_t len=0;
+  while (*s) {
+    if (len==0xffff) break;
+    len++; s++;
+  }
+  return len;
 }
 
 char to_hex(unsigned char v)
@@ -66,6 +83,15 @@ unsigned long mega65_bcdtime(void)
 char write_sector(unsigned char drive_id, unsigned char track, unsigned char sector)
 {
 
+  mega65_uart_print("Image in drive ");
+  mega65_uart_printhex(drive_id);
+  mega65_uart_print(" is ");
+  mega65_uart_print(cwd);
+  mega65_uart_print(drive0file);
+  mega65_uart_print("\r\n");
+  
+  dump_bytes("Writing sector data beginning with", SECTOR_BUFFER_ADDRESS,16);
+  
   // Select FDC rather than SD card sector buffer
   POKE(0xD689L,PEEK(0xD689L)&0x7f);
   
@@ -177,17 +203,32 @@ char read_sector(unsigned char drive_id, unsigned char track, unsigned char sect
 char mount_d81(char *filename, unsigned char drive_id)
 {
   unsigned char r;
+
+  if (strlen(filename)>=MAX_PATH_LEN) { fail(3); return 3; }
+  
   switch(drive_id) {
-  case 0: r=mountd81disk0(filename); break;
-  case 1: r=mountd81disk1(filename); break;
-  default: return 1;
+  case 0:
+    r=mountd81disk0(filename);
+    if (r==1) {
+      lcopy((unsigned long)filename,(unsigned long) drive0file, strlen(filename)+1);
+    }
+    break;
+  case 1:
+    r=mountd81disk1(filename);
+    if (r==1) {
+      lcopy((unsigned long)filename,(unsigned long) drive1file, strlen(filename)+1);
+    }
+    break;
+  default:
+    fail(1);
+    return 1;
   }
 
   if (r==1) {
     return 0;
   } else {
     fail(r);
-    return 2;
+    return 2; 
   }
   
 }
@@ -206,14 +247,28 @@ char mega65_cdroot(void)
 {
   // XXX - Doesn't allow use of different partitions
   chdirroot(0);
-  // XXX - chddirroot()'s HYPPO call lacks failure semantics, and doesn't set return value.
+  // XXX - chddirroot()'s HYPPO call lacks failure semantics, and doesn't set return value.  
   // So we have to assume it succeeded.
+
+  cwd[0]='/'; cwd[1]=0;
+  cwd_len=1;
+  
   return 0;
 }
 
 char mega65_chdir(char *dir)
 {
-  return chdir(dir);
+  // Abort if path too long
+  if ( (strlen(dir) + cwd_len) >= (MAX_PATH_LEN - 2)) { fail(1); return 1; }
+  
+  uint8_t r = chdir(dir);
+  if (!r) {
+    lcopy((unsigned long)dir, (unsigned long)&cwd[cwd_len],strlen(dir)+1);
+    cwd_len+=strlen(dir);
+    cwd[cwd_len++]='/';
+    cwd[cwd_len]=0;
+  }
+  return r;
 }
 
 __attribute__((no_instrument_function))
@@ -268,7 +323,6 @@ void mega65_uart_printptr(const void *v)
 __attribute__((no_instrument_function))
 void mega65_uart_printhex16(const uint16_t v)
 {
-  mega65_uart_print("0x");
   mega65_uart_printhex(((unsigned int)v)>>8);
   mega65_uart_printhex(((unsigned int)v));
 }
@@ -423,5 +477,43 @@ void nmi_catcher(void)
     while (1) { /* halt */ }
 }
 
+unsigned char as_printable(unsigned char c)
+{
+  if (c<' ') return '.';
+  if (c>=0x7e) return '.';
+  return c;
+}
+
+void dump_bytes(char *msg, unsigned long d_in, int len)
+{
+  unsigned char *d = (unsigned char *)d_in;
+  
+  mega65_uart_print("DEBUG: ");
+  mega65_uart_print(msg);
+  mega65_uart_print("\r\n");
+  for(int i=0;i<len;i+=16) {
+    mega65_uart_printhex16(i);
+    mega65_uart_print(": ");
+    for(int j=0;j<16;j++) {
+      if ((i+j)<len) {
+	mega65_uart_printhex(lpeek(d_in+i+j));
+	mega65_uart_print(" ");
+      } else mega65_uart_print("   ");
+    }
+    mega65_uart_print("  ");
+    for(int j=0;j<16;j++) {
+      if ((i+j)<len) {
+	char cc[2];
+	cc[0]=as_printable(lpeek(d_in+i+j));
+	cc[1]=0;
+	mega65_uart_print(cc);
+      } 
+    }
+    mega65_uart_print("\r\n");
+  }
+}
+
+
 #endif
+
 

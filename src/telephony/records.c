@@ -29,7 +29,7 @@ unsigned int record_allocate_next(unsigned long bam_sector_address)
 	  // (but note the line above means that we will implicitly mark sector 0 as allocated
 	  // in the process).
 	  if (i+j) {
-	    // dump_bytes("Sector BAM after allocation",&bam_sector[2],USABLE_SECTORS_PER_DISK/8);
+	    // 	    dump_bytes("BAM sector after allocation",bam_sector_address,256);
 	    return (i<<3)+j;
 	  }
 	}

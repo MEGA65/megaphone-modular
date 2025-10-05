@@ -298,8 +298,10 @@ unsigned char as_printable(unsigned char c)
   return c;
 }
 
-void dump_bytes(char *msg, unsigned char *d, int len)
+void dump_bytes(char *msg, unsigned long d_in, int len)
 {
+  unsigned char *d = (unsigned char *)d_in;
+  
   fprintf(stderr,"DEBUG: %s\n",msg);
   for(int i=0;i<len;i+=16) {
     fprintf(stderr,"%04X: ",i);
