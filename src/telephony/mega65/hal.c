@@ -289,9 +289,11 @@ void mega65_fail(const char *file, const char *function, const char *line, unsig
 
   dump_backtrace();
 
+  uint8_t old_bg = PEEK(0xD021);
   while(PEEK(0xD610)) POKE(0xD610,0);
   while(!PEEK(0xD610)) POKE(0xD021,PEEK(0xD012));
-
+  POKE(0xD021,old_bg);
+  
 }
 
 /*
