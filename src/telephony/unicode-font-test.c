@@ -176,8 +176,12 @@ main(void)
 
       buffers_unlock(LOCK_TEXTBOX);
       // XXX Remove cursor first!
+      // XXX Display busy status
       sms_send_to_contact(contact_ID,buffers.textbox.draft);
-      buffers_unlock(LOCK_TELEPHONY);
+      buffers_unlock(LOCK_TELEPHONY);      
+
+      // Sending to a contact unmounts the thread, so we need to fix that
+      try_or_fail(mount_contact_qso(contact_ID));
       
       reload_contact = 1;
       erase_draft = 1;
