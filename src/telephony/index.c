@@ -103,6 +103,10 @@ char index_update_from_buffer(unsigned char disk_id, unsigned int record_number)
   unsigned int index_page = 0, ofs;
   unsigned char slab;
 
+  mega65_uart_print("Indexing disk ");
+  mega65_uart_printhex(disk_id);
+  mega65_uart_print("\r\n");
+  
   // Calculate which byte and bit we are fiddling in each index page
   // +2 to skip the track/sector 
   unsigned char record_byte = 2 + (record_number>>3);
