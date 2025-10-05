@@ -67,7 +67,7 @@ char sms_send_to_contact(unsigned int contact_ID, unsigned char *message)
   bcdDate = mega65_bcddate();
   bcdTime = mega65_bcdtime();
 
-  r=read_record_by_id(contact_ID,0,buffers.textbox.contact_record);
+  r=read_record_by_id(DRIVE_0,contact_ID,buffers.textbox.contact_record);
   if (r) fail(1);
 
   phoneNumber = find_field(buffers.textbox.contact_record,RECORD_DATA_SIZE,FIELD_PHONENUMBER,&len);
@@ -95,7 +95,7 @@ char sms_log_to_contact(unsigned int contact_ID,
   
   if (buffers_lock(LOCK_TELEPHONY)) fail(99);
   
-  if (read_record_by_id(0, contact_ID,buffers.telephony.contact)) {
+  if (read_record_by_id(DRIVE_0, contact_ID,buffers.telephony.contact)) {
     buffers_unlock(LOCK_TELEPHONY);
     fail(1);
   }
@@ -116,7 +116,7 @@ char sms_log_to_contact(unsigned int contact_ID,
 	  unreadMessageCount[1]=0xff;
 	}
       } 
-      write_record_by_id(0,contact_ID,buffers.telephony.contact);
+      write_record_by_id(DRIVE_0,contact_ID,buffers.telephony.contact);
     } else {
       // No unread message count in the contact. Silently ignore for now.
     }
@@ -147,7 +147,7 @@ char sms_log_to_contact(unsigned int contact_ID,
   
   // 6. Build message and store.
   if (buffers_lock(LOCK_TELEPHONY)) fail(6);
-  if (read_record_by_id(0,record_number,buffers.telephony.message)) {
+  if (read_record_by_id(DRIVE_0,record_number,buffers.telephony.message)) {
     buffers_unlock(LOCK_TELEPHONY);  
     fail(7);
   }
@@ -160,7 +160,7 @@ char sms_log_to_contact(unsigned int contact_ID,
   }
   sectorise_record(buffers.telephony.message, (unsigned long)&buffers.telephony.sector_buffer[0]);
   lcopy((unsigned long)buffers.telephony.sector_buffer,SECTOR_BUFFER_ADDRESS,512);
-  if (write_record_by_id(0,record_number,buffers.telephony.message)) {
+  if (write_record_by_id(DRIVE_0,record_number,buffers.telephony.message)) {
     buffers_unlock(LOCK_TELEPHONY);  
     fail(9);
   }
