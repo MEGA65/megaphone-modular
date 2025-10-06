@@ -985,3 +985,13 @@ void textbox_find_cursor(void)
     buffers.textbox.draft[buffers.textbox.draft_len]=0;
   }
 }
+
+void textbox_remove_cursor(void)
+{
+  if (buffers.textbox.draft_len==0) return;
+  
+  lcopy((unsigned long)&buffers.textbox.draft[buffers.textbox.draft_cursor_position+1],
+	(unsigned long)&buffers.textbox.draft[buffers.textbox.draft_cursor_position],
+	buffers.textbox.draft_len - buffers.textbox.draft_cursor_position);
+  buffers.textbox.draft_len--;
+}

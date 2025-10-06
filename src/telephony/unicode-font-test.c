@@ -141,7 +141,7 @@ main(void)
   redraw_draft = 1;
   reload_contact = 1;
   erase_draft = 0;
-
+  
   while(1) {
     unsigned int first_message_displayed;
 
@@ -183,12 +183,18 @@ main(void)
 
       // XXX Display busy status
       show_busy();
+
+      textbox_remove_cursor();
       sms_send_to_contact(contact_ID,buffers.textbox.draft);
       buffers_unlock(LOCK_TELEPHONY);      
 
       // Sending to a contact unmounts the thread, so we need to fix that
       try_or_fail(mount_contact_qso(contact_ID));
       hide_busy();
+
+      // Clear saved draft
+      textbox_erase_draft();
+      write_record_by_id(0,USABLE_SECTORS_PER_DISK -1, buffers.textbox.draft);
       
       reload_contact = 1;
       erase_draft = 1;

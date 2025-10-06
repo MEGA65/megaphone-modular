@@ -75,7 +75,7 @@ char draw_scrollbar(unsigned char sprite_num,
 		    unsigned int total);
 
 void textbox_find_cursor(void);
-
+void textbox_remove_cursor(void);
 
 extern unsigned long screen_ram;
 extern unsigned long colour_ram;
