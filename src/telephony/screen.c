@@ -962,11 +962,11 @@ void textbox_find_cursor(void)
       buffers.textbox.draft_cursor_position<buffers.textbox.draft_len;
       buffers.textbox.draft_cursor_position++) {
     if (buffers.textbox.draft[buffers.textbox.draft_cursor_position]==CURSOR_CHAR) {
-      for(uint16_t position = buffers.textbox.draft_cursor_position;
+      for(uint16_t position = buffers.textbox.draft_cursor_position + 1;
 	  position<buffers.textbox.draft_len;
 	  position++) {
 	if (buffers.textbox.draft[position]==CURSOR_CHAR) {
-	  // Found an extra cursor: Delete it.
+	  // Found an extra cursor: Delete it.	  
 	  lcopy((unsigned long)&buffers.textbox.draft[position+1],
 		(unsigned long)&buffers.textbox.draft[position],
 		buffers.textbox.draft_len - position);
