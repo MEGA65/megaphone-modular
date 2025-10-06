@@ -944,3 +944,37 @@ char pick_font_by_codepoint(unsigned long cp, unsigned char default_font)
     
     return default_font;
 }
+
+void textbox_find_cursor(void)
+{
+  buffers.textbox.draft_len = strlen((char *)buffers.textbox.draft);
+  buffers.textbox.draft_cursor_position = buffers.textbox.draft_len;
+  // Reposition cursor to first CURSOR_CHAR in the draft
+  // (and remove any later ones)
+  for(buffers.textbox.draft_cursor_position = 0;
+      buffers.textbox.draft_cursor_position<buffers.textbox.draft_len;
+      buffers.textbox.draft_cursor_position++) {
+    if (buffers.textbox.draft[buffers.textbox.draft_cursor_position]==CURSOR_CHAR) {
+      for(uint16_t position = buffers.textbox.draft_cursor_position;
+	  position<buffers.textbox.draft_len;
+	  position++) {
+	if (buffers.textbox.draft[position]==CURSOR_CHAR) {
+	  // Found an extra cursor: Delete it.
+	  lcopy((unsigned long)&buffers.textbox.draft[position+1],
+		(unsigned long)&buffers.textbox.draft[position],
+		buffers.textbox.draft_len - position);
+	  buffers.textbox.draft_len--;
+	}
+      }
+      // Finished removing extra cursor characters
+      break;	    
+    }
+  }
+  // No cursor found, so append one to the end (trimming the draft if necessary to make it fit)
+  if (buffers.textbox.draft_cursor_position >= buffers.textbox.draft_len) {
+    if (buffers.textbox.draft_len > (RECORD_DATA_SIZE - 2))
+      buffers.textbox.draft_len = (RECORD_DATA_SIZE - 2);
+    buffers.textbox.draft[buffers.textbox.draft_len++]=CURSOR_CHAR;
+    buffers.textbox.draft[buffers.textbox.draft_len]=0;
+  }
+}

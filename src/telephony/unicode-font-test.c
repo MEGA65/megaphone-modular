@@ -157,35 +157,7 @@ main(void)
       if (!erase_draft) {
 	// Read last record in disk to get any saved draft
 	read_record_by_id(0,USABLE_SECTORS_PER_DISK -1,buffers.textbox.draft);
-	buffers.textbox.draft_len = strlen((char *)buffers.textbox.draft);
-	buffers.textbox.draft_cursor_position = buffers.textbox.draft_len;
-	// Reposition cursor to first CURSOR_CHAR in the draft
-	// (and remove any later ones)
-	for(buffers.textbox.draft_cursor_position = 0;
-	    buffers.textbox.draft_cursor_position<buffers.textbox.draft_len;
-	    buffers.textbox.draft_cursor_position++) {
-	  if (buffers.textbox.draft[position]==CURSOR_CHAR) {
-	    for(; buffers.textbox.draft_cursor_position<buffers.textbox.draft_len;
-		buffers.textbox.draft_cursor_position++) {
-	      if (buffers.textbox.draft[position]==CURSOR_CHAR) {
-		// Found an extra cursor: Delete it.
-		lcopy((unsigned long)&buffers.textbox.draft[position+1],
-		      (unsigned long)&buffers.textbox.draft[position],
-		      buffers.textbox.draft_len - position);
-		buffers.textbox.draft_len--;
-	      }
-	    }
-	    // Finished removing extra cursor characters
-	    break;	    
-	  }
-	}
-	// No cursor found, so append one to the end (trimming the draft if necessary to make it fit)
-	if (buffers.textbox.draft_cursor_position >= buffers.textbox.draft_len) {
-	  if (buffers.textbox.draft_len > (RECORD_DATA_SIZE - 2))
-	    buffers.textbox.draft_len = (RECORD_DATA_SIZE - 2);
-	  buffers.textbox.draft[buffers.textbox.draft_len++]=CURSOR_CHAR;
-	  buffers.textbox.draft[buffers.textbox.draft_len]=0;
-	}
+	textbox_find_cursor();
       }
       erase_draft = 0;
 
