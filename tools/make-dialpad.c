@@ -8,6 +8,7 @@
 
 #define HEIGHT 31
 #define OUTPUT_HEIGHT 32
+#define OUTPUT_WIDTH 64
 #define BASELINE (OUTPUT_HEIGHT - 5)
 #define MAX_WIDTH 1024
 
@@ -77,13 +78,13 @@ char intensity_to_ascii(uint8_t intensity) {
     const char ramp[] = " .:-=+*#%@";
     const int ramp_len = sizeof(ramp) - 1; // exclude null terminator
 
-    int index = (intensity * ramp_len) / 256;
+    int index = (intensity * ramp_len) / 16;
     if (index >= ramp_len) index = ramp_len - 1;
 
     return ramp[index];
 }
 
-/*  Copy one glyph from pixel_data[][16] → data[256]
+/*  Copy one glyph from pixel_data[][32] → data[2560]
  *
  *  ┌───────────────  glyph columns ───────────────┐
  *  row 0  pixel_data[0][ 0.. 7] → data[0.. 63]  (tile 0, row 0)
@@ -101,23 +102,29 @@ char intensity_to_ascii(uint8_t intensity) {
  *  └─────┴─────┘         data[192..255]  = tile 3 (odd rows,  right 8 bytes)
  */
 static void
-pack_into_tiles(const uint8_t pixel_data[OUTPUT_HEIGHT][16], uint8_t data[256])
+pack_into_tiles(const uint8_t pixel_data[OUTPUT_HEIGHT][32], uint8_t data[2560])
 {
-    memset(data, 0, 256);          /*  safety / predictable padding           */
+    memset(data, 0, 2560);          /*  safety / predictable padding           */
 
     for (int y = 0; y < OUTPUT_HEIGHT; ++y) {          /* 0‥15 */
         const int tile_row     = y >> 1;               /* 0‥7   */
         const int even_row     = !(y & 1);             /* true if 0,2,4…       */
         const int even_offset  = even_row ?   0 : 64; /* tiles 0+1 or 2+3     */
 
-        for (int bx = 0; bx < 16; ++bx) {              /* byte-column 0‥15     */
-            const int right_half  = (bx >= 8);         /* 0 = left, 1 = right  */
-            const int base_offset = even_offset + (right_half ? 128 : 0);
-            const int dest_index  = base_offset + tile_row * 8 + (bx & 7);
+        for (int bx = 0; bx < 32; ++bx) {              /* byte-column 0‥15     */
+	  char char_column = bx / 8;
+	  const int base_offset = even_offset + char_column * 128;
+	  const int dest_index  = base_offset + tile_row * 8 + (bx & 7);
 
             data[dest_index] = pixel_data[y][bx];
         }
     }
+}
+
+unsigned char nybl_pick(unsigned char c, int pickHigh)
+{
+  if (pickHigh) return c>>4;
+  return c&0xf;
 }
 
 void render_glyph(FT_Face face, uint32_t codepoint, int pen_x) {
@@ -164,7 +171,7 @@ void render_glyph(FT_Face face, uint32_t codepoint, int pen_x) {
     uint8_t glyph_width = width;  // For kerning-aware spacing
 
     // Allocate pixel buffer
-    uint8_t pixel_data[OUTPUT_HEIGHT][32] = {{0}}; // max 16px wide (or 32px with nybl packing, so 16 bytes, either way)
+    uint8_t pixel_data[OUTPUT_HEIGHT][32] = {{0}}; // max 64px wide using nybls = 32 bytes per row
 
     int y_offset = BASELINE - face->glyph->bitmap_top;
 
@@ -243,8 +250,8 @@ void render_glyph(FT_Face face, uint32_t codepoint, int pen_x) {
 
     pen_x = 0;
     for (int y = 0; y < OUTPUT_HEIGHT; y++) {
-      for(int x=0;x<glyph_width;x++) {
-	output[y][pen_x + x] = intensity_to_ascii(pixel_data[y][x]);
+      for(int x=0;x<OUTPUT_WIDTH;x++) {
+	output[y][pen_x + x] = intensity_to_ascii(nybl_pick(pixel_data[y][x/2],x&1));
       }
       output[y][pen_x + glyph_width] = '|';
       output[y][pen_x + glyph_width + 1] = 0;
