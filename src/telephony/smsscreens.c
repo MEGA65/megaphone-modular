@@ -79,13 +79,13 @@ char sms_thread_display(unsigned int contact,
   else message = message_count;
 
   lcopy((uint32_t)&message_count,0x12000L,2);
-
+  
   if (with_edit_box_P) {  
     // Work out how many rows the message draft uses
-    calc_break_points(buffers.textbox.draft,
-		      FONT_UI,
-		      294, // text field in px
-		      RENDER_COLUMNS - 1 - 45);  
+    try_or_fail(calc_break_points(buffers.textbox.draft,
+				  FONT_UI,
+				  294, // text field in px
+				  RENDER_COLUMNS - 1 - 45));
     
     y = MAX_ROWS - buffers.textbox.line_count - 1;
     bottom_row_available = MAX_ROWS - buffers.textbox.line_count - 1;
@@ -111,7 +111,7 @@ char sms_thread_display(unsigned int contact,
     // No message editing text box visible
     y = MAX_ROWS - 1;
     bottom_row_available = MAX_ROWS - 1;    
-  }
+  }  
   
   while(y>=2&&message>0) {
 

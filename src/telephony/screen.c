@@ -569,13 +569,19 @@ char calc_break_points(unsigned char *str,
   unsigned int this_cost, underful_cost;
   
   // Box must be wide enough to take single widest glyph
-  if (box_width_pixels<32) return 4;
-  if (box_width_glyphs<2) return 4;
+  if (box_width_pixels<32) { fail(6); return 6; }
+  if (box_width_glyphs<2) { fail(5); return 5; }
   
   buffers_lock(LOCK_TEXTBOX);
 
-  if (!str) return 3;
-  if (!*str) return 3;
+  if (!str) { fail(4); return 4; }
+  if (!*str) {
+    // For an empty string, just reserve a single line, so that
+    // it's still visible.
+    buffers.textbox.line_count = 1;
+    buffers.textbox.line_offsets_in_bytes[0]=0;
+    return 0;
+  }
 
   r = string_render_analyse(str, font,
 			    &buffers.textbox.len,
@@ -617,7 +623,8 @@ char calc_break_points(unsigned char *str,
       buffers.textbox.line_offsets_in_bytes[buffers.textbox.line_count++]=(best_break_s-last_break_s);
 
       if (!best_break_ofs) {
-	return 5;
+	fail(7);
+	return 7;
       }
 
       w_px=0;
