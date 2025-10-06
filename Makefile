@@ -61,6 +61,9 @@ tools/bomtool:	tools/bomtool.c tools/parts-library.c tools/parts-library.h
 tools/showglyph:	tools/showglyph.c
 	gcc -o tools/showglyph tools/showglyph.c -I/usr/include/freetype2 -lfreetype
 
+tools/make-dialpad:	tools/make-dialpad.c
+	gcc -o tools/make-dialpad tools/make-dialpad.c -I/usr/include/freetype2 -lfreetype
+
 tools/gen_attr_tables:	tools/gen_attr_tables.c
 	gcc -o tools/gen_attr_tables tools/gen_attr_tables.c
 
