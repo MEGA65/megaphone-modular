@@ -141,6 +141,8 @@ main(void)
   redraw_draft = 1;
   reload_contact = 1;
   erase_draft = 0;
+
+  show_busy();
   
   while(1) {
     unsigned int first_message_displayed;
@@ -165,24 +167,22 @@ main(void)
     }
       
     if (redraw) {
-      show_busy();
       sms_thread_display(contact_ID,position,
 			 1, // Show message edit box
 			 &first_message_displayed);
-      hide_busy();
     }
     redraw=0;
 
-    // Wait for key press
+    // Wait for key press: This is the only time that we aren't "busy"    
+    hide_busy();
     while(!PEEK(0xD610)) continue;
+    show_busy();
+    
     switch(PEEK(0xD610)) {
     case 0x0d: // RETURN = send message
       // Don't send empty messages (or that just consist of the cursor)
 
       buffers_unlock(LOCK_TEXTBOX);
-
-      // XXX Display busy status
-      show_busy();
 
       textbox_remove_cursor();
       sms_send_to_contact(contact_ID,buffers.textbox.draft);
@@ -190,7 +190,6 @@ main(void)
 
       // Sending to a contact unmounts the thread, so we need to fix that
       try_or_fail(mount_contact_qso(contact_ID));
-      hide_busy();
 
       // Clear saved draft
       textbox_erase_draft();
@@ -213,6 +212,13 @@ main(void)
 
 	redraw_draft=1;
       }
+      break;
+
+    case 0x94: // SHIFT+DEL = delete last message in the thread.
+      sms_delete_message(contact_ID,
+			 -1 // last message in the thread
+			 );
+      redraw = 1;
       break;
       
     case 0x93: // CLR+HOME

@@ -14,3 +14,4 @@ char sms_log_to_contact(unsigned int contact_ID,
 			unsigned long bcdDate,
 			unsigned long bcdTime,
 			unsigned char *message, char direction);
+char sms_delete_message(unsigned int contact_ID, int message_number);

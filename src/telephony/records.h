@@ -27,7 +27,7 @@
 #define DRIVE_1 1
 
 unsigned int record_allocate_next(unsigned long bam_sector_address);
-char record_free(unsigned char *bam_sector,unsigned int record_num);
+char record_free(unsigned long bam_sector_Address,unsigned int record_num);
 
 char write_record_by_id(unsigned char drive_id,unsigned int id,unsigned char *buffer);
 char read_record_by_id(unsigned char drive_id,unsigned int id,unsigned char *buffer);

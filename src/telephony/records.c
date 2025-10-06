@@ -42,17 +42,18 @@ unsigned int record_allocate_next(unsigned long bam_sector_address)
   return 0;
 }
 
-char record_free(unsigned char *bam_sector,unsigned int record_num)
+char record_free(unsigned long bam_sector,unsigned int record_num)
 {
   unsigned char b, bit;
   if (record_num>=USABLE_SECTORS_PER_DISK) fail(1);
-  b=bam_sector[record_num>>3];
+  b=lpeek(bam_sector + (record_num>>3));
   bit = 1<<(record_num&7);
-  if (!(b&bit)) fail(2); // Record wasn't allocated
+  if (!(b&bit)) { fail(2); return 2; } // Record wasn't allocated
   b&=(0xff-bit);
-  bam_sector[record_num>>3]=b;
+  lpoke(bam_sector + (record_num>>3), b);
   return 0;
 }
+
 
 void sectorise_record(unsigned char *record,
 		      unsigned long sector_buffer)

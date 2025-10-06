@@ -133,9 +133,7 @@ char sms_log_to_contact(unsigned int contact_ID,
   
   // 5. Allocate message record in conversation
   if (read_sector(DRIVE_0,1,0)) fail(3);
-  dump_bytes("BAM sector before allocation", SECTOR_BUFFER_ADDRESS,16);
   record_number = record_allocate_next( SECTOR_BUFFER_ADDRESS );
-  dump_bytes("BAM sector after allocation", SECTOR_BUFFER_ADDRESS,16);
   
   if (!record_number) {
     fail(4);
@@ -146,9 +144,7 @@ char sms_log_to_contact(unsigned int contact_ID,
     mega65_uart_printhex16(record_number);
     mega65_uart_print(" for new SMS message\r\n");
     lfill(SECTOR_BUFFER_ADDRESS,0x00,512);
-    if (read_sector(DRIVE_0,1,0)) fail(51);
-    dump_bytes("BAM sector read back after", SECTOR_BUFFER_ADDRESS,16);
-    
+    if (read_sector(DRIVE_0,1,0)) fail(51);    
   }
 #ifdef CROSS_COMPILED
   fprintf(stderr,"DEBUG: Allocated message record #%d in contact #%d\n",
@@ -186,8 +182,58 @@ char sms_log_to_contact(unsigned int contact_ID,
   
   buffers_unlock(LOCK_TELEPHONY);    
 
-  // XXX Removing this POKE causes a linker error
-  POKE(0xFFFF,1);
+  return 0;
+}
+
+char sms_delete_message(unsigned int contact_ID, int message_number)
+{
+  int record_number;
+
+  // 1. Make sure we have the contact loaded
+  if (mount_contact_qso(contact_ID)) { fail(1); return 1; }
+  
+  // 2. Read the BAM
+  if (read_sector(DRIVE_0,1,0)) { fail(2); return 2; }
+
+  // 3. Resolve a relative message number if necessary
+  int next_record_number = record_allocate_next( SECTOR_BUFFER_ADDRESS );
+  // Then get back the original version
+  if (read_sector(DRIVE_0,1,0)) { fail(3); return 3; }
+  if (message_number < 0 ) {
+    record_number = next_record_number + message_number;
+    if (record_number < 0) { fail(4); return 4; }
+  } else record_number = message_number;
+  if (record_number >= next_record_number) { fail(5); return 5; }
+  if (!record_number) { fail(6); return 6; }
+  
+  // 4. Erase bits for this record in all index records.
+  index_buffer_clear();
+  index_buffer_update((unsigned char *)"",0);
+  index_update_from_buffer(DRIVE_1,record_number);
+  
+  // Check if we are deleting the last message, in which case we don't
+  // need to shuffle down, and can simply unindex the message.
+  // But if it's not the last we have to reindex multiple records.
+  // For now, in that case we'll just reindex the whole thing.
+  // Actually... we can just shuffle the index bits down.
+
+  if (record_number < (next_record_number - 1) ) {
+    // It wasn't the last record, so we have to shuffle the index entries as well.
+    // For now, just re-index the whole thing.
+    // XXX Disabled for now because we don't currently use the index,
+    //     and it takes _forever_. Like _hours_ to reindex a disk on real hardware
+    //     right now.
+    // XXX disk_reindex(FIELD_BODYTEXT);
+  }
+
+  // 5. Update BAM sector for thread to mark the message free
+  if (read_sector(DRIVE_0,1,0)) { fail(7); return 7; }
+  if (record_free(SECTOR_BUFFER_ADDRESS + 2,record_number)) { fail(9); return 9; }
+  if (write_sector(DRIVE_0,1,0)) { fail(8); return 8; }
+  
+  buffers_unlock(LOCK_TELEPHONY);    
   
   return 0;
 }
+
+

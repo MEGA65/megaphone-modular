@@ -173,6 +173,10 @@ char disk_reindex(unsigned char field)
 {
   unsigned int c;
 
+  CHECKPOINT("disk_reindex() takes >1 hour to run!");
+  fail(1);
+  return 1;
+  
   /* Note that we can't use slab_read() for the records we are
      indexing, because that gets used in index_update_from_buffer().
 
@@ -249,5 +253,3 @@ char contacts_reindex(unsigned char contacts_disk_id)
   return 0;
 }
 
-  
-  
