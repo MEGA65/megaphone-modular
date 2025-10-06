@@ -84,6 +84,8 @@ void fatal(const char *file, const char *function, int line, unsigned char r)
 
 #ifdef LLVM
 
+extern void irq_wait_animation(void);
+
 int
 #else
 void
@@ -99,6 +101,12 @@ main(void)
   
   mega65_io_enable();
 
+  asm volatile ( "sei");  
+
+  // Install IRQ animator for waiting
+  POKE(0x0314,(uint8_t)(((uint16_t)&irq_wait_animation)>>0));
+  POKE(0x0315,(uint8_t)(((uint16_t)&irq_wait_animation)>>8));  
+  
   // Install NMI/BRK catcher
   POKE(0x0316,(uint8_t)(((uint16_t)&nmi_catcher)>>0));
   POKE(0x0317,(uint8_t)(((uint16_t)&nmi_catcher)>>8));
@@ -106,6 +114,8 @@ main(void)
   POKE(0x0319,(uint8_t)(((uint16_t)&nmi_catcher)>>8));
   POKE(0xFFFE,(uint8_t)(((uint16_t)&nmi_catcher)>>0));
   POKE(0xFFFF,(uint8_t)(((uint16_t)&nmi_catcher)>>8));
+
+  asm volatile ( "cli");  
   
   screen_setup();  
   screen_clear();    
@@ -164,7 +174,9 @@ main(void)
       
     if (redraw) {
       show_busy();
-      sms_thread_display(contact_ID,position,0,&first_message_displayed);
+      sms_thread_display(contact_ID,position,
+			 1, // Show message edit box
+			 &first_message_displayed);
       hide_busy();
     }
     redraw=0;

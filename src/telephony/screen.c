@@ -148,6 +148,14 @@ void screen_setup(void)
 
 void show_busy(void)
 {
+  // Reset weight position when showing it
+  if (!(PEEK(0xD015)&0x04)) {
+    // Reset weight to near top of the screen
+    POKE(0xD005,0x18);
+    // Randomise X position somewhat
+    POKE(0xD004,PEEK(0xD012));
+  }
+  
   POKE(0xD015,PEEK(0xD015)|0x04);
 }
 

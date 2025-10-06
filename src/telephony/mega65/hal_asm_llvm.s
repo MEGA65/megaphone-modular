@@ -1,5 +1,30 @@
-	.global mountd81disk0,mountd81disk1
+	.global mountd81disk0,mountd81disk1, irq_wait_animation
 	.type  mountd81disk0,@function
+	.type  mountd81disk1,@function
+	.type  irq_wait_animation,@function
+
+irq_wait_animation:
+
+	;; Move weight down the screen
+	inc $d005
+	inc $d005
+
+	;; Check if it's near the bottom of the screen
+	lda $d005
+	cmp #$fe
+	bcc not_at_bottom
+
+	;; It was near the bottom of the screen
+	
+	;;  Move wait back to top of screen
+	lda #$18
+	sta $d005
+	;; and randomise X position somewhat
+	lda $d012
+	sta $d004
+	
+not_at_bottom:	
+	jmp $ea31
 	
 llvm_copy_arg1_to_0100:	
     ;; Copy file name
