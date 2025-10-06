@@ -23,14 +23,14 @@ void textbox_erase_draft(void)
   buffers.textbox.draft_len = 1;
   buffers.textbox.draft_cursor_position = 0;
   lfill((uint32_t)buffers.textbox.draft,0x00,sizeof(buffers.textbox.draft));
-  buffers.textbox.draft[0]='|';
+  buffers.textbox.draft[0]=CURSOR_CHAR;
 }
 
 void textbox_hide_cursor(void)
 {
   buffers_lock(LOCK_TEXTBOX);
   for(unsigned int i=0;i<buffers.textbox.draft_len;i++) {
-    if (buffers.textbox.draft[i]=='|') {
+    if (buffers.textbox.draft[i]==CURSOR_CHAR) {
       lcopy((unsigned long) &buffers.textbox.draft[i+1],
 	    (unsigned long) &buffers.textbox.draft[i],
 	    buffers.textbox.draft_len - i);

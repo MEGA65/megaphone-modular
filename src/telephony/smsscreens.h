@@ -5,3 +5,4 @@ char sms_thread_display(unsigned int contact,
 			);
 void textbox_erase_draft(void);
 void textbox_hide_cursor(void);
+

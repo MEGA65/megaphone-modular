@@ -6,6 +6,11 @@
 #define FONT_EMOJI_MONO 1
 #define FONT_TEXT 2
 #define FONT_UI 3
+// Allow a glyph to be forced to be used no matter which font is requested
+#define FONT_ALL 0xff
+
+// Magic unicode codepoint that instead draws a blinking 2px wide cursor
+#define CURSOR_CHAR 0x01
 
 void show_busy(void);
 void hide_busy(void);

@@ -143,7 +143,8 @@ void screen_setup(void)
   // Sprite multi-colour 1 = black, so that we can draw scroll bars
   POKE(0xD025,0x0B); // Sprite MCM 0 = dark grey 
   POKE(0xD026,0x06); // Sprite MCM 1 = blue
-  
+
+  reset_glyph_cache();
 }
 
 void show_busy(void)
@@ -314,6 +315,16 @@ void reset_glyph_cache(void)
     ofs+=count;
   }
   lfill((unsigned long)cached_codepoints,0x00,GLYPH_CACHE_SIZE*sizeof(unsigned long));
+
+  // Allocate unicode point 0x00001 = pseudo cursor
+  // (2px wide full height bar)
+  cached_codepoints[0]=0x1;
+  cached_fontnums[0]=FONT_ALL;
+  cached_glyph_flags[0]=0x03;
+  lfill(GLYPH_DATA_START+0x00,0x80,0x100);
+  lfill(GLYPH_DATA_START+0x08,0xFF,0x38);
+  lfill(GLYPH_DATA_START+0x40,0xFF,0x38);
+
 }
 
 void load_glyph(int font, unsigned long codepoint, unsigned int cache_slot)
@@ -344,15 +355,7 @@ void load_glyph(int font, unsigned long codepoint, unsigned int cache_slot)
   }
 
   // Store glyph in the cache
-#define FONT_CARD_ORDER_FIXED
-#ifdef FONT_CARD_ORDER_FIXED
   lcopy((unsigned long)glyph_buffer,GLYPH_DATA_START + ((unsigned long)cache_slot<<8), BYTES_PER_GLYPH);
-#else
-  lcopy((unsigned long)glyph_buffer,GLYPH_DATA_START + ((unsigned long)cache_slot<<8), 64);
-  lcopy((unsigned long)glyph_buffer + 64 ,GLYPH_DATA_START + ((unsigned long)cache_slot<<8) + 128, 64);
-  lcopy((unsigned long)glyph_buffer + 128,GLYPH_DATA_START + ((unsigned long)cache_slot<<8) + 64, 64);
-  lcopy((unsigned long)glyph_buffer + 192,GLYPH_DATA_START + ((unsigned long)cache_slot<<8)+ 192, 64);
-#endif
   cached_codepoints[cache_slot]=codepoint;
   cached_fontnums[cache_slot]=font;
   cached_glyph_flags[cache_slot]=glyph_flags;
@@ -779,7 +782,8 @@ unsigned char lookup_glyph(int font, unsigned long codepoint,unsigned char *pixe
   
   for(i=0;i<GLYPH_CACHE_SIZE;i++) {
     if (!cached_codepoints[i]) break;
-    if (cached_codepoints[i]==codepoint&&cached_fontnums[i]==font) break;
+    if (cached_codepoints[i]==codepoint
+	&&((cached_fontnums[i]==FONT_ALL)||(cached_fontnums[i]==font))) break;
   }
 
   if (i==GLYPH_CACHE_SIZE) {
