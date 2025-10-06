@@ -321,10 +321,14 @@ void reset_glyph_cache(void)
   cached_codepoints[0]=0x1;
   cached_fontnums[0]=FONT_ALL;
   cached_glyph_flags[0]=0x03;
+#ifdef GRADED_CURSOR_ENDS
   lfill(GLYPH_DATA_START+0x00,0x80,0x100);
   lfill(GLYPH_DATA_START+0x08,0xFF,0x38);
   lfill(GLYPH_DATA_START+0x40,0xFF,0x38);
-
+#else
+  lfill(GLYPH_DATA_START+0x00,0xD0,0x100);
+#endif
+  
 }
 
 void load_glyph(int font, unsigned long codepoint, unsigned int cache_slot)
@@ -816,6 +820,9 @@ char draw_glyph(int x, int y, int font, unsigned long codepoint,unsigned char co
 
   // Make reverse bit be in correct place for SEAM colour RAM byte 1 reverse flag
   if (reverse) reverse = 0x20;
+
+  // Make cursor blink
+  if (codepoint==CURSOR_CHAR) reverse |= 0x10;
   
   colour &= 0x0f;
 
