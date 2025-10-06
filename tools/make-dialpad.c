@@ -20,11 +20,12 @@ char output[OUTPUT_HEIGHT][MAX_WIDTH + 1];
 
 FILE *outfile=NULL;
 
-void record_glyph(uint32_t codepoint, unsigned char data[256])
+void record_glyph(unsigned char data[2560])
 {
+#define GLYPH_SIZE (64*4*2*2)
+  
   if (outfile) {
-    fseek(outfile,codepoint << 8, SEEK_SET);
-    fwrite(data,256,1,outfile);
+    fwrite(data,64*4*2*2,1,outfile);
   }
 }
 
@@ -45,7 +46,7 @@ int dump_bytes(char *msg, unsigned char *bytes, int length)
 void clear_output() {
     for (int y = 0; y < OUTPUT_HEIGHT; y++) {
         memset(output[y], ' ', MAX_WIDTH);
-        output[y][MAX_WIDTH] = '\0';
+        output[y][MAX_WIDTH-1] = '\0';
     }
 }
 
@@ -84,40 +85,30 @@ char intensity_to_ascii(uint8_t intensity) {
     return ramp[index];
 }
 
-/*  Copy one glyph from pixel_data[][32] → data[2560]
- *
- *  ┌───────────────  glyph columns ───────────────┐
- *  row 0  pixel_data[0][ 0.. 7] → data[0.. 63]  (tile 0, row 0)
- *         pixel_data[0][ 8..15] → data[128..191] (tile 2, row 0)
- *  row 1  pixel_data[1][ 0.. 7] → data[64..127] (tile 1, row 0)
- *         pixel_data[1][ 8..15] → data[192..255] (tile 3, row 0)
- *  row 2  pixel_data[2][ 0.. 7] → data[0.. 63]  (tile 0, row 1)
- *  ...
- *
- *  Layout recap
- *  ┌─────┬─────┐         data[  0.. 63]  = tile 0 (even rows, left 8 bytes)
- *  │ T0  │ T2  │         data[128..191]  = tile 2 (even rows, right 8 bytes)
- *  ├─────┼─────┤
- *  │ T1  │ T3  │         data[ 64..127]  = tile 1 (odd rows,  left 8 bytes)
- *  └─────┴─────┘         data[192..255]  = tile 3 (odd rows,  right 8 bytes)
- */
 static void
 pack_into_tiles(const uint8_t pixel_data[OUTPUT_HEIGHT][32], uint8_t data[2560])
 {
     memset(data, 0, 2560);          /*  safety / predictable padding           */
 
-    for (int y = 0; y < OUTPUT_HEIGHT; ++y) {          /* 0‥15 */
-        const int tile_row     = y >> 1;               /* 0‥7   */
-        const int even_row     = !(y & 1);             /* true if 0,2,4…       */
-        const int even_offset  = even_row ?   0 : 64; /* tiles 0+1 or 2+3     */
+    for (int y = 0; y < OUTPUT_HEIGHT; ++y) {          /* 0‥31 */
+      for (int bx = 0; bx < 32; ++bx) {              /* byte-column 0‥31 = 64px     */
 
-        for (int bx = 0; bx < 32; ++bx) {              /* byte-column 0‥15     */
-	  char char_column = bx / 8;
-	  const int base_offset = even_offset + char_column * 128;
-	  const int dest_index  = base_offset + tile_row * 8 + (bx & 7);
+	const int intra_tile_row     = (y >> 1) & 7;               /* 0‥7   */
+	const int interlace_even     = !(y & 1);             /* true if 0,2,4…       */
+	const int interlace_offset   = interlace_even ?   0 : 64; /* tiles 0+1 or 2+3     */
 
-            data[dest_index] = pixel_data[y][bx];
-        }
+	const int lower_row_offset = (y>15) ? (64*2*4) : 0;
+	
+	char char_column = bx / 8;
+
+	const int tile_offset = interlace_offset + char_column * 128 + lower_row_offset;
+
+	const int dest_index  = tile_offset + intra_tile_row * 8 + (bx & 7);
+
+	//	fprintf(stderr,"DEBUG: y=%d, x=%d, dest_index=0x%04x\n",y,bx,dest_index);
+	
+	data[dest_index] = pixel_data[y][bx];
+      }
     }
 }
 
@@ -170,6 +161,8 @@ void render_glyph(FT_Face face, uint32_t codepoint, int pen_x) {
     
     uint8_t glyph_width = width;  // For kerning-aware spacing
 
+    uint8_t centring_offset = (64 - width) / 2;
+    
     // Allocate pixel buffer
     uint8_t pixel_data[OUTPUT_HEIGHT][32] = {{0}}; // max 64px wide using nybls = 32 bytes per row
 
@@ -248,13 +241,13 @@ void render_glyph(FT_Face face, uint32_t codepoint, int pen_x) {
            is_color ? "color" : "intensity",
            width, glyph_width);
 
-    pen_x = 0;
+    pen_x = centring_offset;
     for (int y = 0; y < OUTPUT_HEIGHT; y++) {
       for(int x=0;x<OUTPUT_WIDTH;x++) {
 	output[y][pen_x + x] = intensity_to_ascii(nybl_pick(pixel_data[y][x/2],x&1));
       }
-      output[y][pen_x + glyph_width] = '|';
-      output[y][pen_x + glyph_width + 1] = 0;
+      output[y][pen_x + OUTPUT_WIDTH] = '|';
+      output[y][pen_x + OUTPUT_WIDTH + 1] = 0;
       puts(output[y]);
     }
     puts("");
@@ -263,9 +256,9 @@ void render_glyph(FT_Face face, uint32_t codepoint, int pen_x) {
 
     pack_into_tiles(pixel_data, data);
           
-    dump_bytes("Packed glyph",data,256);
+    dump_bytes("Packed glyph",data,128*4*2);
 
-    record_glyph(codepoint, data);
+    record_glyph(data);
     
 }
 
@@ -279,7 +272,7 @@ int main(int argc, char** argv) {
     const char* font_path = argv[1];
 
     char filename[8192];
-    snprintf(filename,8192,"%s.MRF",argv[1]);
+    snprintf(filename,8192,"dialpad.NCM");
     outfile=fopen(filename,"wb");
     
     FT_Library ft;
