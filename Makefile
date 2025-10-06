@@ -80,6 +80,7 @@ SRC_TELEPHONY_COMMON=	src/telephony/d81.c \
 NATIVE_TELEPHONY_COMMON=	$(SRC_TELEPHONY_COMMON) \
 			src/telephony/screen.c \
 			src/telephony/smsscreens.c \
+			src/telephony/wait_sprite.c \
 
 
 OBJ_TELEPHONY_COMMON=	src/telephony/d81.s \
@@ -124,6 +125,10 @@ SRC_TELEPHONY_COMMON_LINUX=	src/telephony/linux/hal.c
 HDR_TELEPHONY_COMMON_LINUX=	src/telephony/linux/includes.h
 
 HDR_PATH_LINUX=	-Isrc/telephony/linux -Isrc/telephony
+
+src/telephony/wait_sprite.c:	tools/sprite_gen.c
+	gcc -Wall -o tools/sprite_gen tools/sprite_gen.c
+	tools/sprite_gen > src/telephony/wait_sprite.c
 
 src/telephony/linux/provision:	src/telephony/provision.c $(SRC_TELEPHONY_COMMON) $(HDR_TELEPHONY_COMMON) $(SRC_TELEPHONY_COMMON_LINUX) $(HDR_TELEPHONY_COMMON_LINUX)
 	gcc -Wall -g $(HDR_PATH_LINUX) -o $@ src/telephony/provision.c $(SRC_TELEPHONY_COMMON) $(SRC_TELEPHONY_COMMON_LINUX)
