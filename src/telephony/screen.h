@@ -7,6 +7,9 @@
 #define FONT_TEXT 2
 #define FONT_UI 3
 
+void show_busy(void);
+void hide_busy(void);
+
 void draw_goto(int x,int y, int goto_pos);
 void screen_setup(void);
 char screen_setup_fonts(void);

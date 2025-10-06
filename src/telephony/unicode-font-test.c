@@ -162,7 +162,11 @@ main(void)
       redraw = 1;      
     }
       
-    if (redraw) sms_thread_display(contact_ID,position,0,&first_message_displayed);
+    if (redraw) {
+      show_busy();
+      sms_thread_display(contact_ID,position,0,&first_message_displayed);
+      hide_busy();
+    }
     redraw=0;
 
     // Wait for key press
@@ -174,11 +178,13 @@ main(void)
       buffers_unlock(LOCK_TEXTBOX);
 
       // XXX Display busy status
+      show_busy();
       sms_send_to_contact(contact_ID,buffers.textbox.draft);
       buffers_unlock(LOCK_TELEPHONY);      
 
       // Sending to a contact unmounts the thread, so we need to fix that
       try_or_fail(mount_contact_qso(contact_ID));
+      hide_busy();
       
       reload_contact = 1;
       erase_draft = 1;

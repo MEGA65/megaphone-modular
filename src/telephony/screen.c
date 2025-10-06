@@ -36,6 +36,7 @@ char screen_setup_fonts(void)
   return err;
 }
 
+extern uint8_t wait_sprite[21*8];
 
 void screen_setup(void)
 {
@@ -103,35 +104,56 @@ void screen_setup(void)
   POKE(0xD06D,0xF0);
   POKE(0xD06E,0x80); // Use 16-bit sprite numbers
 
-  // Point the sprite data for sprites at $F100 & $F400
+  // Point the sprite data for scroll bar sprites at $F100 & $F400
   // to allow for 255x3 = ~$300 bytes
   POKE(0xF000,((0xF100L>>6)) & 0xff);
   POKE(0xF001,(0xF100L>>(6+8)));
   POKE(0xF002,((0xF400L>>6)) & 0xff);
   POKE(0xF003,(0xF400L>>(6+8)));
+  // Point the sprite data for the "wait" sprite at $F700
+  POKE(0xF004,((0xF700L>>6)) & 0xff);
+  POKE(0xF005,(0xF700L>>(6+8)));
+  // And copy sprite data into place
+  lcopy((unsigned long)&wait_sprite[0],0xF700,21*8);
 
-  // XXX For testing fill the sprites with something we can see
-  lfill(0xF100L,0x55,0x600);
+  // Place "wait" sprite centrally on the screen
+  POKE(0xD004,0x80);
+  POKE(0xD005,0x80);
 
-  // Position sprites appropriately
+  // "Wait" sprite is black
+  POKE(0xD029,0x00);
+  // "Wait" sprite is 64px wide
+  POKE(0xD057,0x04);
+  
+  // Position scroll-bar sprites appropriately
   POKE(0xD000L,0xC9);
   POKE(0xD001L,0x1E);
   POKE(0xD002L,0x80);
   POKE(0xD003L,0x1E);
-  POKE(0xD010L,0x00); // Sprite X MSBs all clear
+  POKE(0xD010L,0x04); // Sprite X MSB only for "wait" sprite
   POKE(0xD05FL,0x01); // Sprite 0 X position super-MSB
 
   // Scroll-bar Sprites are MCM
   POKE(0xD01C,0x03);
   
-  // Sprites are light grey
+  // Scroll-bar Sprites are light grey
   POKE(0xD027,0x0F);
   POKE(0xD028,0x0F);
 
   // Sprite multi-colour 1 = black, so that we can draw scroll bars
   POKE(0xD025,0x0B); // Sprite MCM 0 = dark grey 
   POKE(0xD026,0x06); // Sprite MCM 1 = blue
+  
+}
 
+void show_busy(void)
+{
+  POKE(0xD015,PEEK(0xD015)|0x04);
+}
+
+void hide_busy(void)
+{
+  POKE(0xD015,PEEK(0xD015)&(0xff-0x04));
 }
 
 char draw_scrollbar(unsigned char sprite_num,

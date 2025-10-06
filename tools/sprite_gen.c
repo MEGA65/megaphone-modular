@@ -1,26 +1,26 @@
 
 char *wait_ascii[]={
-  "                                                               ",
-  "                                                               ",
-  "                                                               ",
-  "                                                               ",
-  "                                                               ",
-  "                 xxxxxxxxxxx                                   ",
-  "                 xx       xx                                   ",
-  "                  xx     xx                                    ",
-  "                   x     x                                     ",
-  "     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                      ",
-  "     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                      ",
-  "    xxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxx                     ",
-  "    xxxxxxxxxxxxxxxxx  xxxxxxxxxxxxxxxxxxx                     ",
-  "   xxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxx                    ",
-  "   xxxxxxxxxxxxxxxx       xxxxxxxxxxxxxxxxx                    ",
-  "  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                   ",
-  "  xxxxxxxxx      xx       xx  xxxx  xxxxxxxx                   ",
-  " xxxxxxxxxxxx  xxxx  xxx  xx    xx  xxxxxxxxx                  ",
-  " xxxxxxxxxxxx  xxxx  xxx  xx  x  x  xxxxxxxxx                  ",
-  "xxxxxxxxxxxxx  xxxx       xx  xx    xxxxxxxxxx                 ",
-  "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                 ",
+  "                                                                ",
+  "                                                                ",
+  "                                                                ",
+  "                                                                ",
+  "                                                                ",
+  "                 xxxxxxxxxxx                                    ",
+  "                 xx       xx                                    ",
+  "                  xx     xx                                     ",
+  "                   x     x                                      ",
+  "     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                       ",
+  "     xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                       ",
+  "    xxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxx                      ",
+  "    xxxxxxxxxxxxxxxxx  xxxxxxxxxxxxxxxxxxx                      ",
+  "   xxxxxxxxxxxxxxxxxxx xxxxxxxxxxxxxxxxxxxx                     ",
+  "   xxxxxxxxxxxxxxxx       xxxxxxxxxxxxxxxxx                     ",
+  "  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                    ",
+  "  xxxxxxxxx      xx       xx  xxxx  xxxxxxxx                    ",
+  " xxxxxxxxxxxx  xxxx  xxx  xx    xx  xxxxxxxxx                   ",
+  " xxxxxxxxxxxx  xxxx  xxx  xx  x  x  xxxxxxxxx                   ",
+  "xxxxxxxxxxxxx  xxxx       xx  xx    xxxxxxxxxx                  ",
+  "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx                  ",
 };
 
 #include <stdio.h>
@@ -38,7 +38,7 @@ int main(int argc,char **argv)
   for(int row=0;row<21;row++) {
     for(int col=0;col<64;col++) {
       if (wait_ascii[row][col]!=' ') {
-	sprite[row*8+(col>>3)]|=1<<(col&7);
+	sprite[row*8+(col>>3)]|=1<<(7-(col&7));
       }
     }
 
