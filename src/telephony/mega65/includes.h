@@ -58,7 +58,8 @@ struct function_table {
 void dump_backtrace(void);
 void nmi_catcher(void);
 
-#endif
+char mega65_dos_exechelper(char *image_name);
+char read_file_from_sdcard(char *filename,uint32_t load_address);
 
 extern unsigned char tof_r;
 #define try_or_fail(X) if ((tof_r=X)!=0) fail(tof_r)
@@ -70,3 +71,4 @@ void mega65_uart_printhex16(const uint16_t v);
 #define CHECKPOINT(X) { mega65_uart_print(__FILE__); mega65_uart_print(":"); mega65_uart_printhex16(__LINE__); mega65_uart_print(":"); mega65_uart_print(__FUNCTION__); mega65_uart_print(":"); mega65_uart_print(X); mega65_uart_print("\n\r"); }
 #define CHECKPOINT_WAIT(X) { CHECKPOINT(X); while(PEEK(0xD610)) POKE(0xD610,0); while(!PEEK(0xD610)) POKE(0xD020,PEEK(0xD020)+1); POKE(0xD610,0); }
 
+#endif

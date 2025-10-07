@@ -89,7 +89,7 @@ NATIVE_TELEPHONY_COMMON=	$(SRC_TELEPHONY_COMMON) \
 			src/telephony/wait_sprite.c \
 
 
-OBJ_TELEPHONY_COMMON=	src/telephony/d81.s \
+OBJ_TELEPHONY_NATIVE=	src/telephony/d81.s \
 			src/telephony/records.s \
 			src/telephony/screen.s \
 			src/telephony/contacts.s \
@@ -102,6 +102,7 @@ OBJ_TELEPHONY_COMMON=	src/telephony/d81.s \
 			src/telephony/slab.s \
 			src/telephony/mega65/hal.s \
 			src/telephony/mega65/hal_asm.s \
+			src/telephony/mega65/helper-llvm.s \
 
 HDR_TELEPHONY_COMMON=	src/telephony/records.h \
 			src/telephony/contacts.h \
@@ -174,7 +175,7 @@ bin65/unicode-font-test.cc65.prg:	src/telephony/unicode-font-test.c $(NATIVE_TEL
 	$(CC65) $(COPT_M65) src/mega65-libc/src/shres.c
 	$(CC65) $(COPT_M65) src/mega65-libc/src/memory.c
 	$(CC65) $(COPT_M65) src/mega65-libc/src/hal.c
-	$(CL65) -o bin65/unicode-font-test.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.s src/telephony/attr_tables.s $(OBJ_TELEPHONY_COMMON) $(OBJ_MEGA65_LIBC) 
+	$(CL65) -o bin65/unicode-font-test.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.s src/telephony/attr_tables.s $(OBJ_TELEPHONY_NATIVE) $(OBJ_MEGA65_LIBC) 
 
 # For backtrace support we have to compile twice: Once to generate the map file, from which we
 # can generate the function list, and then a second time, where we link that in.
