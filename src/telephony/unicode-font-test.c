@@ -146,7 +146,7 @@ main(void)
   erase_draft = 0;
 
   show_busy();
-  
+
   while(1) {
     unsigned int first_message_displayed;
 

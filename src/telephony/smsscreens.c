@@ -55,6 +55,11 @@ char sms_thread_display(unsigned int contact,
   unsigned int message = 0;
   unsigned char r;
 
+  // Draw GOTOX to right of dialpad, so that right display area
+  // remains aligned.
+  for(int y=2;y<MAX_ROWS;y++) draw_goto(RENDER_COLUMNS - 1,y,720);
+  for(int y=2;y<MAX_ROWS;y++) draw_goto(100,y,720);
+  
   buffers_lock(LOCK_TEXTBOX);
 
   // XXX - Remember what we have mounted somehwere, so that we don't waste lots of time re-mounting

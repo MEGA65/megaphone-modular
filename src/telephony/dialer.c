@@ -21,7 +21,8 @@ void dialpad_draw_button(unsigned char symbol_num,
 
       if (yy==0||yy==3) glyph_num = DIALPAD_BLANK_GLYPH_ADDR / 64;
       else {
-	glyph_num = lpeek(glyph_num_addr);
+	if (xx) glyph_num = lpeek(glyph_num_addr - 1);
+	else glyph_num=0xa0;
 	if (glyph_num!=0xa0) {
 	  glyph_num = glyph_num*2 + (0x10080 / 64);
 	} else glyph_num = DIALPAD_BLANK_GLYPH_ADDR / 64;
