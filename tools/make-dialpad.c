@@ -290,7 +290,7 @@ void render_glyph(FT_Face face, uint32_t codepoint, int pen_x) {
     unsigned char data[16384];
     int len = pack_into_tiles(pixel_data, data);
     
-    dump_bytes("Packed glyph",data,len);
+    // dump_bytes("Packed glyph",data,len);
 
     record_glyph(data, len);
     
