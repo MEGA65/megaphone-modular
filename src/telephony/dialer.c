@@ -23,7 +23,7 @@ void dialpad_draw_button(unsigned char symbol_num,
       else {
 	glyph_num = lpeek(glyph_num_addr);
 	if (glyph_num!=0xa0) {
-	  glyph_num = glyph_num*2 + (0x10000 / 64);
+	  glyph_num = glyph_num*2 + (0x10080 / 64);
 	} else glyph_num = DIALPAD_BLANK_GLYPH_ADDR / 64;
 	glyph_num_addr++;
       }
@@ -44,12 +44,20 @@ void dialpad_draw_button(unsigned char symbol_num,
 
 void dialpad_draw(void)
 {
+  uint8_t seq[12]={1,2,3,4,5,6,7,8,9,11,0,10};
+
+  // Draw GOTOX to right of dialpad, so that right display area
+  // remains aligned.
+  for(int y=2;y<MAX_ROWS;y++) draw_goto(38,y,(38*8));
+  
   int x = 5;
   int y = 5;
-  for(int d=1;d<=9;d++) {
+  for(int d=0;d<=11;d++) {
     // Draw digits all in RED by default
-    dialpad_draw_button(d,x,y, 0x22);  // 0x20 = reverse
+    dialpad_draw_button(seq[d],x,y, 0x22);  // 0x20 = reverse
     x+=6;
     if (x>(5+6+6)) { x=5; y+=5; }
   }
+
+  
 }
