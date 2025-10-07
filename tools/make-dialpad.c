@@ -20,12 +20,27 @@ char output[OUTPUT_HEIGHT][MAX_WIDTH + 1];
 
 FILE *outfile=NULL;
 
-void record_glyph(unsigned char data[2560])
+int glyph_count = 0;
+
+#define MAX_GLYPHS 16
+#define DATA_START (MAX_GLYPHS * 8)
+
+int data_offset = DATA_START;
+
+void record_glyph(unsigned char data[2560], int len)
 {
-#define GLYPH_SIZE (64*4*2*2)
+  if (glyph_count>=MAX_GLYPHS) {
+    fprintf(stderr,"FATAL: Too many glyphs. Increase MAX_GLYPHS.\n");
+    exit(1);
+  }
   
   if (outfile) {
-    fwrite(data,64*4*2*2,1,outfile);
+    fseek(outfile,glyph_count*8,SEEK_SET);
+    fwrite(data,8,1,outfile);
+    fseek(outfile,data_offset,SEEK_SET);
+    fwrite(&data[8],len - 8,1,outfile);
+    data_offset += len - 8;
+    glyph_count++;
   }
 }
 
@@ -85,31 +100,51 @@ char intensity_to_ascii(uint8_t intensity) {
     return ramp[index];
 }
 
-static void
+static unsigned int
 pack_into_tiles(const uint8_t pixel_data[OUTPUT_HEIGHT][32], uint8_t data[2560])
 {
     memset(data, 0, 2560);          /*  safety / predictable padding           */
 
-    for (int y = 0; y < OUTPUT_HEIGHT; ++y) {          /* 0‥31 */
-      for (int bx = 0; bx < 32; ++bx) {              /* byte-column 0‥31 = 64px     */
+    int glyph_num = 0;
 
-	const int intra_tile_row     = (y >> 1) & 7;               /* 0‥7   */
-	const int interlace_even     = !(y & 1);             /* true if 0,2,4…       */
-	const int interlace_offset   = interlace_even ?   0 : 64; /* tiles 0+1 or 2+3     */
+    int glyph_offset = 8;
+    
+    for(int glyph=0;glyph<8;glyph++) {
+      int yl = (glyph&4)?16 : 0;
+      int xl = (glyph&3) * 8;
+      int yh = yl + 15;
+      int xh = xl+7;
 
-	const int lower_row_offset = (y>15) ? (64*2*4) : 0;
-	
-	char char_column = bx / 8;
-
-	const int tile_offset = interlace_offset + char_column * 128 + lower_row_offset;
-
-	const int dest_index  = tile_offset + intra_tile_row * 8 + (bx & 7);
-
-	//	fprintf(stderr,"DEBUG: y=%d, x=%d, dest_index=0x%04x\n",y,bx,dest_index);
-	
-	data[dest_index] = pixel_data[y][bx];
+      int byte = 0;
+      
+      for (int y = yl; y <= yh; y++) {          /* 0‥31 */
+	for (int bx = xl; bx <= xh; bx++) {              /* byte-column 0‥31 = 64px     */
+	  
+	  const int intra_tile_row     = (y >> 1) & 7;               /* 0‥7   */
+	  const int interlace_even     = !(y & 1);             /* true if 0,2,4…       */
+	  const int interlace_offset   = interlace_even ?   0 : 64; /* tiles 0+1 or 2+3     */
+	  	  
+	  const int dest_index  = interlace_offset + intra_tile_row * 8 + (bx & 7);
+	  
+	  //	  fprintf(stderr,"DEBUG: y=%d, x=%d, dest_index=0x%04x\n",y,bx,dest_index);
+	  
+	  data[glyph_offset + dest_index] = pixel_data[y][bx];
+	}
       }
+
+      data[glyph]=0xa0;
+      int i;
+      for(i=0;i<128;i++) if (data[glyph_offset + i]) break;
+      if (i<128) {
+	// fprintf(stderr,"DEBUG: Glyph %d non-empty.\n",glyph);
+	data[glyph]=glyph_num + (data_offset - DATA_START) / 128;
+	glyph_num++;
+	glyph_offset+=64*2;
+      }
+      
     }
+
+    return glyph_offset;
 }
 
 unsigned char nybl_pick(unsigned char c, int pickHigh)
@@ -252,13 +287,12 @@ void render_glyph(FT_Face face, uint32_t codepoint, int pen_x) {
     }
     puts("");
 
-    unsigned char data[2560];
+    unsigned char data[16384];
+    int len = pack_into_tiles(pixel_data, data);
+    
+    dump_bytes("Packed glyph",data,len);
 
-    pack_into_tiles(pixel_data, data);
-          
-    dump_bytes("Packed glyph",data,128*4*2);
-
-    record_glyph(data);
+    record_glyph(data, len);
     
 }
 
