@@ -11,6 +11,7 @@
 #include "contacts.h"
 #include "smsscreens.h"
 #include "sms.h"
+#include "dialer.h"
 
 unsigned char buffer[128];
 
@@ -120,6 +121,8 @@ main(void)
   screen_setup();  
   screen_clear();    
 
+  dialpad_draw();
+  
   generate_rgb332_palette();
   
   // Make sure SD card is idle

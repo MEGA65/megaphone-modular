@@ -85,6 +85,7 @@ SRC_TELEPHONY_COMMON=	src/telephony/d81.c \
 
 NATIVE_TELEPHONY_COMMON=	$(SRC_TELEPHONY_COMMON) \
 			src/telephony/screen.c \
+			src/telephony/dialer.c \
 			src/telephony/smsscreens.c \
 			src/telephony/wait_sprite.c \
 
@@ -100,9 +101,10 @@ OBJ_TELEPHONY_NATIVE=	src/telephony/d81.s \
 			src/telephony/sms.s \
 			src/telephony/smsscreens.s \
 			src/telephony/slab.s \
+			src/telephony/dialer.s \
 			src/telephony/mega65/hal.s \
 			src/telephony/mega65/hal_asm.s \
-			src/telephony/mega65/helper-llvm.s \
+			src/telephony/helper-cc65.s \
 
 HDR_TELEPHONY_COMMON=	src/telephony/records.h \
 			src/telephony/contacts.h \

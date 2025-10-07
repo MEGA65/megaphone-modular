@@ -148,7 +148,7 @@ void screen_setup(void)
 
   // Load dialpad and related glyphs
   mega65_chdir("PHONE");
-  read_file_from_sdcard("dialpad.NCM",0x10000L);
+  read_file_from_sdcard("dialpad.NCM",0x10000L);  
   
 }
 
