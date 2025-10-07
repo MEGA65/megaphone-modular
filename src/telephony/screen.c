@@ -145,6 +145,11 @@ void screen_setup(void)
   POKE(0xD026,0x06); // Sprite MCM 1 = blue
 
   reset_glyph_cache();
+
+  // Load dialpad and related glyphs
+  mega65_chdir("PHONE");
+  read_file_from_sdcard("dialpad.NCM",0x10000L);
+  
 }
 
 void show_busy(void)
