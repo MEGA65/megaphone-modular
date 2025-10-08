@@ -1,4 +1,4 @@
-#define RENDER_COLUMNS 160
+#define RENDER_COLUMNS 157
 #define MAX_ROWS 30
 
 #define NUM_FONTS 4
@@ -15,7 +15,6 @@
 void show_busy(void);
 void hide_busy(void);
 
-void draw_goto(int x,int y, int goto_pos);
 void screen_setup(void);
 char screen_setup_fonts(void);
 void generate_rgb332_palette(void);
@@ -23,7 +22,7 @@ void screen_clear(void);
 void screen_clear_partial_line(unsigned char row,
 			       unsigned char first_col,
 			       unsigned char last_col);
-void draw_goto(int x,int y, int goto_pos);
+void draw_goto(int x,int y, uint16_t goto_pos);
 char draw_glyph(int x, int y, int font, unsigned long codepoint,unsigned char colour, unsigned char *pixels_used);
 #define VIEWPORT_PADDED 1
 #define VIEWPORT_UNPADDED 0
@@ -76,6 +75,10 @@ char draw_scrollbar(unsigned char sprite_num,
 
 void textbox_find_cursor(void);
 void textbox_remove_cursor(void);
+
+unsigned char nybl_to_char(unsigned char n);
+void bcd_to_str(unsigned char v, unsigned char *out);
+
 
 extern unsigned long screen_ram;
 extern unsigned long colour_ram;

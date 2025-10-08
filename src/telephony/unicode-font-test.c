@@ -12,6 +12,7 @@
 #include "smsscreens.h"
 #include "sms.h"
 #include "dialer.h"
+#include "status.h"
 
 unsigned char buffer[128];
 
@@ -145,11 +146,13 @@ main(void)
   reload_contact = 1;
   erase_draft = 0;
 
+  statusbar_draw();
+  
   show_busy();
 
   while(1) {
     unsigned int first_message_displayed;
-
+    
     if (reload_contact) {
       reload_contact = 0;
 
@@ -178,7 +181,11 @@ main(void)
 
     // Wait for key press: This is the only time that we aren't "busy"    
     hide_busy();
-    while(!PEEK(0xD610)) continue;
+    while(!PEEK(0xD610)) {
+      // Keep the clock updated
+      statusbar_draw_time();
+      continue;
+    }
     show_busy();
     
     switch(PEEK(0xD610)) {

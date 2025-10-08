@@ -288,7 +288,7 @@ extern unsigned char colour_ram_1[64];
 
 unsigned int row0_offset;
 
-void draw_goto(int x,int y, int goto_pos)
+void draw_goto(int x,int y, uint16_t goto_pos)
 {
   // Get offset within screen and colour RAM for both rows of chars
   row0_offset = (y<<9) + (x<<1);
@@ -999,4 +999,17 @@ void textbox_remove_cursor(void)
 	(unsigned long)&buffers.textbox.draft[buffers.textbox.draft_cursor_position],
 	buffers.textbox.draft_len - buffers.textbox.draft_cursor_position);
   buffers.textbox.draft_len--;
+}
+
+unsigned char nybl_to_char(unsigned char n)
+{
+  if (n<0xa) return n+'0';
+  return (n-0xa)+'A';
+}
+
+void bcd_to_str(unsigned char v, unsigned char *out)
+{
+  out[0]=nybl_to_char(v>>4);
+  out[1]=nybl_to_char(v&0xf);
+  return;
 }

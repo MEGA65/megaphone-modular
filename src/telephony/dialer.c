@@ -49,15 +49,16 @@ void dialpad_draw(void)
 
   // Draw GOTOX to right of dialpad, so that right display area
   // remains aligned.
-  for(int y=2;y<MAX_ROWS;y++) draw_goto(38,y,(38*8));
-  
-  int x = 5;
+  for(int y=2;y<MAX_ROWS;y++) draw_goto(38,y,38*8-1);
+
+#define X_START 5
+  int x = X_START;
   int y = 5;
   for(int d=0;d<=11;d++) {
     // Draw digits all in RED by default
     dialpad_draw_button(seq[d],x,y, 0x22);  // 0x20 = reverse
     x+=6;
-    if (x>(5+6+6)) { x=5; y+=5; }
+    if (x>(X_START+6+6)) { x=X_START; y+=5; }
   }
 
   
