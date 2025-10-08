@@ -3,11 +3,28 @@
 #include "screen.h"
 #include "status.h"
 
+uint8_t registered_with_network = 1;
+uint8_t signal_level = 0xb0;
+uint8_t battery_percent = 100;
+uint8_t is_charging = 0;
+
+unsigned char signal_none[]="📵";
+// The following two strings must use unicode symbols that encode to the same number of bytes as each other.
+// The filler chars after must be exactly 7px wide to keep alignment
+unsigned char signal_strength[]="📱cccc";
+unsigned char signal_strength_forbidden[]="🚫****";
+
+unsigned char battery_charging[]="⚡🔋████";
+unsigned char battery_discharging[]="🪫████";
+unsigned char battery_flat[]="⚠🪫";
+unsigned char battery_flat_charging[]="⚡🪫";
+
 /*
   Status bar structure:
 
   0-63px (glyphs 0--15) = time
-
+  64-191px (glyphs 16--39) = OS information
+  
   64--703 (glyphs 16--156) = RESERVED
 
 */
@@ -45,7 +62,91 @@ void statusbar_draw_time(void)
 
 void statusbar_draw(void)
 {
+  // Prevent display glitching from RRB wrap etc
+  for(uint8_t x=1;x<RENDER_COLUMNS-2;x++) draw_goto(x,1,704);
+
+  // Setup signal strength increment mono glyphs
+  uint8_t toggle = 0x00;
+  for(uint8_t level=0;level<8;level++) {
+    for(uint8_t y=0;y<8;y++) {
+      // Bar
+      lpoke(0xff7e000L + (0x70 + level)*8 + 7 - y, (y==0||y>level) ? 0x00 : 0xff);
+      lpoke(0xff7e800L + (0x70 + level)*8 + 7 - y, (y==0||y>level) ? 0x00 : 0xff);
+      // Empty bar
+      lpoke(0xff7e000L + (0x78 + level)*8 + 7 - y, (y==0||y>level) ? 0x00 : 0xaa ^ toggle );
+      lpoke(0xff7e800L + (0x78 + level)*8 + 7 - y, (y==0||y>level) ? 0x00 : 0x55 ^ toggle);
+    }
+
+    // Toggle prevents the hashed empty bars from having matching edges
+    if (level&1) toggle = toggle ^ 0xff;
+  }
+  
+
+  // Time on the left
   statusbar_draw_time();
+
+  // Cellular Network name
+  draw_string_nowrap(16,1,
+		     FONT_UI,
+		     0x81, // reverse white
+		     (unsigned char *)"MEGAtel",
+		     64,128,
+		     16+24,
+		     NULL,
+		     VIEWPORT_PADDED,
+		     NULL,NULL);
+
+  // While fill for space in between
+  draw_string_nowrap(16+24,1,
+		     FONT_UI,
+		     0x81, // reverse white
+		     (unsigned char *)"",
+		     64+128,199,16+24+50,
+		     NULL,
+		     VIEWPORT_PADDED,
+		     NULL,NULL);
+  
+  // Reserved for status indicators
+  draw_string_nowrap(16+24+50,1,
+		     FONT_UI,
+		     0x81, // reverse white
+		     (unsigned char *)"",
+		     64+128+200,129,16+24+50+24,
+		     NULL,
+		     VIEWPORT_PADDED,
+		     NULL,NULL);
+
+  
+  // Signal strength
+  uint8_t *signal_string = NULL;
+  uint8_t bars = 0;
+  if (signal_level == 0) signal_string = signal_none;
+  else {
+    signal_string = signal_strength;
+    if (!registered_with_network) signal_string = signal_strength_forbidden;
+    bars = signal_level/50;
+    if (bars>4) bars=4;
+  }
+  draw_string_nowrap(16+24+50+24,1,
+		     FONT_UI,
+		     0x81, // reverse white
+		     signal_string,
+		     64+128+200,48,16+24+50+24+8,
+		     NULL,
+		     VIEWPORT_PADDED,
+		     NULL,NULL);
+  // Then we munge the _ characters to instead show our signal strength indicators
+  for(uint8_t bar = 0; bar < 4; bar++) {
+    // Draw bar or lack of bar
+    lpoke(screen_ram + 1 * (2 * 0x100) + (16+24+50+24+2 + bar)*2 + 0, (bar < bars) ? 0x71 + bar*2 : 0x79 + bar * 2);
+    // Choose non-FCM glyph and trim to 7px wide
+    lpoke(screen_ram + 1 * (2 * 0x100) + (16+24+50+24+2 + bar)*2 + 1, 0x20);
+  }
+  
+  // Battery status as percentage
+  
+
+  
 }
 
 		    
