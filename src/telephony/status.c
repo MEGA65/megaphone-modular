@@ -20,16 +20,6 @@ unsigned char battery_discharging[]=" 🪫ccccc";
 unsigned char battery_flat[]=" ⚠🪫";
 unsigned char battery_flat_charging[]=" ⚡🪫";
 
-/*
-  Status bar structure:
-
-  0-63px (glyphs 0--15) = time
-  64-191px (glyphs 16--39) = OS information
-  
-  64--703 (glyphs 16--156) = RESERVED
-
-*/
-
 unsigned char status_time[32];
 
 void statusbar_draw_time(void)
@@ -53,7 +43,7 @@ void statusbar_draw_time(void)
 		     FONT_UI,
 		     0x81, // reverse white
 		     status_time,
-		     0,64,16,
+		     0,ST_PX_TIME,ST_GL_TIME,
 		     NULL,
 		     VIEWPORT_PADDED,
 		     NULL,NULL);
@@ -90,12 +80,12 @@ void statusbar_draw(void)
   statusbar_draw_time();
 
   // Cellular Network name
-  draw_string_nowrap(16,1,
+  draw_string_nowrap(ST_GL_TIME,1,
 		     FONT_UI,
 		     0x81, // reverse white
 		     (unsigned char *)"MEGAtel",
-		     64,128,
-		     16+24,
+		     ST_PX_TIME,ST_PX_NETNAME,
+		     ST_GL_TIME+ST_GL_NETNAME,
 		     NULL,
 		     VIEWPORT_PADDED,
 		     NULL,NULL);
@@ -109,6 +99,7 @@ void statusbar_draw(void)
 		     NULL,
 		     VIEWPORT_PADDED,
 		     NULL,NULL);
+
   
   // Reserved for status indicators
   draw_string_nowrap(16+24+50,1,
@@ -131,20 +122,22 @@ void statusbar_draw(void)
     bars = signal_level/50;
     if (bars>4) bars=4;
   }
-  draw_string_nowrap(16+24+50+24,1,
+  draw_string_nowrap(ST_GL_SIGNAL_START,1,
 		     FONT_UI,
 		     0x81, // reverse white
 		     signal_string,
-		     64+128+200+129,48,16+24+50+24+8,
+		     ST_PX_SIGNAL_START,
+		     ST_PX_SIGNAL,
+		     ST_GL_SIGNAL_START+ST_GL_SIGNAL,
 		     NULL,
 		     VIEWPORT_PADDED,
 		     NULL,NULL);
   // Then we munge the _ characters to instead show our signal strength indicators
   for(uint8_t bar = 0; bar < 4; bar++) {
     // Draw bar or lack of bar
-    lpoke(screen_ram + 1 * (2 * 0x100) + (16+24+50+24+2 + bar)*2 + 0, (bar < bars) ? 0x71 + bar*2 : 0x79 + bar * 2);
+    lpoke(screen_ram + 1 * (2 * 0x100) + (ST_GL_SIGNAL_START+2 + bar)*2 + 0, (bar < bars) ? 0x71 + bar*2 : 0x79 + bar * 2);
     // Choose non-FCM glyph and trim to 7px wide
-    lpoke(screen_ram + 1 * (2 * 0x100) + (16+24+50+24+2 + bar)*2 + 1, 0x20);
+    lpoke(screen_ram + 1 * (2 * 0x100) + (ST_GL_SIGNAL_START+2 + bar)*2 + 1, 0x20);
   }
   
   // Battery status as percentage
@@ -161,11 +154,13 @@ void statusbar_draw(void)
     if (bars>5) bars=5;
     if (bars>=4) battery_string = battery_fullish;
   }
-  draw_string_nowrap(16+24+50+24+8,1,
+  draw_string_nowrap(ST_GL_BATTERY_START,1,
 		     FONT_UI,
 		     0x81, // reverse white
 		     battery_string,
-		     64+128+200+129+48,64,16+24+50+24+8+16,
+		     ST_PX_BATTERY_START,
+		     ST_PX_BATTERY,
+		     ST_GL_BATTERY_START+ST_GL_BATTERY,
 		     NULL,
 		     VIEWPORT_PADDED,
 		     NULL,NULL);
@@ -173,9 +168,9 @@ void statusbar_draw(void)
     // Then we munge the c characters to instead show our battery charge level bars
     for(uint8_t bar = 0; bar < 5; bar++) {
       // Draw bar or lack of bar
-      lpoke(screen_ram + 1 * (2 * 0x100) + (16+24+50+24+8+3 + bar)*2 + 0, 0x6f);
+      lpoke(screen_ram + 1 * (2 * 0x100) + (ST_GL_BATTERY_START+3 + bar)*2 + 0, 0x6f);
       // Choose non-FCM glyph and trim to 7px wide
-      lpoke(screen_ram + 1 * (2 * 0x100) + (16+24+50+24+8+3 + bar)*2 + 1, 0x20);
+      lpoke(screen_ram + 1 * (2 * 0x100) + (ST_GL_BATTERY_START+3 + bar)*2 + 1, 0x20);
     }
   }
   
