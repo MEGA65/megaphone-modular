@@ -126,7 +126,7 @@ void screen_setup(void)
   POKE(0xD057,0x04);
   
   // Position scroll-bar sprites appropriately
-  POKE(0xD000L,0xC9);
+  POKE(0xD000L,0xCB);
   POKE(0xD001L,0x1E + 3*8);
   POKE(0xD002L,0x80);
   POKE(0xD003L,0x1E);
@@ -136,9 +136,9 @@ void screen_setup(void)
   // Scroll-bar Sprites are MCM
   POKE(0xD01C,0x03);
   
-  // Scroll-bar Sprites are light grey
-  POKE(0xD027,0x0F);
-  POKE(0xD028,0x0F);
+  // Scroll-bar Sprites are medium grey
+  POKE(0xD027,0x0C);
+  POKE(0xD028,0x0C);
 
   // Sprite multi-colour 1 = black, so that we can draw scroll bars
   POKE(0xD025,0x0B); // Sprite MCM 0 = dark grey 
