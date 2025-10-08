@@ -71,10 +71,10 @@ void statusbar_draw(void)
   for(uint8_t level=0;level<8;level++) {
     for(uint8_t y=0;y<8;y++) {
       // Bar
-      lpoke(0xff7e000L + (0x70 + level)*8 + 7 - y, (y==0||y>level) ? 0x00 : 0xff);
+      lpoke(0xff7e000L + (0x70 + level)*8 + 7 - y, (y==0||y>level||y==7) ? 0x00 : 0xff);
       lpoke(0xff7e800L + (0x70 + level)*8 + 7 - y, (y==0||y>level) ? 0x00 : 0xff);
       // Empty bar
-      lpoke(0xff7e000L + (0x78 + level)*8 + 7 - y, (y==0||y>level) ? 0x00 : 0xaa ^ toggle );
+      lpoke(0xff7e000L + (0x78 + level)*8 + 7 - y, (y==0||y>level||y==7) ? 0x00 : 0xaa ^ toggle );
       lpoke(0xff7e800L + (0x78 + level)*8 + 7 - y, (y==0||y>level) ? 0x00 : 0x55 ^ toggle);
       // Battery level bars
       lpoke(0xff7e000L + (0x6f)*8 + 7 - y, (y==0||y==7) ? 0x00 : 0xfc );
