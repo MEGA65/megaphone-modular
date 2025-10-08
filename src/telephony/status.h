@@ -37,6 +37,13 @@
 #define ST_PX_BATTERY 64
 
 void statusbar_draw_time(void);
+void statusbar_draw_signal(void);
+void statusbar_draw_battery(void);
+void statusbar_draw_reserved(void);
+void statusbar_draw_netname(void);
+void statusbar_draw_indicators(void);
+
+void statusbar_setup(void);
 void statusbar_draw(void);
 
 #endif

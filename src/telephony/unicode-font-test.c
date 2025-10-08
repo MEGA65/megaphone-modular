@@ -119,8 +119,9 @@ main(void)
 
   asm volatile ( "cli");  
   
-  screen_setup();  
-  screen_clear();    
+  screen_setup();
+  screen_clear();
+  statusbar_setup();
 
   dialpad_draw();
   
