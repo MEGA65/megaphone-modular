@@ -1,6 +1,8 @@
 #define RENDER_COLUMNS 157
 #define MAX_ROWS 30
 
+#define SCROLL_BAR_HEIGHT (26*8)
+
 #define NUM_FONTS 4
 #define FONT_EMOJI_COLOUR 0
 #define FONT_EMOJI_MONO 1

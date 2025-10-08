@@ -96,7 +96,7 @@ void screen_setup(void)
 
   // But setup SMS and contact list scroll bar sprites
   POKE(0xD055,3); // Extended sprite height
-  POKE(0xD056,240);  // Extended height sprites are 240px tall
+  POKE(0xD056,SCROLL_BAR_HEIGHT);  // Extended height sprites for scroll bars
   POKE(0xD010,1); // SMS thread scroll bar goes on the right
 
   // Set the sprite pointer somewhere convenient @ $F000
@@ -127,7 +127,7 @@ void screen_setup(void)
   
   // Position scroll-bar sprites appropriately
   POKE(0xD000L,0xC9);
-  POKE(0xD001L,0x1E);
+  POKE(0xD001L,0x1E + 3*8);
   POKE(0xD002L,0x80);
   POKE(0xD003L,0x1E);
   POKE(0xD010L,0x04); // Sprite X MSB only for "wait" sprite
@@ -188,14 +188,14 @@ char draw_scrollbar(unsigned char sprite_num,
 
   if (!start) first=0;
   else {  
-    temp = start*240;
+    temp = start*SCROLL_BAR_HEIGHT;
     temp /= total;
     first = temp;
   }
 
-  if (end == total) last=240;
+  if (end == total) last=SCROLL_BAR_HEIGHT;
   else {
-    temp = end*240;
+    temp = end*SCROLL_BAR_HEIGHT;
     temp /= total;
     last = temp;
   }
