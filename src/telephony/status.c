@@ -12,12 +12,13 @@ unsigned char signal_none[]="📵";
 // The following two strings must use unicode symbols that encode to the same number of bytes as each other.
 // The filler chars after must be exactly 7px wide to keep alignment
 unsigned char signal_strength[]="📱cccc";
-unsigned char signal_strength_forbidden[]="🚫****";
+unsigned char signal_strength_forbidden[]="🚫cccc";
 
-unsigned char battery_charging[]="⚡🔋████";
-unsigned char battery_discharging[]="🪫████";
-unsigned char battery_flat[]="⚠🪫";
-unsigned char battery_flat_charging[]="⚡🪫";
+unsigned char battery_charging[]="⚡ccccc";
+unsigned char battery_fullish[]=" 🔋ccccc";
+unsigned char battery_discharging[]=" 🪫ccccc";
+unsigned char battery_flat[]=" ⚠🪫";
+unsigned char battery_flat_charging[]=" ⚡🪫";
 
 /*
   Status bar structure:
@@ -75,6 +76,9 @@ void statusbar_draw(void)
       // Empty bar
       lpoke(0xff7e000L + (0x78 + level)*8 + 7 - y, (y==0||y>level) ? 0x00 : 0xaa ^ toggle );
       lpoke(0xff7e800L + (0x78 + level)*8 + 7 - y, (y==0||y>level) ? 0x00 : 0x55 ^ toggle);
+      // Battery level bars
+      lpoke(0xff7e000L + (0x6f)*8 + 7 - y, (y==0||y==7) ? 0x00 : 0xfc );
+      lpoke(0xff7e800L + (0x6f)*8 + 7 - y, (y==0||y==7) ? 0x00 : 0xfc );
     }
 
     // Toggle prevents the hashed empty bars from having matching edges
@@ -131,7 +135,7 @@ void statusbar_draw(void)
 		     FONT_UI,
 		     0x81, // reverse white
 		     signal_string,
-		     64+128+200,48,16+24+50+24+8,
+		     64+128+200+129,48,16+24+50+24+8,
 		     NULL,
 		     VIEWPORT_PADDED,
 		     NULL,NULL);
@@ -144,6 +148,36 @@ void statusbar_draw(void)
   }
   
   // Battery status as percentage
+  // Signal strength
+  uint8_t *battery_string = NULL;
+  if (battery_percent <20) {
+    if (is_charging) battery_string = battery_flat_charging;
+    else battery_string = battery_flat;
+  }
+  else {
+    if (is_charging) battery_string = battery_charging;
+    else battery_string = battery_discharging;
+    bars = battery_percent/19;
+    if (bars>5) bars=5;
+    if (bars>=4) battery_string = battery_fullish;
+  }
+  draw_string_nowrap(16+24+50+24+8,1,
+		     FONT_UI,
+		     0x81, // reverse white
+		     battery_string,
+		     64+128+200+129+48,64,16+24+50+24+8+16,
+		     NULL,
+		     VIEWPORT_PADDED,
+		     NULL,NULL);
+  if (battery_percent >= 20) {
+    // Then we munge the c characters to instead show our battery charge level bars
+    for(uint8_t bar = 0; bar < 5; bar++) {
+      // Draw bar or lack of bar
+      lpoke(screen_ram + 1 * (2 * 0x100) + (16+24+50+24+8+3 + bar)*2 + 0, 0x6f);
+      // Choose non-FCM glyph and trim to 7px wide
+      lpoke(screen_ram + 1 * (2 * 0x100) + (16+24+50+24+8+3 + bar)*2 + 1, 0x20);
+    }
+  }
   
 
   
