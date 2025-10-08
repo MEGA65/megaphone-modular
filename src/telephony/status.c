@@ -91,22 +91,26 @@ void statusbar_draw(void)
 		     NULL,NULL);
 
   // While fill for space in between
-  draw_string_nowrap(16+24,1,
+  draw_string_nowrap(ST_GL_RESERVED_START,1,
 		     FONT_UI,
 		     0x81, // reverse white
 		     (unsigned char *)"",
-		     64+128,199,16+24+50,
+		     ST_PX_RESERVED_START,
+		     ST_PX_RESERVED,
+		     ST_GL_RESERVED_START+ST_GL_RESERVED,
 		     NULL,
 		     VIEWPORT_PADDED,
 		     NULL,NULL);
 
   
   // Reserved for status indicators
-  draw_string_nowrap(16+24+50,1,
+  draw_string_nowrap(ST_GL_INDICATORS_START,1,
 		     FONT_UI,
 		     0x81, // reverse white
 		     (unsigned char *)"",
-		     64+128+200,129,16+24+50+24,
+		     ST_PX_INDICATORS_START,
+		     ST_PX_INDICATORS,
+		     ST_GL_INDICATORS_START+ST_GL_INDICATORS,
 		     NULL,
 		     VIEWPORT_PADDED,
 		     NULL,NULL);
