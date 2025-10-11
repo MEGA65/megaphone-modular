@@ -88,6 +88,7 @@ NATIVE_TELEPHONY_COMMON=	$(SRC_TELEPHONY_COMMON) \
 			src/telephony/dialer.c \
 			src/telephony/status.c \
 			src/telephony/smsscreens.c \
+			src/telephony/contactscreens.c \
 			src/telephony/wait_sprite.c \
 
 
@@ -101,6 +102,7 @@ OBJ_TELEPHONY_NATIVE=	src/telephony/d81.s \
 			src/telephony/search.s \
 			src/telephony/sms.s \
 			src/telephony/smsscreens.s \
+			src/telephony/contactscreens.s \
 			src/telephony/slab.s \
 			src/telephony/dialer.s \
 			src/telephony/status.s \
