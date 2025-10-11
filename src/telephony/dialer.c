@@ -56,7 +56,7 @@ void dialpad_draw(void)
   int y = 5;
   for(int d=0;d<=11;d++) {
     // Draw digits all in RED by default
-    dialpad_draw_button(seq[d],x,y, 0x22);  // 0x20 = reverse
+    dialpad_draw_button(seq[d],x,y, 0x2e);  // 0x20 = reverse
     x+=6;
     if (x>(X_START+6+6)) { x=X_START; y+=5; }
   }
