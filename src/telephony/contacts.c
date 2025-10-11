@@ -6,6 +6,18 @@
 
 #include <string.h>
 
+char contact_read(uint16_t contact_id, unsigned char *buffer)
+{
+  try_or_fail(mega65_cdroot());
+  try_or_fail(mega65_chdir("PHONE"));
+
+  try_or_fail(mount_d81("CONTACT0.D81",DRIVE_0));
+
+  try_or_fail(read_record_by_id(DRIVE_0, contact_id, buffer));
+
+  return 0;  
+}
+
 char build_contact(unsigned char buffer[RECORD_DATA_SIZE],unsigned int *bytes_used,
 		   unsigned char *firstName,
 		   unsigned char *lastName,

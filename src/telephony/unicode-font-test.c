@@ -10,9 +10,14 @@
 #include "records.h"
 #include "contacts.h"
 #include "smsscreens.h"
+#include "contactscreens.h"
 #include "sms.h"
 #include "dialer.h"
 #include "status.h"
+
+#define RIGHT_AREA_START_PX 360
+#define RIGHT_AREA_START_GL 45
+#define RIGHT_AREA_WIDTH_PX 294
 
 unsigned char buffer[128];
 
@@ -157,6 +162,20 @@ main(void)
     if (reload_contact) {
       reload_contact = 0;
 
+      // Redisplay contact at top of screen
+
+      // Mount contacts 
+      if (!contact_read(contact_ID,buffers.textbox.draft)) {
+	contact_draw(RIGHT_AREA_START_GL, 3,
+		     RIGHT_AREA_START_PX,
+		     RENDER_COLUMNS - 1 - RIGHT_AREA_START_GL,
+		     RIGHT_AREA_WIDTH_PX,
+		     contact_ID,
+		     0, // XXX which field is currently active/highlighted
+		     buffers.textbox.draft);
+      }
+
+      
       // Clear draft initially
       textbox_erase_draft();
       
@@ -288,16 +307,16 @@ main(void)
       
       calc_break_points(buffers.textbox.draft,
 			FONT_UI,
-			294, // text field in px
-			  RENDER_COLUMNS - 1 - 45);      
+		        RIGHT_AREA_WIDTH_PX, // text field in px
+			RENDER_COLUMNS - 1 - RIGHT_AREA_START_GL);      
       
       // Only redraw the message draft if it hasn't changed how many lines it uses
       if (buffers.textbox.line_count == old_draft_line_count ) {
-	textbox_draw(360/8,
+	textbox_draw(RIGHT_AREA_START_PX/8,
 		     MAX_ROWS - buffers.textbox.line_count,
-		     360,
-		     294,
-		     RENDER_COLUMNS - 1 - 45,
+		     RIGHT_AREA_START_PX,
+		     RIGHT_AREA_WIDTH_PX,
+		     RENDER_COLUMNS - 1 - RIGHT_AREA_START_GL,
 		     FONT_UI,
 		     0x8F,
 		     buffers.textbox.draft,

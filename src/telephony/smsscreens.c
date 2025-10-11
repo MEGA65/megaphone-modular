@@ -98,7 +98,7 @@ char sms_thread_display(unsigned int contact,
     // XXX - Remember what's on the screen already, and use DMA to scroll it up
     // and down, so that we don't need to redraw it all.
     // But for now, we don't have that, so just clear the thread area on the screen
-    sms_thread_clear_screen_region(2,MAX_ROWS);
+    sms_thread_clear_screen_region(6,MAX_ROWS);
     
     // Draw the message draft
     textbox_draw(360/8,
