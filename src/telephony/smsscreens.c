@@ -114,6 +114,8 @@ char sms_thread_display(unsigned int contact,
     y = MAX_ROWS - 1;
     bottom_row_available = MAX_ROWS - 1;    
   }  
+
+  char partial_message=0;
   
   while(y>=SMS_FIRST_ROW&&message>0) {
 
@@ -149,6 +151,7 @@ char sms_thread_display(unsigned int contact,
     while(y<SMS_FIRST_ROW) {
       y++;
       first_row++;
+      partial_message=1;
     }
 
     bottom_row = buffers.textbox.line_count-1;
@@ -168,6 +171,8 @@ char sms_thread_display(unsigned int contact,
 
     // Leave blank line between messages
     y--;
+
+    if (partial_message) break;
     
     message--;
   }    
