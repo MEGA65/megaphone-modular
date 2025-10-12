@@ -121,7 +121,7 @@ unsigned char *find_field(unsigned char *record, unsigned int bytes_used, unsign
     unsigned int shuffle = 1 + 1 + ((record[ofs]&1)?256:0) + record[ofs+1];
 
     if ((record[ofs]&0xfe) == type) {
-      *len = ((record[ofs]&1)?256:0) + record[ofs+1];
+      if (len) *len = ((record[ofs]&1)?256:0) + record[ofs+1];
       return &record[ofs+2];
     }
 
