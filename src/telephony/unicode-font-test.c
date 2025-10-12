@@ -147,18 +147,18 @@ main(void)
   
   position = -1;
   redraw = 1;
-  redraw_draft = 1;
   reload_contact = 1;
+  redraw_contact = 1;
   erase_draft = 0;
 
   active_field = 0;
-
+  
   dialpad_draw(active_field);  
   
   statusbar_draw();
   
   show_busy();
-
+  
   while(1) {
     unsigned int first_message_displayed;
     
@@ -195,7 +195,6 @@ main(void)
 		   RENDER_COLUMNS - 1 - RIGHT_AREA_START_GL,
 		   // Subtract a bit of space for scroll bar etc
 		   RIGHT_AREA_WIDTH_PX - 16,
-		   contact_id,
 		   active_field, // which field is currently active/highlighted
 		   buffers.textbox.draft);
     }       
@@ -220,9 +219,9 @@ main(void)
     switch(PEEK(0xD610)) {
     case 0x09: case 0x0F: // TAB - move fields
 
+      // Redraw old field sans cursor or selection
       textbox_remove_cursor();
-      // Redraw old field sans cursor
-
+      af_redraw(0xff,active_field);      
       
       prev_active_field = active_field;
       if (PEEK(0xD610)==0x0F) active_field--; // shift+tab = 0x0f
@@ -237,36 +236,30 @@ main(void)
 
       // Load draft with the correct field
       af_retrieve(active_field, contact_id);
-      switch(active_field) {
-      }
+      // textbox_find_cursor();
+      af_redraw(active_field,active_field);      
       
-      // Then redraw whatever the field is that should be active in the
-      // normal way
-      redraw_draft = 1;
-      
-      textbox_find_cursor();
-      
-      redraw_contact = 1;
       break;
     case 0x0d: // RETURN = send message
       // Don't send empty messages (or that just consist of the cursor)
 
-      buffers_unlock(LOCK_TEXTBOX);
-
-      textbox_remove_cursor();
-      sms_send_to_contact(contact_id,buffers.textbox.draft);
-      buffers_unlock(LOCK_TELEPHONY);      
-
-      // Sending to a contact unmounts the thread, so we need to fix that
-      try_or_fail(mount_contact_qso(contact_id));
-
-      // Clear saved draft
-      textbox_erase_draft();
-      write_record_by_id(0,USABLE_SECTORS_PER_DISK -1, buffers.textbox.draft);
-      
-      reload_contact = 1;
-      erase_draft = 1;
-      
+      if (active_field==AF_SMS) {
+	buffers_unlock(LOCK_TEXTBOX);
+	
+	textbox_remove_cursor();
+	sms_send_to_contact(contact_id,buffers.textbox.draft);
+	buffers_unlock(LOCK_TELEPHONY);      
+	
+	// Sending to a contact unmounts the thread, so we need to fix that
+	try_or_fail(mount_contact_qso(contact_id));
+	
+	// Clear saved draft
+	textbox_erase_draft();
+	write_record_by_id(0,USABLE_SECTORS_PER_DISK -1, buffers.textbox.draft);
+	
+	reload_contact = 1;
+	erase_draft = 1;
+      }
       break;
     case 0x11: // down arrow
       if (position<-1) { redraw=1; position++; }
@@ -342,7 +335,6 @@ main(void)
       redraw_draft = 0;
 
       // Update saved draft in the D81
-      write_record_by_id(0,USABLE_SECTORS_PER_DISK -1, buffers.textbox.draft);
       
       calc_break_points(buffers.textbox.draft,
 			FONT_UI,

@@ -1032,6 +1032,17 @@ void textbox_find_cursor(void)
 void textbox_remove_cursor(void)
 {
   if (buffers.textbox.draft_len==0) return;
+
+  if (buffers.textbox.draft_len >= RECORD_DATA_SIZE) {
+    fail(1);
+    return;
+  }
+
+  if (!buffers.textbox.draft_len) return;
+  if (buffers.textbox.draft_cursor_position==buffers.textbox.draft_len) {
+    // Cursor has already been removed
+    return;
+  }
   
   lcopy((unsigned long)&buffers.textbox.draft[buffers.textbox.draft_cursor_position+1],
 	(unsigned long)&buffers.textbox.draft[buffers.textbox.draft_cursor_position],

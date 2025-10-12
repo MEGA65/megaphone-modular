@@ -8,6 +8,7 @@
 #include "screen.h"
 #include "records.h"
 #include "contacts.h"
+#include "af.h"
 
 void sms_thread_clear_screen_region(unsigned char first_row, unsigned char last_row)
 {
@@ -101,25 +102,10 @@ char sms_thread_display(unsigned int contact,
     // But for now, we don't have that, so just clear the thread area on the screen
     sms_thread_clear_screen_region(6,MAX_ROWS);
 
-    // Appropriately hide or show the cursor depending whether this field is active
-    // or not.
-    if (active_field) textbox_hide_cursor();
-    else {
-      textbox_find_cursor();
-    }
+    af_retrieve(AF_SMS, contact);
+    if (active_field==AF_SMS) textbox_find_cursor();
+    af_redraw(active_field,AF_SMS);
     
-    // Draw the message draft
-    textbox_draw(360/8,
-		 MAX_ROWS - buffers.textbox.line_count,
-		 360,
-		 294,
-		 RENDER_COLUMNS - 1 - 45,
-		 FONT_UI,
-		 active_field==0 ? 0x8F : 0x8c,
-		 buffers.textbox.draft,
-		 0,
-		 buffers.textbox.line_count-1,
-		 VIEWPORT_PADDED);
   } else {
     // No message editing text box visible
     y = MAX_ROWS - 1;

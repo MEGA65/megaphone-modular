@@ -72,6 +72,8 @@ char af_retrieve(char active_field, uint16_t contact_id)
     lcopy((unsigned long)string, (unsigned long)buffers.textbox.draft, RECORD_DATA_SIZE);
     return 0;
   }
+
+  return 1;
 }
 
 char af_store(char active_field, uint16_t contact_id)
@@ -80,13 +82,31 @@ char af_store(char active_field, uint16_t contact_id)
   case AF_DIALPAD:
     break;
   case AF_SMS:
+    try_or_fail(mount_contact_qso(contact_id));
+    write_record_by_id(0,USABLE_SECTORS_PER_DISK -1, buffers.textbox.draft);
     break;
   case AF_CONTACT_FIRSTNAME:
-    break;
   case AF_CONTACT_LASTNAME:
-    break;
   case AF_CONTACT_PHONENUMBER:
-    break;
+    // Mount contact list
+    try_or_fail(contact_read(contact_id,buffers.textbox.contact_record));
+    
+    // Delete relevant field from contact record
+    unsigned int bytes_used = record_get_bytes_used(buffers.textbox.contact_record);
+    delete_field(buffers.textbox.contact_record,
+		 &bytes_used,
+		 contact_field_lookup[active_field - AF_CONTACT_FIRSTNAME]);
+    
+    // Insert current value
+    append_field(buffers.textbox.contact_record,&bytes_used,RECORD_DATA_SIZE,
+		 contact_field_lookup[active_field - AF_CONTACT_FIRSTNAME],
+		 buffers.textbox.draft,
+		 buffers.textbox.draft_len);
+
+    // Write updated contact record
+    try_or_fail(contact_write(contact_id,buffers.textbox.contact_record));
+
+    return 0;
   }
 
   return 1;

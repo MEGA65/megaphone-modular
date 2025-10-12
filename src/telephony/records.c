@@ -130,6 +130,18 @@ unsigned char *find_field(unsigned char *record, unsigned int bytes_used, unsign
   return NULL;
 }
 
+unsigned int record_get_bytes_used(unsigned char *record)
+{
+  unsigned int ofs=2;  // Skip record number indicator
+
+  while((ofs<=RECORD_DATA_SIZE)&&record[ofs]) {
+    unsigned int shuffle = 1 + 1 + ((record[ofs]&1)?256:0) + record[ofs+1];
+
+    ofs+=shuffle;    
+  }
+  return ofs;
+}
+
 char read_record_by_id(unsigned char drive_id,unsigned int id,unsigned char *buffer)
 {
   // The ID let's us determine the track and sector.

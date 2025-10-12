@@ -41,6 +41,6 @@ char append_field(unsigned char *record, unsigned int *bytes_used, unsigned int 
 		  unsigned char type, unsigned char *value, unsigned int value_length);
 char delete_field(unsigned char *record, unsigned int *bytes_used, unsigned char type);
 unsigned char *find_field(unsigned char *record, unsigned int bytes_used, unsigned char type, unsigned int *len);
-
+unsigned int record_get_bytes_used(unsigned char *record);
 
 #endif
