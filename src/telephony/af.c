@@ -2,15 +2,57 @@
 
 #include "buffers.h"
 #include "contacts.h"
+#include "contactscreens.h"
 #include "screen.h"
 #include "af.h"
 
 const uint8_t contact_field_lookup[]={FIELD_FIRSTNAME, FIELD_LASTNAME, FIELD_PHONENUMBER};
 
+char af_redraw(char active_field, char field)
+{
+  switch(field) {
+  case AF_DIALPAD:
+    break;
+  case AF_SMS:
+    textbox_draw(RIGHT_AREA_START_PX/8,
+		 MAX_ROWS - buffers.textbox.line_count,
+		 RIGHT_AREA_START_PX,
+		 RIGHT_AREA_WIDTH_PX,
+		 RENDER_COLUMNS - 1 - RIGHT_AREA_START_GL,
+		 FONT_UI,
+		 0x8F,
+		 buffers.textbox.draft,
+		 0,
+		 buffers.textbox.line_count-1,
+		 VIEWPORT_PADDED);    
+    return 0;
+  case AF_CONTACT_FIRSTNAME:
+  case AF_CONTACT_LASTNAME:
+  case AF_CONTACT_PHONENUMBER:
+    draw_string_nowrap(RIGHT_AREA_START_GL + LABEL_WIDTH_GL,
+		       3+field - AF_CONTACT_FIRSTNAME,
+		       FONT_UI,
+		       (active_field==field) ? 0x8f : 0x8b, // reverse medium grey if not selected
+		       (unsigned char *)buffers.textbox.draft,
+		       RIGHT_AREA_START_PX + LABEL_WIDTH_PX,
+		       RIGHT_AREA_WIDTH_PX - LABEL_WIDTH_PX,
+		       RIGHT_AREA_START_GL + LABEL_WIDTH_GL,
+		       NULL,
+		       VIEWPORT_PADDED_RIGHT,
+		       NULL,
+		       NULL);
+    return 0;
+  }
+
+  return 1;
+}
+
 char af_retrieve(char active_field, uint16_t contact_id)
 {
   switch(active_field) {
   case AF_DIALPAD:
+    // XXX Where on earth are we storing this?
+    // Also we don't yet have a textbox for this on screen
     break;
   case AF_SMS:
     // Mount contact D81s, so that we can retreive draft
@@ -46,4 +88,6 @@ char af_store(char active_field, uint16_t contact_id)
   case AF_CONTACT_PHONENUMBER:
     break;
   }
+
+  return 1;
 }
