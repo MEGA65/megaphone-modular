@@ -288,7 +288,8 @@ main(void)
       
     case 0x93: // CLR+HOME
       textbox_erase_draft();
-
+      af_store(active_field, contact_id);
+      
       redraw_draft=1;      
       break;
     case 0x91: // up arrow
