@@ -35,7 +35,7 @@ char contact_draw(uint8_t x, uint8_t y,
 		       LABEL_WIDTH_PX,
 		       x + LABEL_WIDTH_GL,
 		       NULL,
-		       VIEWPORT_PADDED,
+		       VIEWPORT_PADDED_LEFT,
 		       NULL,
 		       NULL);
 
@@ -48,7 +48,7 @@ char contact_draw(uint8_t x, uint8_t y,
 		       w_px - LABEL_WIDTH_PX,
 		       x + w_gl,
 		       NULL,
-		       VIEWPORT_PADDED,
+		       VIEWPORT_PADDED_RIGHT,
 		       NULL,
 		       NULL);
   }

@@ -373,7 +373,7 @@ void load_glyph(int font, unsigned long codepoint, unsigned int cache_slot)
 
 char pad_string_viewport(unsigned char x_glyph_start, unsigned char y_glyph, // Starting coordinates in glyphs
 			 unsigned char colour,
-			 unsigned int x_pixels_viewport,
+			 unsigned int x_pixels_viewport_width,
 			 unsigned char x_glyphs_viewport,
 			 unsigned int x_viewport_absolute_end_pixel)
 {
@@ -390,10 +390,10 @@ char pad_string_viewport(unsigned char x_glyph_start, unsigned char y_glyph, // 
   // because we just need a blank glyph.
   lookup_glyph(FONT_UI,' ',NULL,&i);  
 
-  while(x<x_pixels_viewport) {
+  while(x<x_pixels_viewport_width) {
     // How many pixels for this glyph
     px=16;
-    if (px>(x_pixels_viewport-x)) px=x_pixels_viewport-x;
+    if (px>(x_pixels_viewport_width-x)) px=x_pixels_viewport_width-x;
 
     trim = 16 - px;
     
@@ -494,13 +494,26 @@ char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start
   if (glyphs_used) *glyphs_used = x;
   if (pixels_used) *pixels_used = pixels_wide;
 
-  if (padP) {
+  switch(padP) {
+  case VIEWPORT_PADDED_LEFT:
+    // Copy the rendered glyphs up
+    screen_shuffle_glyphs_right(x_glyph_start, y_glyph_start,
+				x,
+				x_glyphs_viewport - x);
+    
+    pad_string_viewport(x_glyph_start, y_glyph_start, // Starting coordinates in glyphs
+			colour,
+		        x_pixels_viewport - pixels_wide,  // Pixels remaining in viewport
+			x_glyphs_viewport - x, // Right hand glyph of view port
+			x_start_px + (x_pixels_viewport - pixels_wide)); // VIC-IV pixel column to point GOTOX to
+    break;
+  case VIEWPORT_PADDED_RIGHT:
     pad_string_viewport(x+ x_glyph_start, y_glyph_start, // Starting coordinates in glyphs
 			colour,
 		        x_pixels_viewport - pixels_wide,  // Pixels remaining in viewport
 			x_glyphs_viewport, // Right hand glyph of view port
 			x_start_px + x_pixels_viewport); // VIC-IV pixel column to point GOTOX to
-
+    break;
   }
   
   // Return the number of bytes of the string that were consumed
@@ -885,6 +898,29 @@ char draw_glyph(int x, int y, int font, unsigned long codepoint,unsigned char co
   // Rendered as 1 char wide
   return 1;
 }
+
+uint8_t shuffle_buffer[256];
+char screen_shuffle_glyphs_right(uint8_t x_source, uint8_t y,
+				 uint8_t width_gl,
+				 uint8_t x_dest)
+{
+  uint16_t src_offset = (y<<9) + (x_source<<1);
+  uint16_t dst_offset = (y<<9) + (x_dest<<1);
+  
+  if (width_gl>127) return 1;
+
+  lcopy((unsigned long)screen_ram + src_offset,
+	(unsigned long)shuffle_buffer, width_gl*2);
+  lcopy((unsigned long)shuffle_buffer,
+	(unsigned long)screen_ram + dst_offset, width_gl*2);
+  
+  lcopy((unsigned long)colour_ram + src_offset,
+	(unsigned long)shuffle_buffer, width_gl*2);
+  lcopy((unsigned long)shuffle_buffer,
+	(unsigned long)colour_ram + dst_offset, width_gl*2);  
+  
+}
+
 
 unsigned long utf8_next_codepoint(unsigned char **s)
 {

@@ -26,6 +26,11 @@ void screen_clear_partial_line(unsigned char row,
 			       unsigned char last_col);
 void draw_goto(int x,int y, uint16_t goto_pos);
 char draw_glyph(int x, int y, int font, unsigned long codepoint,unsigned char colour, unsigned char *pixels_used);
+char screen_shuffle_glyphs_right(uint8_t x_source, uint8_t y,
+				 uint8_t width_gl,
+				 uint8_t x_dest);
+#define VIEWPORT_PADDED_LEFT 2
+#define VIEWPORT_PADDED_RIGHT 1
 #define VIEWPORT_PADDED 1
 #define VIEWPORT_UNPADDED 0
 char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start, // Starting coordinates in glyphs
