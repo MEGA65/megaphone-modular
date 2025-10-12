@@ -23,7 +23,7 @@ char contact_draw(uint8_t x, uint8_t y,
 
   uint8_t fields[3]={FIELD_FIRSTNAME, FIELD_LASTNAME, FIELD_PHONENUMBER};
   unsigned char *labels[3]
-    ={(unsigned char*)"First:",(unsigned char *)"Last:",(unsigned char *)"Phone:"};
+    ={(unsigned char*)"First: ",(unsigned char *)"Last: ",(unsigned char *)"Phone: "};
     
   for(uint8_t field=0;field<3;field++) {
     
