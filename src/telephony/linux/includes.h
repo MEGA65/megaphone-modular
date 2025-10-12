@@ -38,7 +38,7 @@ void format_image_fully_allocated(char drive_id,char *header, char withSectorMar
 char sort_d81(char *name_in, char *name_out, unsigned char field_id);
 
 void dump_sector_buffer(char *m);
-void dump_bytes(char *msg, unsigned lond d, int len);
+void dump_bytes(char *msg, unsigned long d, int len);
 
 char to_hex(unsigned char v);
 
@@ -47,6 +47,11 @@ char log_error_(const char *file,const char *func,const unsigned int line,const 
 
 extern unsigned char tof_r;
 #define try_or_fail(X) if ((tof_r=X)!=0) fail(tof_r)
+
+void mega65_uart_print(char *);
+void mega65_uart_printhex(uint8_t v);
+void mega65_uart_printhex16(uint16_t v);
+#define CHECKPOINT(X)
 
 #endif
 

@@ -321,7 +321,7 @@ void dump_bytes(char *msg, unsigned long d_in, int len)
 }
 
 void dump_sector_buffer(char *m) {
-  dump_bytes(m,sector_buffer, 512);
+  dump_bytes(m,(unsigned long)sector_buffer, 512);
 }
 
 
@@ -330,4 +330,16 @@ char log_error_(const char *file,const char *func,const unsigned int line,const 
   fprintf(stderr,"%s:%d:%s(): Returning with error %d\n",
 	  file,line,func,error_code);
   return error_code;
+}
+
+void mega65_uart_print(char *)
+{
+}
+
+void mega65_uart_printhex(uint8_t v)
+{
+}
+
+void mega65_uart_printhex16(uint16_t v)
+{
 }

@@ -73,6 +73,7 @@ char append_field(unsigned char *record, unsigned int *bytes_used, unsigned int 
 		  unsigned char type, unsigned char *value, unsigned int value_length)
 {
   // Insufficient space
+  mega65_uart_printhex16(value_length);
   if (((*bytes_used)+1+1+value_length)>=length) fail(1);
   // Field too long
   if (value_length > 511) fail(2);
@@ -103,7 +104,8 @@ char delete_field(unsigned char *record, unsigned int *bytes_used, unsigned char
       // On MEGA65, lcopy() has "special" behaviour with overlapping copies.
       // Basically the first few bytes will be read before the first byte is written.
       // The nature of the copy that we are doing, shuffling down, is safe in this context.
-      lcopy((unsigned long)&record[ofs+shuffle],(unsigned long)&record[ofs],(*bytes_used)-ofs-shuffle);
+      if ((*bytes_used)-ofs-shuffle)
+	lcopy((unsigned long)&record[ofs+shuffle],(unsigned long)&record[ofs],(*bytes_used)-ofs-shuffle);
       (*bytes_used) -= shuffle;
 
       deleted++;
@@ -139,6 +141,8 @@ unsigned int record_get_bytes_used(unsigned char *record)
   while((ofs<=RECORD_DATA_SIZE)&&record[ofs]) {
     unsigned int shuffle = 1 + 1 + ((record[ofs]&1)?256:0) + record[ofs+1];
 
+    if (!record[ofs]) break;
+    
     ofs+=shuffle;    
   }
   return ofs;
