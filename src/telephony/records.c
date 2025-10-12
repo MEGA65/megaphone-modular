@@ -81,8 +81,10 @@ char append_field(unsigned char *record, unsigned int *bytes_used, unsigned int 
 
   record[(*bytes_used)++]=type|(value_length>>8);
   record[(*bytes_used)++]=value_length&0xff;
-  lcopy((unsigned long)value,(unsigned long)&record[*bytes_used],value_length);
-  (*bytes_used)+=value_length;
+  if (value_length) {
+    lcopy((unsigned long)value,(unsigned long)&record[*bytes_used],value_length);
+    (*bytes_used)+=value_length;
+  }
 
   return 0;
 }

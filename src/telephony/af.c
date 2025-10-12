@@ -71,6 +71,14 @@ char af_retrieve(char field, char active_field, uint16_t contact_id)
 		   NULL);    
     lcopy((unsigned long)string, (unsigned long)buffers.textbox.draft, RECORD_DATA_SIZE);
     if (field==active_field) textbox_find_cursor();
+    // Figure out where the end of the field is, and clamp it to fit.
+    buffers.textbox.draft_len=0;
+    while(buffers.textbox.draft[buffers.textbox.draft_len]) {
+      if (buffers.textbox.draft_len >= (RECORD_DATA_SIZE - 10)) break;
+      buffers.textbox.draft_len++;
+    }
+    buffers.textbox.draft[buffers.textbox.draft_len]=0;
+    
     return 0;
   }
 
@@ -84,7 +92,7 @@ char af_store(char active_field, uint16_t contact_id)
     break;
   case AF_SMS:
     try_or_fail(mount_contact_qso(contact_id));
-    write_record_by_id(0,USABLE_SECTORS_PER_DISK -1, buffers.textbox.draft);
+    write_record_by_id(0,USABLE_SECTORS_PER_DISK - 1, buffers.textbox.draft);
     break;
   case AF_CONTACT_FIRSTNAME:
   case AF_CONTACT_LASTNAME:

@@ -222,6 +222,8 @@ main(void)
 
       // Redraw old field sans cursor or selection
       textbox_remove_cursor();
+      // Save any changes to the field before TABing to next field
+      af_store(active_field,contact_id);
       af_redraw(0xff,active_field);      
       
       prev_active_field = active_field;
@@ -335,8 +337,7 @@ main(void)
     if (redraw_draft) {
       redraw_draft = 0;
 
-      // Update saved draft in the D81
-      
+      // For SMS messages, we need to know if the line count has changed
       calc_break_points(buffers.textbox.draft,
 			FONT_UI,
 		        RIGHT_AREA_WIDTH_PX, // text field in px
@@ -344,17 +345,7 @@ main(void)
       
       // Only redraw the message draft if it hasn't changed how many lines it uses
       if (buffers.textbox.line_count == old_draft_line_count ) {
-	textbox_draw(RIGHT_AREA_START_PX/8,
-		     MAX_ROWS - buffers.textbox.line_count,
-		     RIGHT_AREA_START_PX,
-		     RIGHT_AREA_WIDTH_PX,
-		     RENDER_COLUMNS - 1 - RIGHT_AREA_START_GL,
-		     FONT_UI,
-		     0x8F,
-		     buffers.textbox.draft,
-		     0,
-		     buffers.textbox.line_count-1,
-		     VIEWPORT_PADDED);
+	af_redraw(active_field,active_field);
       } else {
 	redraw = 1;
       }
