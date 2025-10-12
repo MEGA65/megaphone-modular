@@ -103,7 +103,7 @@ char sms_thread_display(unsigned int contact,
     // XXX - Remember what's on the screen already, and use DMA to scroll it up
     // and down, so that we don't need to redraw it all.
     // But for now, we don't have that, so just clear the thread area on the screen
-    sms_thread_clear_screen_region(6,MAX_ROWS);
+    sms_thread_clear_screen_region(SMS_FIRST_ROW,MAX_ROWS);
 
     af_retrieve(AF_SMS, active_field, contact);
     if (active_field==AF_SMS) textbox_find_cursor();
@@ -115,7 +115,7 @@ char sms_thread_display(unsigned int contact,
     bottom_row_available = MAX_ROWS - 1;    
   }  
   
-  while(y>=2&&message>0) {
+  while(y>=SMS_FIRST_ROW&&message>0) {
 
     unsigned int first_row = 0;
     unsigned char we_sent_it = 0;
@@ -146,7 +146,7 @@ char sms_thread_display(unsigned int contact,
     // Adjust y to the necessary starting row.    
     y = y - buffers.textbox.line_count;
     first_row = 0;
-    while(y<2) {
+    while(y<SMS_FIRST_ROW) {
       y++;
       first_row++;
     }
@@ -154,11 +154,11 @@ char sms_thread_display(unsigned int contact,
     bottom_row = buffers.textbox.line_count-1;
     while ((y+bottom_row) > bottom_row_available) bottom_row--;
     
-    textbox_draw(we_sent_it? 384/8 : 360/8, // column on screen
+    textbox_draw(we_sent_it? (RIGHT_AREA_START_PX+SMS_TX_RX_OFFSET_PX)/8 : RIGHT_AREA_START_PX/8, // column on screen
 		 y, // row on screen
-		 we_sent_it? 384 : 360, // start pixel
-		 255, // px width
-		 RENDER_COLUMNS - 1 - (we_sent_it? 48 : 45),   // glyph width
+		 we_sent_it? (RIGHT_AREA_START_PX+SMS_TX_RX_OFFSET_PX) : RIGHT_AREA_START_PX, // start pixel
+		 SMS_TEXT_BLOCK_WIDTH, // px width
+		 RENDER_COLUMNS - 1 - (we_sent_it? (RIGHT_AREA_START_GL+SMS_TX_RX_OFFSET_GL) : RIGHT_AREA_START_GL),   // glyph width
 		 FONT_UI,
 		 we_sent_it ? 0x8D : 0x8F, // colour
 		 buffers.textbox.field,

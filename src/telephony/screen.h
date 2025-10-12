@@ -1,7 +1,12 @@
 #define RENDER_COLUMNS 145
 #define MAX_ROWS 30
 
+// Space for dummy line, status bar, a gap, a contact and a gap
+#define SMS_FIRST_ROW (1 + 1 + 1 + 3 + 1)
+
 #define RIGHT_AREA_START_PX 360
+#define SMS_TX_RX_OFFSET_PX 24
+#define SMS_TX_RX_OFFSET_GL (SMS_TX_RX_OFFSET_PX/8)
 #define RIGHT_AREA_START_GL 45
 #define RIGHT_AREA_WIDTH_PX 294
 
