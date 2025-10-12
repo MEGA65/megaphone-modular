@@ -20,7 +20,7 @@ char af_redraw(char active_field, char field)
 		 RIGHT_AREA_WIDTH_PX,
 		 RENDER_COLUMNS - 1 - RIGHT_AREA_START_GL,
 		 FONT_UI,
-		 0x8F,
+		 (active_field==field) ? 0x8f : 0x8b, // reverse medium grey if not selected
 		 buffers.textbox.draft,
 		 0,
 		 buffers.textbox.line_count-1,

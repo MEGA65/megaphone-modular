@@ -57,7 +57,7 @@ void dialpad_draw(char active_field)
   int y = 5;
   for(int d=0;d<=11;d++) {
     // Draw digits all in RED by default
-    dialpad_draw_button(seq[d],x,y, (active_field==AF_DIALPAD)? 0x2e : 0x2c);  // 0x20 = reverse
+    dialpad_draw_button(seq[d],x,y, (active_field==AF_DIALPAD)? 0x2e : 0x2b);  // 0x20 = reverse
     x+=6;
     if (x>(X_START+6+6)) { x=X_START; y+=5; }
   }

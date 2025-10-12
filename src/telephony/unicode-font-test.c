@@ -189,8 +189,6 @@ main(void)
     }
 
     if (redraw_contact) {
-      mega65_uart_print(buffers.textbox.contact_record);
-      mega65_uart_print("\r\n");
       redraw_contact = 0;
       contact_draw(RIGHT_AREA_START_GL, 3,
 		   RIGHT_AREA_START_PX,
