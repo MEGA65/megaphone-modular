@@ -171,7 +171,7 @@ main(void)
       if (!contact_read(contact_id,buffers.textbox.contact_record)) {
 	redraw_contact = 1;
       }
-    
+
       // Clear draft initially
       textbox_erase_draft();
       
@@ -195,8 +195,9 @@ main(void)
 		   RENDER_COLUMNS - 1 - RIGHT_AREA_START_GL,
 		   // Subtract a bit of space for scroll bar etc
 		   RIGHT_AREA_WIDTH_PX - 16,
-		   active_field, // which field is currently active/highlighted
-		   buffers.textbox.contact_record);
+		   contact_id,
+		   active_field // which field is currently active/highlighted
+		   );
     }       
     
     if (redraw) {
@@ -235,7 +236,7 @@ main(void)
       }
 
       // Load draft with the correct field
-      af_retrieve(active_field, contact_id);
+      af_retrieve(active_field, active_field, contact_id);
       // textbox_find_cursor();
       af_redraw(active_field,active_field);      
       

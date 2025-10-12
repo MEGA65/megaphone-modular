@@ -2,6 +2,7 @@
 
 #include "contactscreens.h"
 
+#include "buffers.h"
 #include "screen.h"
 #include "records.h"
 #include "af.h"
@@ -9,15 +10,14 @@
 char contact_draw(uint8_t x, uint8_t y,
 		  uint16_t x_start_px,
 		  uint8_t w_gl, uint16_t w_px,
-		  uint8_t active_field,
-		  unsigned char *contact_record)
+		  uint16_t contact_id,
+		  uint8_t active_field)
 {
-  unsigned char *string;
-
+  if (buffers_lock(LOCK_TEXTBOX)) fail(99);
+  
   if (w_gl<20) return 1;
   if (w_px<96) return 2;
 
-  uint8_t fields[3]={FIELD_FIRSTNAME, FIELD_LASTNAME, FIELD_PHONENUMBER};
   unsigned char *labels[3]
     ={(unsigned char*)"First: ",(unsigned char *)"Last: ",(unsigned char *)"Phone: "};
     
@@ -35,18 +35,8 @@ char contact_draw(uint8_t x, uint8_t y,
 		       NULL,
 		       NULL);
 
-    string = find_field(contact_record, RECORD_DATA_SIZE, fields[field],NULL);
-    draw_string_nowrap(x + LABEL_WIDTH_GL, y+field,
-		       FONT_UI,
-		       active_field==(field+AF_CONTACT_FIRSTNAME) ? 0x8f : 0x8b, // reverse medium grey if not selected
-		       (unsigned char *)string,
-		       x_start_px + LABEL_WIDTH_PX,
-		       w_px - LABEL_WIDTH_PX,
-		       x + w_gl,
-		       NULL,
-		       VIEWPORT_PADDED_RIGHT,
-		       NULL,
-		       NULL);
+    af_retrieve(field + AF_CONTACT_FIRSTNAME, active_field, contact_id);
+    af_redraw(active_field, field + AF_CONTACT_FIRSTNAME);
   }
 
   return 0;

@@ -346,8 +346,11 @@ void load_glyph(int font, unsigned long codepoint, unsigned int cache_slot)
   glyph_buffer[0xff]=codepoint&0x1f;
 #else
   // Seek to and load glyph from font in shared resources
-
-  try_or_fail(shseek(&fonts[font],codepoint<<8,SEEK_SET));  
+  
+  if (shseek(&fonts[font],codepoint<<8,SEEK_SET)) {
+    // Glyph doesn't exist in this font.
+    return;
+  }
   try_or_fail(shread(glyph_buffer,256,&fonts[font]));
   
 #endif

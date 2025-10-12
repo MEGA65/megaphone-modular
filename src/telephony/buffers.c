@@ -6,7 +6,7 @@ struct shared_buffers buffers;
 
 unsigned char buffers_lock(unsigned char module)
 {
-  if (buffers.lock) return 99;
+  if (buffers.lock && buffers.lock != module) return 99;
   buffers.lock = module;
   return 0;
 }

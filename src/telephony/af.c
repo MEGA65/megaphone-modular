@@ -47,9 +47,9 @@ char af_redraw(char active_field, char field)
   return 1;
 }
 
-char af_retrieve(char active_field, uint16_t contact_id)
+char af_retrieve(char field, char active_field, uint16_t contact_id)
 {
-  switch(active_field) {
+  switch(field) {
   case AF_DIALPAD:
     // XXX Where on earth are we storing this?
     // Also we don't yet have a textbox for this on screen
@@ -59,7 +59,7 @@ char af_retrieve(char active_field, uint16_t contact_id)
     try_or_fail(mount_contact_qso(contact_id));
     // Read last record in disk to get any saved draft
     read_record_by_id(0,USABLE_SECTORS_PER_DISK - 1,buffers.textbox.draft);
-    textbox_find_cursor();
+    if (field==active_field) textbox_find_cursor();
     return 0;
   case AF_CONTACT_FIRSTNAME:
   case AF_CONTACT_LASTNAME:
@@ -67,9 +67,10 @@ char af_retrieve(char active_field, uint16_t contact_id)
     try_or_fail(contact_read(contact_id,buffers.textbox.contact_record));
     unsigned char *string
       = find_field(buffers.textbox.contact_record, RECORD_DATA_SIZE,
-		   contact_field_lookup[active_field - AF_CONTACT_FIRSTNAME],
+		   contact_field_lookup[field - AF_CONTACT_FIRSTNAME],
 		   NULL);    
     lcopy((unsigned long)string, (unsigned long)buffers.textbox.draft, RECORD_DATA_SIZE);
+    if (field==active_field) textbox_find_cursor();
     return 0;
   }
 

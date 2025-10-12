@@ -89,6 +89,9 @@ char sms_thread_display(unsigned int contact,
   
   if (with_edit_box_P) {  
     // Work out how many rows the message draft uses
+
+    af_retrieve(AF_SMS, active_field, contact);
+
     try_or_fail(calc_break_points(buffers.textbox.draft,
 				  FONT_UI,
 				  294, // text field in px
@@ -102,7 +105,7 @@ char sms_thread_display(unsigned int contact,
     // But for now, we don't have that, so just clear the thread area on the screen
     sms_thread_clear_screen_region(6,MAX_ROWS);
 
-    af_retrieve(AF_SMS, contact);
+    af_retrieve(AF_SMS, active_field, contact);
     if (active_field==AF_SMS) textbox_find_cursor();
     af_redraw(active_field,AF_SMS);
     
