@@ -81,6 +81,7 @@ SRC_TELEPHONY_COMMON=	src/telephony/d81.c \
 			src/telephony/buffers.c \
 			src/telephony/search.c \
 			src/telephony/sms.c \
+			src/telephony/mountstate.c \
 			src/telephony/slab.c
 
 NATIVE_TELEPHONY_COMMON=	$(SRC_TELEPHONY_COMMON) \
@@ -89,7 +90,6 @@ NATIVE_TELEPHONY_COMMON=	$(SRC_TELEPHONY_COMMON) \
 			src/telephony/status.c \
 			src/telephony/smsscreens.c \
 			src/telephony/af.c \
-			src/telephony/mountstate.c \
 			src/telephony/contactscreens.c \
 			src/telephony/wait_sprite.c \
 
