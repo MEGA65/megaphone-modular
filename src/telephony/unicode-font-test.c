@@ -105,6 +105,7 @@ main(void)
   unsigned char temp;
   unsigned int contact_ID;
   unsigned char r;
+  char active_field;
   
   mega65_io_enable();
 
@@ -152,6 +153,8 @@ main(void)
   reload_contact = 1;
   erase_draft = 0;
 
+  active_field = 0;
+  
   statusbar_draw();
   
   show_busy();
@@ -172,7 +175,7 @@ main(void)
 		     // Subtract a bit of space for scroll bar etc
 		     RIGHT_AREA_WIDTH_PX - 16,
 		     contact_ID,
-		     0, // XXX which field is currently active/highlighted
+		     active_field, // which field is currently active/highlighted
 		     buffers.textbox.draft);
       }
 
@@ -196,6 +199,7 @@ main(void)
     if (redraw) {
       sms_thread_display(contact_ID,position,
 			 1, // Show message edit box
+			 active_field,
 			 &first_message_displayed);
     }
     redraw=0;
@@ -210,6 +214,14 @@ main(void)
     show_busy();
     
     switch(PEEK(0xD610)) {
+    case 0x09: case 0x89: // TAB - move fields
+      if (PEEK(0xD610)&0x80) active_field--;
+      else active_field++;
+      if (active_field > 3 ) active_field = 0;
+      if (active_field < 0 ) active_field = 3;
+      reload_contact = 1;
+      redraw = 1;
+      break;
     case 0x0d: // RETURN = send message
       // Don't send empty messages (or that just consist of the cursor)
 

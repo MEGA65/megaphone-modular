@@ -45,6 +45,7 @@ void textbox_hide_cursor(void)
 char sms_thread_display(unsigned int contact,
 			int last_message,
 			char with_edit_box_P,
+			char active_field,
 			unsigned int *first_message_displayed
 			)
 {
@@ -99,6 +100,13 @@ char sms_thread_display(unsigned int contact,
     // and down, so that we don't need to redraw it all.
     // But for now, we don't have that, so just clear the thread area on the screen
     sms_thread_clear_screen_region(6,MAX_ROWS);
+
+    // Appropriately hide or show the cursor depending whether this field is active
+    // or not.
+    if (active_field) textbox_hide_cursor();
+    else {
+      textbox_find_cursor();
+    }
     
     // Draw the message draft
     textbox_draw(360/8,
@@ -107,7 +115,7 @@ char sms_thread_display(unsigned int contact,
 		 294,
 		 RENDER_COLUMNS - 1 - 45,
 		 FONT_UI,
-		 0x8F,
+		 active_field==0 ? 0x8F : 0x8c,
 		 buffers.textbox.draft,
 		 0,
 		 buffers.textbox.line_count-1,
