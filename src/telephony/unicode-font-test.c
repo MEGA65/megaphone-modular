@@ -129,8 +129,6 @@ main(void)
   screen_clear();
   statusbar_setup();
 
-  dialpad_draw();
-  
   generate_rgb332_palette();
   
   // Make sure SD card is idle
@@ -154,6 +152,8 @@ main(void)
   erase_draft = 0;
 
   active_field = 0;
+
+  dialpad_draw(active_field);  
   
   statusbar_draw();
   
@@ -217,8 +217,12 @@ main(void)
     case 0x09: case 0x89: // TAB - move fields
       if (PEEK(0xD610)&0x80) active_field--;
       else active_field++;
-      if (active_field > 3 ) active_field = 0;
-      if (active_field < 0 ) active_field = 3;
+      if (active_field > 4 ) active_field = 0;
+      if (active_field < 0 ) active_field = 4;
+      if (active_field == 0 || active_field == 4) {
+	dialpad_draw(active_field);	
+      }
+
       reload_contact = 1;
       redraw = 1;
       break;

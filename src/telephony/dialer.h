@@ -1,1 +1,1 @@
-void dialpad_draw(void);
+void dialpad_draw(char active_field);

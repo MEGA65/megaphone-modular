@@ -43,7 +43,7 @@ void dialpad_draw_button(unsigned char symbol_num,
   
 }
 
-void dialpad_draw(void)
+void dialpad_draw(char active_field)
 {
   uint8_t seq[12]={1,2,3,4,5,6,7,8,9,11,0,10};
 
@@ -56,7 +56,7 @@ void dialpad_draw(void)
   int y = 5;
   for(int d=0;d<=11;d++) {
     // Draw digits all in RED by default
-    dialpad_draw_button(seq[d],x,y, 0x2e);  // 0x20 = reverse
+    dialpad_draw_button(seq[d],x,y, (active_field==4)? 0x2e : 0x2c);  // 0x20 = reverse
     x+=6;
     if (x>(X_START+6+6)) { x=X_START; y+=5; }
   }
