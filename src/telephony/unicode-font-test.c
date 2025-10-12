@@ -16,10 +16,6 @@
 #include "status.h"
 #include "af.h"
 
-#define RIGHT_AREA_START_PX 360
-#define RIGHT_AREA_START_GL 45
-#define RIGHT_AREA_WIDTH_PX 294
-
 unsigned char buffer[128];
 
 unsigned char i;
@@ -107,8 +103,9 @@ main(void)
   unsigned char temp;
   unsigned int contact_id;
   unsigned char r;
-  char active_field;
-  char prev_active_field;
+  // active field needs to be signed, so that we can wrap field numbers
+  int8_t active_field;
+  int8_t prev_active_field;
   
   mega65_io_enable();
 
@@ -221,18 +218,18 @@ main(void)
     show_busy();
     
     switch(PEEK(0xD610)) {
-    case 0x09: case 0x89: // TAB - move fields
+    case 0x09: case 0x0F: // TAB - move fields
 
       textbox_remove_cursor();
       // Redraw old field sans cursor
 
       
       prev_active_field = active_field;
-      if (PEEK(0xD610)&0x80) active_field--;
+      if (PEEK(0xD610)==0x0F) active_field--; // shift+tab = 0x0f
       else active_field++;
       if (active_field > AF_MAX ) active_field = 0;
-      if (active_field < 0 ) active_field = 4;
-
+      if (active_field < 0 ) active_field = AF_MAX;
+      
       // Now redraw what we need to
       if (active_field == AF_DIALPAD || prev_active_field == AF_DIALPAD ) {
 	dialpad_draw(active_field);	
