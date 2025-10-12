@@ -1,7 +1,12 @@
 #define RENDER_COLUMNS 157
 #define MAX_ROWS 30
 
-#define SCROLL_BAR_HEIGHT (26*8)
+#define RIGHT_AREA_START_PX 360
+#define RIGHT_AREA_START_GL 45
+#define RIGHT_AREA_WIDTH_PX 294
+
+#define SCROLL_BAR_HEIGHT (23*8)
+#define SCROLL_BAR_Y (0x1e + 6*8)
 
 #define NUM_FONTS 4
 #define FONT_EMOJI_COLOUR 0

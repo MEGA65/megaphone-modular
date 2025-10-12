@@ -127,7 +127,7 @@ void screen_setup(void)
   
   // Position scroll-bar sprites appropriately
   POKE(0xD000L,0xCB);
-  POKE(0xD001L,0x1E + 3*8);
+  POKE(0xD001L,SCROLL_BAR_Y);
   POKE(0xD002L,0x80);
   POKE(0xD003L,0x1E);
   POKE(0xD010L,0x04); // Sprite X MSB only for "wait" sprite
