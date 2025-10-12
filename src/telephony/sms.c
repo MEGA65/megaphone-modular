@@ -7,6 +7,7 @@
 #include "search.h"
 #include "index.h"
 #include "sms.h"
+#include "mountstate.h"
 
 char sms_build_message(unsigned char buffer[RECORD_DATA_SIZE],unsigned int *bytes_used,
 		       unsigned char txP,
@@ -59,9 +60,7 @@ char sms_send_to_contact(unsigned int contact_ID, unsigned char *message)
   unsigned char r;
   
   // Mount contact D81 to get phone number of this contact
-  mega65_cdroot();
-  mega65_chdir("PHONE");
-  mount_d81("CONTACT0.D81",0);
+  try_or_fail(mount_state_set(MS_CONTACT_LIST,contact_ID));
 
   // XXX - Assume RTC is valid
   bcdDate = mega65_bcddate();

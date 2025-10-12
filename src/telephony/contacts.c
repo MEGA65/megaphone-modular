@@ -3,16 +3,15 @@
 #include "includes.h"
 #include "records.h"
 #include "search.h"
+#include "mountstate.h"
 
 #include <string.h>
 
 char contact_read(uint16_t contact_id, unsigned char *buffer)
 {
-  try_or_fail(mega65_cdroot());
-  try_or_fail(mega65_chdir("PHONE"));
 
-  try_or_fail(mount_d81("CONTACT0.D81",DRIVE_0));
-
+  try_or_fail(mount_state_set(MS_CONTACT_LIST,contact_id));
+  
   try_or_fail(read_record_by_id(DRIVE_0, contact_id, buffer));
 
   return 0;  
@@ -20,10 +19,7 @@ char contact_read(uint16_t contact_id, unsigned char *buffer)
 
 char contact_write(uint16_t contact_id, unsigned char *buffer)
 {
-  try_or_fail(mega65_cdroot());
-  try_or_fail(mega65_chdir("PHONE"));
-
-  try_or_fail(mount_d81("CONTACT0.D81",DRIVE_0));
+  try_or_fail(mount_state_set(MS_CONTACT_LIST,contact_id));
 
   try_or_fail(write_record_by_id(DRIVE_0, contact_id, buffer));
 
@@ -58,28 +54,10 @@ char build_contact(unsigned char buffer[RECORD_DATA_SIZE],unsigned int *bytes_us
 
 char mount_contact_qso(unsigned int contact)
 {
-  char hex[2];
-
-  try_or_fail(mega65_cdroot());
-
-  try_or_fail(mega65_chdir("PHONE"));
-  try_or_fail(mega65_chdir("THREADS"));
-
-  hex[0]=to_hex(contact>>12);
-  hex[1]=0;
-  try_or_fail(mega65_chdir(hex));
-  hex[0]=to_hex(contact>>8);
-  hex[1]=0;
-  try_or_fail(mega65_chdir(hex));
-  hex[0]=to_hex(contact>>4);
-  hex[1]=0;
-  try_or_fail(mega65_chdir(hex));
-  hex[0]=to_hex(contact>>0);
-  hex[1]=0;
-  try_or_fail(mega65_chdir(hex));
-
-  try_or_fail(mount_d81("MESSAGES.D81",0));
-  try_or_fail(mount_d81("MSGINDEX.D81",1));
+  // Nothing to do
+  try_or_fail(mount_state_set(MS_CONTACT_QSO,contact));
 
   return 0;
 }
+
+

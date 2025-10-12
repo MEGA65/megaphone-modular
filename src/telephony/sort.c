@@ -2,6 +2,7 @@
 #include "records.h"
 #include "slab.h"
 #include "buffers.h"
+#include "mountstate.h"
 
 // #define DEBUG_MERGE
 
@@ -129,6 +130,8 @@ char sort_d81(char *name_in, char *name_out, unsigned char field_id)
   unsigned char out_sector=0;
   unsigned char slab=0;
   unsigned char s;
+
+  mount_state_invalidate();
   
   // Mount D81 to be sorted in drive 0
   if (mount_d81(name_in,0)) fail(7);

@@ -5,6 +5,7 @@
 #include "buffers.h"
 #include "index.h"
 #include "search.h"
+#include "mountstate.h"
 
 /*
   Reset search of a records D81.
@@ -363,6 +364,7 @@ unsigned int search_contact_by_phonenumber(unsigned char *phoneNumber)
   unsigned char *recordPhoneNumber;
   
   // Search for the phone number in contacts
+  mount_state_invalidate();
   mega65_cdroot();
   mega65_chdir("PHONE");
   mount_d81("CONTACT0.D81",0);
