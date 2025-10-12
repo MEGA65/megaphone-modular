@@ -385,7 +385,7 @@ char pad_string_viewport(unsigned char x_glyph_start, unsigned char y_glyph, // 
   unsigned int row0_offset = 0;
   if (colour&0x80) reverse = 0x20;
   colour &= 0xf;
-
+  
   // Lookup space character from UI font -- doesn't actually matter which font is active right now,
   // because we just need a blank glyph.
   lookup_glyph(FONT_UI,' ',NULL,&i);  
@@ -398,7 +398,9 @@ char pad_string_viewport(unsigned char x_glyph_start, unsigned char y_glyph, // 
     trim = 16 - px;
     
     // Ran out of glyphs to make the alignment
-    if (x_g==x_glyphs_viewport) return 1;
+    if (x_g==x_glyphs_viewport) {
+      return 1;
+    }
 
     // Get offset within screen and colour RAM for both rows of chars
     row0_offset = (y_glyph<<9) + (x_g<<1);
@@ -416,10 +418,10 @@ char pad_string_viewport(unsigned char x_glyph_start, unsigned char y_glyph, // 
     x_g++;
     x+=px;
   }
-
+ 
   // Write GOTOX to use up remainder of view port glyphs
   while(x_g<x_glyphs_viewport) {
-
+    
     // Get offset within screen and colour RAM for both rows of chars
     row0_offset = (y_glyph<<9) + (x_g<<1);
 
@@ -465,7 +467,6 @@ char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start
     if (utf8>=str_end) return 0;
   }
 
-  
   while ( (cp = utf8_next_codepoint(&utf8)) != 0L ) {
 
     // Fall-back to emoji font when required if using the UI font

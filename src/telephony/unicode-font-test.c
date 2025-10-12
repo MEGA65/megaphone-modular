@@ -169,7 +169,8 @@ main(void)
 	contact_draw(RIGHT_AREA_START_GL, 3,
 		     RIGHT_AREA_START_PX,
 		     RENDER_COLUMNS - 1 - RIGHT_AREA_START_GL,
-		     RIGHT_AREA_WIDTH_PX,
+		     // Subtract a bit of space for scroll bar etc
+		     RIGHT_AREA_WIDTH_PX - 16,
 		     contact_ID,
 		     0, // XXX which field is currently active/highlighted
 		     buffers.textbox.draft);
