@@ -918,7 +918,8 @@ char screen_shuffle_glyphs_right(uint8_t x_source, uint8_t y,
 	(unsigned long)shuffle_buffer, width_gl*2);
   lcopy((unsigned long)shuffle_buffer,
 	(unsigned long)colour_ram + dst_offset, width_gl*2);  
-  
+
+  return 0;
 }
 
 

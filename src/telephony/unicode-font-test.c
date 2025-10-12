@@ -14,6 +14,7 @@
 #include "sms.h"
 #include "dialer.h"
 #include "status.h"
+#include "af.h"
 
 #define RIGHT_AREA_START_PX 360
 #define RIGHT_AREA_START_GL 45
@@ -101,11 +102,13 @@ main(void)
 {
   int position;
   char redraw, redraw_draft, reload_contact, erase_draft;
+  char redraw_contact;
   unsigned char old_draft_line_count;
   unsigned char temp;
-  unsigned int contact_ID;
+  unsigned int contact_id;
   unsigned char r;
   char active_field;
+  char prev_active_field;
   
   mega65_io_enable();
 
@@ -143,7 +146,7 @@ main(void)
 
   hal_init();
   
-  contact_ID = 3;
+  contact_id = 3;
   
   position = -1;
   redraw = 1;
@@ -168,23 +171,15 @@ main(void)
       // Redisplay contact at top of screen
 
       // Mount contacts 
-      if (!contact_read(contact_ID,buffers.textbox.draft)) {
-	contact_draw(RIGHT_AREA_START_GL, 3,
-		     RIGHT_AREA_START_PX,
-		     RENDER_COLUMNS - 1 - RIGHT_AREA_START_GL,
-		     // Subtract a bit of space for scroll bar etc
-		     RIGHT_AREA_WIDTH_PX - 16,
-		     contact_ID,
-		     active_field, // which field is currently active/highlighted
-		     buffers.textbox.draft);
+      if (!contact_read(contact_id,buffers.textbox.draft)) {
+	redraw_contact = 1;
       }
-
-      
+    
       // Clear draft initially
       textbox_erase_draft();
       
       // Mount contact D81s, so that we can retreive draft
-      r = mount_contact_qso(contact_ID);
+      r = mount_contact_qso(contact_id);
       if (r) fatal(__FILE__,__FUNCTION__,__LINE__,r);
       if (!erase_draft) {
 	// Read last record in disk to get any saved draft
@@ -195,9 +190,21 @@ main(void)
 
       redraw = 1;      
     }
-      
+
+    if (redraw_contact) {
+      redraw_contact = 0;
+      contact_draw(RIGHT_AREA_START_GL, 3,
+		   RIGHT_AREA_START_PX,
+		   RENDER_COLUMNS - 1 - RIGHT_AREA_START_GL,
+		   // Subtract a bit of space for scroll bar etc
+		   RIGHT_AREA_WIDTH_PX - 16,
+		   contact_id,
+		   active_field, // which field is currently active/highlighted
+		   buffers.textbox.draft);
+    }       
+    
     if (redraw) {
-      sms_thread_display(contact_ID,position,
+      sms_thread_display(contact_id,position,
 			 1, // Show message edit box
 			 active_field,
 			 &first_message_displayed);
@@ -215,16 +222,34 @@ main(void)
     
     switch(PEEK(0xD610)) {
     case 0x09: case 0x89: // TAB - move fields
+
+      textbox_remove_cursor();
+      // Redraw old field sans cursor
+
+      
+      prev_active_field = active_field;
       if (PEEK(0xD610)&0x80) active_field--;
       else active_field++;
-      if (active_field > 4 ) active_field = 0;
+      if (active_field > AF_MAX ) active_field = 0;
       if (active_field < 0 ) active_field = 4;
-      if (active_field == 0 || active_field == 4) {
+
+      // Now redraw what we need to
+      if (active_field == AF_DIALPAD || prev_active_field == AF_DIALPAD ) {
 	dialpad_draw(active_field);	
       }
 
-      reload_contact = 1;
-      redraw = 1;
+      // Load draft with the correct field
+      af_retrieve(active_field, contact_id);
+      switch(active_field) {
+      }
+      
+      // Then redraw whatever the field is that should be active in the
+      // normal way
+      redraw_draft = 1;
+      
+      textbox_find_cursor();
+      
+      redraw_contact = 1;
       break;
     case 0x0d: // RETURN = send message
       // Don't send empty messages (or that just consist of the cursor)
@@ -232,11 +257,11 @@ main(void)
       buffers_unlock(LOCK_TEXTBOX);
 
       textbox_remove_cursor();
-      sms_send_to_contact(contact_ID,buffers.textbox.draft);
+      sms_send_to_contact(contact_id,buffers.textbox.draft);
       buffers_unlock(LOCK_TELEPHONY);      
 
       // Sending to a contact unmounts the thread, so we need to fix that
-      try_or_fail(mount_contact_qso(contact_ID));
+      try_or_fail(mount_contact_qso(contact_id));
 
       // Clear saved draft
       textbox_erase_draft();
@@ -262,7 +287,7 @@ main(void)
       break;
 
     case 0x94: // SHIFT+DEL = delete last message in the thread.
-      sms_delete_message(contact_ID,
+      sms_delete_message(contact_id,
 			 -1 // last message in the thread
 			 );
       redraw = 1;

@@ -1,6 +1,7 @@
 #include "includes.h"
 
 #include "screen.h"
+#include "af.h"
 
 // XXX Use the fact that chip RAM at 0x60000 reads as zeroes :)
 #define DIALPAD_BLANK_GLYPH_ADDR 0x60000
@@ -56,7 +57,7 @@ void dialpad_draw(char active_field)
   int y = 5;
   for(int d=0;d<=11;d++) {
     // Draw digits all in RED by default
-    dialpad_draw_button(seq[d],x,y, (active_field==4)? 0x2e : 0x2c);  // 0x20 = reverse
+    dialpad_draw_button(seq[d],x,y, (active_field==AF_DIALPAD)? 0x2e : 0x2c);  // 0x20 = reverse
     x+=6;
     if (x>(X_START+6+6)) { x=X_START; y+=5; }
   }

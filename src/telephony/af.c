@@ -1,0 +1,49 @@
+#include "includes.h"
+
+#include "buffers.h"
+#include "contacts.h"
+#include "screen.h"
+#include "af.h"
+
+const uint8_t contact_field_lookup[]={FIELD_FIRSTNAME, FIELD_LASTNAME, FIELD_PHONENUMBER};
+
+char af_retrieve(char active_field, uint16_t contact_id)
+{
+  switch(active_field) {
+  case AF_DIALPAD:
+    break;
+  case AF_SMS:
+    // Mount contact D81s, so that we can retreive draft
+    try_or_fail(mount_contact_qso(contact_id));
+    // Read last record in disk to get any saved draft
+    read_record_by_id(0,USABLE_SECTORS_PER_DISK - 1,buffers.textbox.draft);
+    textbox_find_cursor();
+    return 0;
+  case AF_CONTACT_FIRSTNAME:
+  case AF_CONTACT_LASTNAME:
+  case AF_CONTACT_PHONENUMBER:
+    try_or_fail(contact_read(contact_id,buffers.textbox.contact_record));
+    unsigned char *string
+      = find_field(buffers.textbox.contact_record, RECORD_DATA_SIZE,
+		   contact_field_lookup[active_field - AF_CONTACT_FIRSTNAME],
+		   NULL);    
+    lcopy((unsigned long)string, (unsigned long)buffers.textbox.draft, RECORD_DATA_SIZE);
+    return 0;
+  }
+}
+
+char af_store(char active_field, uint16_t contact_id)
+{
+  switch(active_field) {
+  case AF_DIALPAD:
+    break;
+  case AF_SMS:
+    break;
+  case AF_CONTACT_FIRSTNAME:
+    break;
+  case AF_CONTACT_LASTNAME:
+    break;
+  case AF_CONTACT_PHONENUMBER:
+    break;
+  }
+}

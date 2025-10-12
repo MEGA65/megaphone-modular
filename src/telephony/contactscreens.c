@@ -4,6 +4,7 @@
 
 #include "screen.h"
 #include "records.h"
+#include "af.h"
 
 // label width must be odd to not cause weird GOTOX glitch with CHARY16 mode
 #define LABEL_WIDTH_PX 47
@@ -42,7 +43,7 @@ char contact_draw(uint8_t x, uint8_t y,
     string = find_field(contact_record, RECORD_DATA_SIZE, fields[field],NULL);
     draw_string_nowrap(x + LABEL_WIDTH_GL, y+field,
 		       FONT_UI,
-		       active_field==(field+1) ? 0x8f : 0x8b, // reverse medium grey if not selected
+		       active_field==(field+AF_CONTACT_FIRSTNAME) ? 0x8f : 0x8b, // reverse medium grey if not selected
 		       (unsigned char *)string,
 		       x_start_px + LABEL_WIDTH_PX,
 		       w_px - LABEL_WIDTH_PX,
