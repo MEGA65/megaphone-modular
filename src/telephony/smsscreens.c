@@ -94,7 +94,7 @@ char sms_thread_display(unsigned int contact,
 
     try_or_fail(calc_break_points(buffers.textbox.draft,
 				  FONT_UI,
-				  294, // text field in px
+				  RIGHT_AREA_WIDTH_PX, // text field in px
 				  RENDER_COLUMNS - 1 - 45));
     
     y = MAX_ROWS - buffers.textbox.line_count - 1;
@@ -139,7 +139,7 @@ char sms_thread_display(unsigned int contact,
     // And figure out how many lines it will take on the screen.
     calc_break_points(buffers.textbox.field,
 		      FONT_UI,
-		      255, // px width
+		      SMS_TEXT_BLOCK_WIDTH, // px width
 		      60   // glyph width
 		      );
 
