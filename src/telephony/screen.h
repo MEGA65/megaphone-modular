@@ -1,4 +1,4 @@
-#define RENDER_COLUMNS 154
+#define RENDER_COLUMNS 145
 #define MAX_ROWS 30
 
 #define RIGHT_AREA_START_PX 360
