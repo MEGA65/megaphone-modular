@@ -168,7 +168,7 @@ main(void)
       // Redisplay contact at top of screen
 
       // Mount contacts 
-      if (!contact_read(contact_id,buffers.textbox.draft)) {
+      if (!contact_read(contact_id,buffers.textbox.contact_record)) {
 	redraw_contact = 1;
       }
     
@@ -189,6 +189,8 @@ main(void)
     }
 
     if (redraw_contact) {
+      mega65_uart_print(buffers.textbox.contact_record);
+      mega65_uart_print("\r\n");
       redraw_contact = 0;
       contact_draw(RIGHT_AREA_START_GL, 3,
 		   RIGHT_AREA_START_PX,
@@ -196,7 +198,7 @@ main(void)
 		   // Subtract a bit of space for scroll bar etc
 		   RIGHT_AREA_WIDTH_PX - 16,
 		   active_field, // which field is currently active/highlighted
-		   buffers.textbox.draft);
+		   buffers.textbox.contact_record);
     }       
     
     if (redraw) {
