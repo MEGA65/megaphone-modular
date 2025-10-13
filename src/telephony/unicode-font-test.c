@@ -265,6 +265,11 @@ main(void)
       }
       break;
     case 0x11: // down arrow
+
+      // Save any changes to active field before redrawing causes it to be reloaded
+      textbox_remove_cursor();
+      af_store(active_field,contact_id);            
+
       if (position<-1) { redraw=1; position++; }
       break;
     case 0x14: // DELETE
@@ -293,6 +298,11 @@ main(void)
       redraw_draft=1;      
       break;
     case 0x91: // up arrow
+
+      // Save any changes to active field before redrawing causes it to be reloaded
+      textbox_remove_cursor();
+      af_store(active_field,contact_id);            
+      
       if (first_message_displayed>1) { redraw=1; position--; }
       break;
     case 0x1d: // cursor right
