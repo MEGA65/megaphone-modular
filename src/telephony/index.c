@@ -173,9 +173,11 @@ char disk_reindex(unsigned char field)
 {
   unsigned int c;
 
+#ifndef CROSS_COMPILED
   CHECKPOINT("disk_reindex() takes >1 hour to run!");
   fail(1);
   return 1;
+#endif
   
   /* Note that we can't use slab_read() for the records we are
      indexing, because that gets used in index_update_from_buffer().
