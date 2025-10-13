@@ -69,7 +69,6 @@ char af_retrieve(char field, char active_field, uint16_t contact_id)
       = find_field(buffers.textbox.contact_record, RECORD_DATA_SIZE,
 		   contact_field_lookup[field - AF_CONTACT_FIRSTNAME],
 		   NULL);    
-    dump_bytes("contact field",(unsigned long) string,256);
     lcopy((unsigned long)string, (unsigned long)buffers.textbox.draft, RECORD_DATA_SIZE);
     if (field==active_field) textbox_find_cursor();
     // Figure out where the end of the field is, and clamp it to fit.
