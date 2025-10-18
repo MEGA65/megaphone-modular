@@ -68,6 +68,29 @@ void mega65_uart_printhex(const unsigned char v);
 void mega65_uart_printptr(const void *v);
 void mega65_uart_printhex16(const uint16_t v);
 
+/* Short-hands so we don’t repeat ourselves */
+#define TPUT(s)            mega65_uart_print((const char*)(s))
+#define THEX8(v)           mega65_uart_printhex((unsigned char)(v))
+#define THEX16(v)          mega65_uart_printhex16((uint16_t)(v))
+#define TPTR(p)            mega65_uart_printptr((const void*)(p))
+static inline void TNL(void){ TPUT("\r\n"); }
+static inline void TSP(void){ TPUT(" "); }
+
+/* 32-bit hex print using two 16-bit halves (hi first) */
+static inline void THEX32(uint32_t v) {
+  THEX16((uint16_t)(v >> 16)); THEX16((uint16_t)(v & 0xFFFF));
+}
+
+/* Label: value(8-bit) */
+#define TV8(lbl, v)  do{ TPUT(lbl); TPUT("="); THEX8((v));  TSP(); }while(0)
+/* Label: value(16-bit) */
+#define TV16(lbl, v) do{ TPUT(lbl); TPUT("="); THEX16((v)); TSP(); }while(0)
+/* Label: value(32-bit) */
+#define TV32(lbl, v) do{ TPUT(lbl); TPUT("="); THEX32((uint32_t)(v)); TSP(); }while(0)
+/* Label: pointer */
+#define TP(lbl, p)   do{ TPUT(lbl); TPUT("="); TPTR((p));   TSP(); }while(0)
+
+
 #define CHECKPOINT(X) { mega65_uart_print(__FILE__); mega65_uart_print(":"); mega65_uart_printhex16(__LINE__); mega65_uart_print(":"); mega65_uart_print(__FUNCTION__); mega65_uart_print(":"); mega65_uart_print(X); mega65_uart_print("\n\r"); }
 #define CHECKPOINT_WAIT(X) { CHECKPOINT(X); while(PEEK(0xD610)) POKE(0xD610,0); while(!PEEK(0xD610)) POKE(0xD020,PEEK(0xD020)+1); POKE(0xD610,0); }
 

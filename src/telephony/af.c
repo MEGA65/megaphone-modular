@@ -36,7 +36,7 @@ char af_redraw(char active_field, char field)
 		       (unsigned char *)buffers.textbox.draft,
 		       RIGHT_AREA_START_PX + LABEL_WIDTH_PX,
 		       RIGHT_AREA_WIDTH_PX - LABEL_WIDTH_PX,
-		       RIGHT_AREA_START_GL + LABEL_WIDTH_GL,
+		       RENDER_COLUMNS - 4,
 		       NULL,
 		       VIEWPORT_PADDED_RIGHT,
 		       NULL,

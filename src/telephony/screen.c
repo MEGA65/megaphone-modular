@@ -378,8 +378,13 @@ char pad_string_viewport(unsigned char x_glyph_start, unsigned char y_glyph, // 
 			 unsigned char colour,
 			 unsigned int x_pixels_viewport_width,
 			 unsigned char x_glyphs_viewport,
-			 unsigned int x_viewport_absolute_end_pixel)
-{
+			 unsigned int x_viewport_absolute_end_pixel){
+
+  if (x_glyph_start > x_glyphs_viewport) {
+    // x_glyphs_viewport is the right-hand glyph of the viewport, not it's width
+    fail(1);
+  }
+  
   unsigned int x = 0;
   unsigned int x_g = x_glyph_start;
   unsigned char px, trim;
@@ -421,13 +426,13 @@ char pad_string_viewport(unsigned char x_glyph_start, unsigned char y_glyph, // 
     x_g++;
     x+=px;
   }
- 
+  
   // Write GOTOX to use up remainder of view port glyphs
   while(x_g<x_glyphs_viewport) {
     
     // Get offset within screen and colour RAM for both rows of chars
     row0_offset = (y_glyph<<9) + (x_g<<1);
-
+    
     // Set screen RAM
     lpoke(screen_ram + row0_offset + 0, x_viewport_absolute_end_pixel&0xff);
     lpoke(screen_ram + row0_offset + 1, (x_viewport_absolute_end_pixel>>8)&0x3);
@@ -462,7 +467,12 @@ char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start
   unsigned int pixels_wide = 0;
   unsigned char glyph_pixels;
   unsigned char ff;
-  
+
+  if (x_glyph_start > x_glyphs_viewport) {
+    // x_glyphs_viewport is the right-hand glyph of the viewport, not it's width
+    fail(1);
+  }
+    
   if (pixels_used) *pixels_used = 0;
 
   // Allow drawing of string segments
@@ -518,7 +528,7 @@ char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start
 			x_start_px + x_pixels_viewport); // VIC-IV pixel column to point GOTOX to
     break;
   }
-  
+
   // Return the number of bytes of the string that were consumed
   return utf8 - utf8_start;
 }
