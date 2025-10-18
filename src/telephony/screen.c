@@ -998,6 +998,22 @@ char pick_font_by_codepoint(unsigned long cp, unsigned char default_font)
     return default_font;
 }
 
+void textbox_insert_cursor(uint16_t ofs)
+{
+  if (ofs > buffers.textbox.draft_len) { fail(1); return; }
+  if (buffers.textbox.draft_len >= (RECORD_DATA_SIZE-1)) { fail(2); return; }
+
+  buffers.textbox.draft_cursor_position=ofs;
+  if (ofs<buffers.textbox.draft_len) {
+    lcopy((unsigned long)&buffers.textbox.draft[ofs],
+	  (unsigned long)&buffers.textbox.draft[ofs+1],
+	  buffers.textbox.draft_len - buffers.textbox.draft_cursor_position);
+  }
+  buffers.textbox.draft[ofs]=CURSOR_CHAR;
+  buffers.textbox.draft_len++;
+	  
+}
+
 void textbox_find_cursor(void)
 {
   buffers.textbox.draft_len = strlen((char *)buffers.textbox.draft);

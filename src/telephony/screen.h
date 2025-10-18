@@ -94,6 +94,8 @@ char draw_scrollbar(unsigned char sprite_num,
 
 void textbox_find_cursor(void);
 void textbox_remove_cursor(void);
+void textbox_insert_cursor(uint16_t ofs);
+
 
 unsigned char nybl_to_char(unsigned char n);
 void bcd_to_str(unsigned char v, unsigned char *out);

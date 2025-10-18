@@ -73,7 +73,6 @@ char append_field(unsigned char *record, unsigned int *bytes_used, unsigned int 
 		  unsigned char type, unsigned char *value, unsigned int value_length)
 {
   // Insufficient space
-  mega65_uart_printhex16(value_length);
   if (((*bytes_used)+1+1+value_length)>=length) fail(1);
   // Field too long
   if (value_length > 511) fail(2);
@@ -95,18 +94,28 @@ char delete_field(unsigned char *record, unsigned int *bytes_used, unsigned char
   unsigned int ofs=2;      // Skip record number indicator
   unsigned char deleted=0;
 
-  while(ofs<=(*bytes_used)&&record[ofs]) {
-    unsigned int shuffle = 1 + 1 + ((record[ofs]&1)?256:0) + record[ofs+1];
-
+  while(ofs<(*bytes_used)&&record[ofs]) {
+    uint16_t field_len = ((record[ofs]&1)?256:0) + record[ofs+1];
+    unsigned int shuffle = 1 + 1 + field_len;
+    
     if ((record[ofs]&0xfe) == type) {
       // Found matching field
       // Now to shuffle it down.
       // On MEGA65, lcopy() has "special" behaviour with overlapping copies.
       // Basically the first few bytes will be read before the first byte is written.
       // The nature of the copy that we are doing, shuffling down, is safe in this context.
-      if ((*bytes_used)-ofs-shuffle)
-	lcopy((unsigned long)&record[ofs+shuffle],(unsigned long)&record[ofs],(*bytes_used)-ofs-shuffle);
+      if ((*bytes_used)-ofs-shuffle) {
+	lcopy((unsigned long)&record[ofs+shuffle],(unsigned long)&record[ofs],
+	      (*bytes_used)-ofs-shuffle);	
+      } else {
+	// A zero-length shuffle happens when we delete the last field in a record.
+	// This is totally fine
+      }
       (*bytes_used) -= shuffle;
+
+      if (*bytes_used > RECORD_DATA_SIZE) {
+	fail(2);
+      }
 
       deleted++;
       
@@ -138,12 +147,16 @@ unsigned int record_get_bytes_used(unsigned char *record)
 {
   unsigned int ofs=2;  // Skip record number indicator
 
-  while((ofs<=RECORD_DATA_SIZE)&&record[ofs]) {
+  while((ofs<=RECORD_DATA_SIZE)&&record[ofs]) {    
     unsigned int shuffle = 1 + 1 + ((record[ofs]&1)?256:0) + record[ofs+1];
-
+    
     if (!record[ofs]) break;
     
-    ofs+=shuffle;    
+    ofs+=shuffle;
+
+    if (ofs>=RECORD_DATA_SIZE) {
+      fail(1);
+    }
   }
   return ofs;
 }

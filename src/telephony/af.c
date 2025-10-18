@@ -102,16 +102,13 @@ char af_store(char active_field, uint16_t contact_id)
     
     // Delete relevant field from contact record
     unsigned int bytes_used = record_get_bytes_used(buffers.textbox.contact_record);
+    
     delete_field(buffers.textbox.contact_record,
 		 &bytes_used,
 		 contact_field_lookup[active_field - AF_CONTACT_FIRSTNAME]);
+
     
     // Insert current value
-    dump_bytes("contact record",(unsigned long)buffers.textbox.contact_record,RECORD_DATA_SIZE);
-    mega65_uart_print("bytes used and draft_len: ");
-    mega65_uart_printhex16(bytes_used);
-    mega65_uart_printhex16(buffers.textbox.draft_len);
-    mega65_uart_print("\r\n");
     append_field(buffers.textbox.contact_record,&bytes_used,RECORD_DATA_SIZE,
 		 contact_field_lookup[active_field - AF_CONTACT_FIRSTNAME],
 		 buffers.textbox.draft,

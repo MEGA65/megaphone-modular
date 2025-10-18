@@ -90,6 +90,20 @@ void fatal(const char *file, const char *function, int line, unsigned char r)
 
 extern void irq_wait_animation(void);
 
+void save_and_redraw_active_field(int8_t active_field, uint16_t contact_id)
+{
+  uint16_t cursor_stash = buffers.textbox.draft_cursor_position;
+  // Remove cursor
+  textbox_remove_cursor();
+  // Save changes
+  af_store(active_field,contact_id);
+  // Reinsert cursor
+  textbox_insert_cursor(cursor_stash);
+  
+  // Redraw
+  af_redraw(0xff,active_field);
+} 
+
 int
 #else
 void
@@ -152,6 +166,8 @@ main(void)
   erase_draft = 0;
 
   active_field = 0;
+
+  af_retrieve(active_field, active_field, contact_id);
   
   dialpad_draw(active_field);  
   
@@ -182,6 +198,7 @@ main(void)
 	// Read last record in disk to get any saved draft
 	read_record_by_id(0,USABLE_SECTORS_PER_DISK -1,buffers.textbox.draft);
 	textbox_find_cursor();
+
       }
       erase_draft = 0;
 
@@ -280,7 +297,7 @@ main(void)
 	buffers.textbox.draft_cursor_position--;
 	buffers.textbox.draft_len--;
 
-	redraw_draft=1;
+	save_and_redraw_active_field(active_field, contact_id);
       }
       break;
 
@@ -333,6 +350,7 @@ main(void)
     if (PEEK(0xD610)>=0x20 && PEEK(0xD610) < 0x7F) {
       // It's a character to add to our draft message
       if (buffers.textbox.draft_len < (RECORD_DATA_SIZE-1) ) {
+       
 	// Shuffle from cursor
 	lcopy((uint32_t)&buffers.textbox.draft[buffers.textbox.draft_cursor_position],
 	      (uint32_t)&buffers.textbox.draft[buffers.textbox.draft_cursor_position+1],
@@ -341,6 +359,8 @@ main(void)
 	buffers.textbox.draft_cursor_position++;
 	buffers.textbox.draft_len++;
 
+	save_and_redraw_active_field(active_field, contact_id);
+	
 	redraw_draft = 1;
       }
     }
@@ -352,7 +372,7 @@ main(void)
       calc_break_points(buffers.textbox.draft,
 			FONT_UI,
 		        RIGHT_AREA_WIDTH_PX, // text field in px
-			RENDER_COLUMNS - 1 - RIGHT_AREA_START_GL);      
+			RENDER_COLUMNS - 1 - RIGHT_AREA_START_GL);
       
       // Only redraw the message draft if it hasn't changed how many lines it uses
       if (buffers.textbox.line_count == old_draft_line_count ) {
