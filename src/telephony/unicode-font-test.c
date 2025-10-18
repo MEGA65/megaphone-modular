@@ -101,7 +101,7 @@ void save_and_redraw_active_field(int8_t active_field, uint16_t contact_id)
   textbox_insert_cursor(cursor_stash);
   
   // Redraw
-  af_redraw(0xff,active_field);
+  af_redraw(active_field,active_field);
 } 
 
 int
