@@ -92,9 +92,6 @@ char sms_thread_display(unsigned int contact,
 
     af_retrieve(AF_SMS, active_field, contact);
 
-    TV8(">>line_count",buffers.textbox.line_count);
-    TNL();
-    
     try_or_fail(calc_break_points(buffers.textbox.draft,
 				  FONT_UI,
 				  RIGHT_AREA_WIDTH_PX, // text field in px
@@ -195,46 +192,6 @@ char sms_thread_display(unsigned int contact,
 
   // Note that this is 1-based, not 0-based, because of the reserved message 0
   if (first_message_displayed) *first_message_displayed = message;
-  
-#if 0
-  // record 0 = BAM, 1 = first actual message
-  read_record_by_id(0,1,buffers.textbox.record);
-
-  buffers.textbox.field = find_field(buffers.textbox.record,
-				     RECORD_DATA_SIZE,
-				     FIELD_BODYTEXT,
-				     &buffers.textbox.field_len);  
-  
-  calc_break_points(buffers.textbox.field,
-		    FONT_UI,
-		    255, // px width
-		    60   // glyph width
-		    );
-
-  textbox_draw(360/8, // column on screen
-	       2, // row on screen
-	       360, // start pixel
-	       255, // px width
-	       RENDER_COLUMNS - 1 - 45,   // glyph width
-	       FONT_UI,
-	       0x8F, // colour
-	       buffers.textbox.field,
-	       0, // Starting row of text box
-	       buffers.textbox.line_count-1, // Ending row of text box
-	       VIEWPORT_PADDED);
-
-  textbox_draw(384/8, // 384/8, // column on screen
-	       12, // row on screen
-	       384, // start pixel
-	       270, // px width
-	       RENDER_COLUMNS - 1 - 48,   // glyph width
-	       FONT_UI,
-	       0x8D, // colour
-	       buffers.textbox.field,
-	       0, // Starting row of text box
-	       buffers.textbox.line_count-1, // Ending row of text box
-	       VIEWPORT_PADDED);
-#endif  
-
+    
   return 0;
 }

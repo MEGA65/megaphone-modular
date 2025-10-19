@@ -657,9 +657,6 @@ char calc_break_points(unsigned char *str,
   else
     buffers.textbox.draft[buffers.textbox.draft_len]=0;  
 
-  TV16("draft_len",buffers.textbox.draft_len);
-  TPUT("/");
-  
   while(*s) {
 
     // Advance through the string, one unicode code point at a time.
@@ -675,9 +672,6 @@ char calc_break_points(unsigned char *str,
     if (break_required) {
       // If a line break is required, record it, and look for next line.
       buffers.textbox.line_offsets_in_bytes[buffers.textbox.line_count++]=(best_break_s-last_break_s);
-      TV8("line_offset",(best_break_s-last_break_s));
-      TV16("s_ofs", s - str);
-      TNL();
 
       if (!best_break_ofs) {
 	fail(7);
@@ -718,8 +712,6 @@ char calc_break_points(unsigned char *str,
 
   if (*last_break_s) {
     // Emit final line
-    TV8("line_count",buffers.textbox.line_count);
-    TPUT("FINAL\r\n");
     buffers.textbox.line_offsets_in_bytes[buffers.textbox.line_count++]=(s-last_break_s);
     
   }
