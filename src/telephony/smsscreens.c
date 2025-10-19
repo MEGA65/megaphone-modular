@@ -107,7 +107,7 @@ char sms_thread_display(unsigned int contact,
 
     af_retrieve(AF_SMS, active_field, contact);
     if (active_field==AF_SMS) textbox_find_cursor();
-    af_redraw(active_field,AF_SMS);
+    af_redraw(active_field,AF_SMS,0);
     
   } else {
     // No message editing text box visible

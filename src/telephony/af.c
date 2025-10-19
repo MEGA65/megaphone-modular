@@ -8,8 +8,12 @@
 
 const uint8_t contact_field_lookup[]={FIELD_FIRSTNAME, FIELD_LASTNAME, FIELD_PHONENUMBER};
 
-char af_redraw(char active_field, char field)
+char af_redraw(char active_field, char field, uint8_t y)
 {
+  // Default to top of screen, unless an alternate position is provided.
+  uint8_t y_row = 3+field - AF_CONTACT_FIRSTNAME;
+  if (y) y_row = y+field - AF_CONTACT_FIRSTNAME;
+
   switch(field) {
   case AF_DIALPAD:
     break;
@@ -30,7 +34,7 @@ char af_redraw(char active_field, char field)
   case AF_CONTACT_LASTNAME:
   case AF_CONTACT_PHONENUMBER:
     draw_string_nowrap(RIGHT_AREA_START_GL + LABEL_WIDTH_GL,
-		       3+field - AF_CONTACT_FIRSTNAME,
+		       y_row,
 		       FONT_UI,
 		       (active_field==field) ? 0x8f : 0x8b, // reverse medium grey if not selected
 		       (unsigned char *)buffers.textbox.draft,

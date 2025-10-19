@@ -6,6 +6,7 @@
 #include "screen.h"
 #include "records.h"
 #include "af.h"
+#include "mountstate.h"
 
 char contact_draw(uint8_t x, uint8_t y,
 		  uint16_t x_start_px,
@@ -36,8 +37,67 @@ char contact_draw(uint8_t x, uint8_t y,
 		       NULL);
 
     af_retrieve(field + AF_CONTACT_FIRSTNAME, active_field, contact_id);
-    af_redraw(active_field, field + AF_CONTACT_FIRSTNAME);
+    if (active_field == AF_ALL)
+      af_redraw(field + AF_CONTACT_FIRSTNAME,
+		field + AF_CONTACT_FIRSTNAME,y);
+    else if (active_field == AF_NONE)
+      af_redraw(99,field + AF_CONTACT_FIRSTNAME, y);
+    else
+      af_redraw(active_field, field + AF_CONTACT_FIRSTNAME, y);
   }
 
+  return 0;
+}
+
+char contact_draw_list(int16_t last_contact, int16_t current_contact)
+{
+  // We use the same vertical space as for SMS thread, so that we don't have
+  // to mess with the scroll bar dimensions.
+  const int display_count = (MAX_ROWS + 1 - SMS_FIRST_ROW) / 4;
+
+  // We don't care that the blank line below the contact is below the
+  // scroll bar. This then lets us get an integer number of contacts
+  // on the screen.
+  int8_t next_row = MAX_ROWS + 1 - (3 + 1);
+
+  // Erase the contact block at the top
+  for(uint8_t l=0;l<4;l++)
+    screen_clear_partial_line(1+1+1+l,RIGHT_AREA_START_GL, RENDER_COLUMNS);
+  
+  mount_state_set(MS_CONTACT_LIST, current_contact);
+  
+  if (last_contact < 0) {
+    // Read BAM, find first free sector (if we don't write it back, it doesn't actually
+    // get allocated, thus saving the need for a separate get allocated count function).
+    read_sector(0,1,0);
+    last_contact = record_allocate_next(SECTOR_BUFFER_ADDRESS) - 1;
+  }
+
+  if (last_contact < display_count) last_contact = display_count - 1;
+  
+  while(next_row >= SMS_FIRST_ROW) {
+    // Highlight if current contact
+    uint8_t activeP = AF_NONE;
+    if (last_contact == current_contact) activeP = AF_ALL;
+
+    if (last_contact > 0) {
+      contact_draw(RIGHT_AREA_START_GL, next_row,
+		   RIGHT_AREA_START_PX,
+		   MAX_ROWS - RIGHT_AREA_START_GL, RIGHT_AREA_WIDTH_PX,
+		   last_contact,
+		   activeP);
+      screen_clear_partial_line(next_row+3,RIGHT_AREA_START_GL, RENDER_COLUMNS);
+      
+    } else {
+      // If insufficient contacts, clear the screen region
+      for(uint8_t l=0;l<4;l++)
+	screen_clear_partial_line(next_row+l,RIGHT_AREA_START_GL, RENDER_COLUMNS);
+    }
+
+    next_row -= 4;
+    last_contact -= 1;
+  }
+
+  
   return 0;
 }

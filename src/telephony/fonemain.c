@@ -15,7 +15,9 @@
 #include "dialer.h"
 #include "status.h"
 #include "af.h"
+#include "mountstate.h"
 
+#define PAGE_UNKNOWN 0
 #define PAGE_SMS_THREAD 1
 #define PAGE_CONTACTS 2
 uint8_t fonemain_sms_thread_controller(void);
@@ -107,7 +109,7 @@ void save_and_redraw_active_field(int8_t active_field, uint16_t contact_id)
   textbox_insert_cursor(cursor_stash);
   
   // Redraw
-  af_redraw(active_field,active_field);
+  af_redraw(active_field,active_field,0);
 } 
 
 
@@ -185,8 +187,11 @@ main(void)
   show_busy();
 
   uint8_t current_page = PAGE_SMS_THREAD;
+  uint8_t last_page = PAGE_UNKNOWN;
   
   while(1) {
+    if (current_page != last_page) redraw=1;
+    last_page = current_page;
     switch (current_page) {
     case PAGE_SMS_THREAD:  current_page = fonemain_sms_thread_controller(); break;
     case PAGE_CONTACTS:    current_page = fonemain_contact_list_controller(); break;
@@ -269,7 +274,7 @@ uint8_t fonemain_sms_thread_controller(void)
     textbox_remove_cursor();
     // Save any changes to the field before TABing to next field
     af_store(active_field,contact_id);
-    af_redraw(0xff,active_field);      
+    af_redraw(AF_NONE,active_field,0);
     
     prev_active_field = active_field;
     if (PEEK(0xD610)==0x0F) active_field--; // shift+tab = 0x0f
@@ -285,7 +290,7 @@ uint8_t fonemain_sms_thread_controller(void)
     // Load draft with the correct field
     af_retrieve(active_field, active_field, contact_id);
     // textbox_find_cursor();
-    af_redraw(active_field,active_field);      
+    af_redraw(active_field,active_field,0);
     
     break;
   case 0x0d: // RETURN = send message
@@ -404,7 +409,7 @@ uint8_t fonemain_sms_thread_controller(void)
     
     // Only redraw the message draft if it hasn't changed how many lines it uses
     if (buffers.textbox.line_count == old_draft_line_count ) {
-      af_redraw(active_field,active_field);
+      af_redraw(active_field,active_field,0);
     } else {
       redraw = 1;
     }
@@ -420,6 +425,40 @@ uint8_t fonemain_sms_thread_controller(void)
 
 uint8_t fonemain_contact_list_controller(void)
 {
-  // XXX Not yet implemented
-  return PAGE_SMS_THREAD;
+  mount_state_set(MS_CONTACT_LIST, 0);
+  read_sector(0,1,0);
+  int16_t contact_count = record_allocate_next(SECTOR_BUFFER_ADDRESS) - 1;
+  
+  
+  if (redraw) {
+    redraw = 0;
+    contact_draw_list(position, contact_id);
+  }
+
+  // Wait for key press: This is the only time that we aren't "busy"    
+  hide_busy();
+  while(!PEEK(0xD610)) {
+    // Keep the clock updated
+    statusbar_draw_time();
+    continue;
+  }
+  show_busy();
+  
+  switch(PEEK(0xD610)) {
+  case 0xF3: // F3 = switch to contact list
+    POKE(0xD610,0); // Remove F3 key event from queue
+    return PAGE_SMS_THREAD;
+  case 0x11: // Cursor down
+    position++;
+    if (position==0) position=-1;
+    redraw = 1;
+    break;
+  case 0x91: // Cursor up
+    position--;
+    if (position<=-contact_count) position=1-contact_count;
+    redraw = 1;
+  }
+  POKE(0xD610,0);
+
+  return PAGE_CONTACTS;
 }
