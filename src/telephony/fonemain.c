@@ -186,8 +186,11 @@ main(void)
   mount_state_set(MS_CONTACT_LIST, 0);
   read_sector(0,1,0);
   contact_count = record_allocate_next(SECTOR_BUFFER_ADDRESS) - 1;
-  
-  contact_id = 3;
+
+  // Start with contact list
+  uint8_t current_page = PAGE_CONTACTS;
+  uint8_t last_page = PAGE_UNKNOWN;   
+  contact_id = 2;
   
   reset_view();
 
@@ -199,9 +202,6 @@ main(void)
   
   show_busy();
 
-  uint8_t current_page = PAGE_SMS_THREAD;
-  uint8_t last_page = PAGE_UNKNOWN;
-  
   while(1) {
     // Reload and redraw things as required when changing views.
     if (current_page != last_page) {
