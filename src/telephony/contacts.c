@@ -4,6 +4,7 @@
 #include "records.h"
 #include "search.h"
 #include "mountstate.h"
+#include "contacts.h"
 
 #include <string.h>
 
@@ -14,7 +15,17 @@ uint16_t contact_create_new(void)
   read_sector(0,1,0);
   uint16_t contact_id = record_allocate_next(SECTOR_BUFFER_ADDRESS);
   write_sector(0,1,0);
-
+  // A bit of a kludge to zero the new contact record without needing
+  // a lock or another buffer.
+  lfill(0x0400,0x00,512);
+  uint16_t bytes_used = 0;
+  build_contact((unsigned char*)0x400, &bytes_used,
+		(unsigned char *)"",
+		(unsigned char *)"",
+		(unsigned char *)"",
+		0);
+  write_record_by_id(DRIVE_0, contact_id, (unsigned char *)0x0400);
+  
   return contact_id;
 }
 
@@ -44,6 +55,8 @@ char build_contact(unsigned char buffer[RECORD_DATA_SIZE],unsigned int *bytes_us
 		   unsigned int unreadCount)
 {
   unsigned char urC[2];
+
+  if (!bytes_used) { fail(1); return 1; }
   
   // Reserve first two bytes for record number
   *bytes_used=2;
