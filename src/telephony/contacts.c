@@ -7,6 +7,17 @@
 
 #include <string.h>
 
+uint16_t contact_create_new(void)
+{
+  try_or_fail(mount_state_set(MS_CONTACT_LIST,0));
+
+  read_sector(0,1,0);
+  uint16_t contact_id = record_allocate_next(SECTOR_BUFFER_ADDRESS);
+  write_sector(0,1,0);
+
+  return contact_id;
+}
+
 char contact_read(uint16_t contact_id, unsigned char *buffer)
 {
 

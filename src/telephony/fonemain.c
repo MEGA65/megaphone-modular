@@ -478,6 +478,9 @@ uint8_t fonemain_contact_list_controller(void)
   show_busy();
 
   switch(PEEK(0xD610)) {
+  case '+': // Create contact
+    contact_id = contact_create_new();
+    // FALL THROUGH (dropping into contact edit / SMS thread display)
   case 0xF3: // F3 = switch to contact list
   case 0x20: case 0x0D: // (SPACE or RETURN also does it)
     POKE(0xD610,0); // Remove key event from queue
