@@ -132,6 +132,7 @@ unsigned char r;
 // active field needs to be signed, so that we can wrap field numbers
 int8_t active_field;
 int8_t prev_active_field;
+uint8_t new_contact;
 
 unsigned int first_message_displayed;
 
@@ -146,6 +147,9 @@ void reset_view(void)
   old_draft_line_count = -1;
   
   active_field = 0;
+
+  // For convenience, highlight the first contact field on creation
+  if (new_contact) { active_field = 2; new_contact=0; }
 }
 
 int
@@ -199,6 +203,7 @@ main(void)
   uint8_t current_page = PAGE_CONTACTS;
   uint8_t last_page = PAGE_UNKNOWN;   
   contact_id = 2;
+  new_contact = 0;
   
   reset_view();
 
@@ -481,6 +486,7 @@ uint8_t fonemain_contact_list_controller(void)
   case '+': // Create contact
     contact_id = contact_create_new();
     contact_count = contact_id;
+    new_contact = 1;
     // FALL THROUGH (dropping into contact edit / SMS thread display)
   case 0xF3: // F3 = switch to contact list
   case 0x20: case 0x0D: // (SPACE or RETURN also does it)
