@@ -469,6 +469,7 @@ uint8_t fonemain_contact_list_controller(void)
 
   switch(PEEK(0xD610)) {
   case 0xF3: // F3 = switch to contact list
+  case 0x20: case 0x0D: // (SPACE or RETURN also does it)
     POKE(0xD610,0); // Remove F3 key event from queue
     return PAGE_SMS_THREAD;
   case 0x11: // Cursor down
@@ -483,9 +484,6 @@ uint8_t fonemain_contact_list_controller(void)
     break;
   }
   POKE(0xD610,0);
-
-  // XXX - Removing the following results in LLVM segfaulting as of 19OCT25 :/ PGS
-  TNL();
   
   return PAGE_CONTACTS;
 }
