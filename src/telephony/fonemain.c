@@ -126,6 +126,20 @@ unsigned char r;
 int8_t active_field;
 int8_t prev_active_field;
 
+unsigned int first_message_displayed;
+
+void reset_view(void)
+{
+  position = -1;
+  redraw = 1;
+  reload_contact = 1;
+  redraw_contact = 1;
+  erase_draft = 0;
+  first_message_displayed = -1;
+
+  active_field = 0;
+}
+
 int
 #else
 void
@@ -175,13 +189,7 @@ main(void)
   
   contact_id = 3;
   
-  position = -1;
-  redraw = 1;
-  reload_contact = 1;
-  redraw_contact = 1;
-  erase_draft = 0;
-
-  active_field = 0;
+  reset_view();
 
   af_retrieve(active_field, active_field, contact_id);
   
@@ -197,8 +205,7 @@ main(void)
   while(1) {
     // Reload and redraw things as required when changing views.
     if (current_page != last_page) {
-      reload_contact = 1;
-      redraw = 1;
+      reset_view();
     }
     last_page = current_page;
     switch (current_page) {
@@ -215,9 +222,7 @@ main(void)
 }
     
 uint8_t fonemain_sms_thread_controller(void)
-{
-  unsigned int first_message_displayed;
-  
+{  
   if (reload_contact) {
     reload_contact = 0;
     
