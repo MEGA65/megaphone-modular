@@ -485,7 +485,7 @@ uint8_t fonemain_contact_list_controller(void)
   switch(PEEK(0xD610)) {
   case '+': // Create contact
     contact_id = contact_create_new();
-    contact_count = contact_id;
+    contact_count = contact_id + 1;
     new_contact = 1;
     // FALL THROUGH (dropping into contact edit / SMS thread display)
   case 0xF3: // F3 = switch to contact list
