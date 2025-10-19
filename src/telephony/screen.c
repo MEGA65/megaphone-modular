@@ -382,7 +382,12 @@ char pad_string_viewport(unsigned char x_glyph_start, unsigned char y_glyph, // 
 
   if (x_glyph_start > x_glyphs_viewport) {
     // x_glyphs_viewport is the right-hand glyph of the viewport, not it's width
-    fail(1);
+
+    // As we are only padding, we'll treat this as a soft error, rather than calling
+    // fail().
+    // fail(1);
+    
+    return 1;
   }
   
   unsigned int x = 0;

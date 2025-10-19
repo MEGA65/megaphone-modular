@@ -195,7 +195,11 @@ main(void)
   uint8_t last_page = PAGE_UNKNOWN;
   
   while(1) {
-    if (current_page != last_page) redraw=1;
+    // Reload and redraw things as required when changing views.
+    if (current_page != last_page) {
+      reload_contact = 1;
+      redraw = 1;
+    }
     last_page = current_page;
     switch (current_page) {
     case PAGE_SMS_THREAD:
@@ -439,6 +443,13 @@ uint8_t fonemain_contact_list_controller(void)
     
   if (redraw) {
     redraw = 0;
+
+    // Ensure contact is visible in listing
+    if (position > contact_id) position = contact_id;
+    if (position <= (contact_id - CONTACTS_PER_PAGE))
+      position = contact_id + 1 - CONTACTS_PER_PAGE;
+    if (position<1) position = 1;
+
     contact_draw_list(position - 1 + CONTACTS_PER_PAGE, contact_id);
   }
 
@@ -462,18 +473,13 @@ uint8_t fonemain_contact_list_controller(void)
     else if (contact_id>1) contact_id--;
     // Adjust window so that contact is visible
     if (contact_id >= contact_count) contact_id = contact_id-1;
-    if (position > contact_id) position = contact_id;
-    if (position <= (contact_id - CONTACTS_PER_PAGE))
-      position = contact_id + 1 - CONTACTS_PER_PAGE;
-    if (position<1) position = 1;
 
     redraw = 1;
     break;
   }
   POKE(0xD610,0);
 
-  TV16("position",position);
-  TV16(", contact_id",contact_id);
+  // XXX - Removing the following results in LLVM segfaulting as of 19OCT25 :/ PGS
   TNL();
   
   return PAGE_CONTACTS;

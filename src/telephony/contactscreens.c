@@ -66,12 +66,14 @@ char contact_draw_list(int16_t last_contact, int16_t current_contact)
     screen_clear_partial_line(1+1+1+l,RIGHT_AREA_START_GL, RENDER_COLUMNS);
   
   mount_state_set(MS_CONTACT_LIST, current_contact);
+
+  // Read BAM, find first free sector (if we don't write it back, it doesn't actually
+  // get allocated, thus saving the need for a separate get allocated count function).
+  read_sector(0,1,0);
+  uint16_t contact_count = record_allocate_next(SECTOR_BUFFER_ADDRESS);
   
   if (last_contact < 0) {
-    // Read BAM, find first free sector (if we don't write it back, it doesn't actually
-    // get allocated, thus saving the need for a separate get allocated count function).
-    read_sector(0,1,0);
-    last_contact = record_allocate_next(SECTOR_BUFFER_ADDRESS) - 1;
+    last_contact = contact_count - 1;
   }
 
   if (last_contact < display_count) last_contact = display_count - 1;
@@ -100,6 +102,11 @@ char contact_draw_list(int16_t last_contact, int16_t current_contact)
   }
   TNL();
 
+  draw_scrollbar(0, // SMS thread scroll bar (which we re-use here)
+		 last_contact,
+		 last_contact + display_count,
+		 contact_count-1-1);  // subtract for BAM, and also for 0-oriented count
+  
   
   return 0;
 }
