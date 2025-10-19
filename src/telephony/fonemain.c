@@ -177,7 +177,7 @@ main(void)
   
   while(1) {
     unsigned int first_message_displayed;
-    
+
     if (reload_contact) {
       reload_contact = 0;
 
