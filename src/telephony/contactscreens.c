@@ -100,7 +100,6 @@ char contact_draw_list(int16_t last_contact, int16_t current_contact)
     next_row -= 4;
     last_contact -= 1;
   }
-  TNL();
 
   draw_scrollbar(0, // SMS thread scroll bar (which we re-use here)
 		 last_contact,

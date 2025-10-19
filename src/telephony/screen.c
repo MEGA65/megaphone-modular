@@ -611,6 +611,8 @@ char calc_break_points(unsigned char *str,
   unsigned char *last_break_s;
   unsigned char break_required;
   unsigned int this_cost, underful_cost;
+
+  buffers.textbox.line_count = 1;
   
   // Box must be wide enough to take single widest glyph
   if (box_width_pixels<32) { fail(6); return 6; }
@@ -622,7 +624,6 @@ char calc_break_points(unsigned char *str,
   if (!*str) {
     // For an empty string, just reserve a single line, so that
     // it's still visible.
-    buffers.textbox.line_count = 1;
     buffers.textbox.line_offsets_in_bytes[0]=0;
     return 0;
   }
@@ -649,6 +650,15 @@ char calc_break_points(unsigned char *str,
   if (r) return r;
 
   buffers.textbox.line_count=0;
+
+  // Routine requires null-terminated string
+  if (buffers.textbox.draft_len>=RECORD_DATA_SIZE)
+    buffers.textbox.draft[RECORD_DATA_SIZE-1]=0;
+  else
+    buffers.textbox.draft[buffers.textbox.draft_len]=0;  
+
+  TV16("draft_len",buffers.textbox.draft_len);
+  TPUT("/");
   
   while(*s) {
 
@@ -665,6 +675,9 @@ char calc_break_points(unsigned char *str,
     if (break_required) {
       // If a line break is required, record it, and look for next line.
       buffers.textbox.line_offsets_in_bytes[buffers.textbox.line_count++]=(best_break_s-last_break_s);
+      TV8("line_offset",(best_break_s-last_break_s));
+      TV16("s_ofs", s - str);
+      TNL();
 
       if (!best_break_ofs) {
 	fail(7);
@@ -705,6 +718,8 @@ char calc_break_points(unsigned char *str,
 
   if (*last_break_s) {
     // Emit final line
+    TV8("line_count",buffers.textbox.line_count);
+    TPUT("FINAL\r\n");
     buffers.textbox.line_offsets_in_bytes[buffers.textbox.line_count++]=(s-last_break_s);
     
   }

@@ -98,6 +98,9 @@ struct textbox {
   unsigned int line_count;
   unsigned int line_offsets_in_bytes[RECORD_DATA_SIZE];
 
+  // Must be immediately before draft[], to absorb the 2 bytes of
+  // record marker.
+  unsigned char draft_record_marker[2];
   unsigned char draft[RECORD_DATA_SIZE];
   unsigned int draft_len;
   unsigned int draft_cursor_position;

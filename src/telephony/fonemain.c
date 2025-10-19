@@ -23,9 +23,6 @@
 uint8_t fonemain_sms_thread_controller(void);
 uint8_t fonemain_contact_list_controller(void);
 
-
-unsigned char buffer[128];
-
 unsigned char i;
 
 char hex(unsigned char c)
@@ -107,6 +104,16 @@ void save_and_redraw_active_field(int8_t active_field, uint16_t contact_id)
   af_store(active_field,contact_id);
   // Reinsert cursor
   textbox_insert_cursor(cursor_stash);
+
+  if (af_dirty) {
+    af_dirty = 0;
+
+    // For SMS messages, we need to know if the line count has changed
+    calc_break_points(buffers.textbox.draft,
+		      FONT_UI,
+		      RIGHT_AREA_WIDTH_PX, // text field in px
+		      RENDER_COLUMNS - 1 - RIGHT_AREA_START_GL);
+  }
   
   // Redraw
   af_redraw(active_field,active_field,0);
@@ -136,7 +143,8 @@ void reset_view(void)
   redraw_contact = 1;
   erase_draft = 0;
   first_message_displayed = -1;
-
+  old_draft_line_count = -1;
+  
   active_field = 0;
 }
 
@@ -267,6 +275,8 @@ uint8_t fonemain_sms_thread_controller(void)
 		       1, // Show message edit box
 		       active_field,
 		       &first_message_displayed);
+    // And make sure we have the current field retrieved after
+    af_retrieve(active_field, active_field, contact_id);
   }
   redraw=0;
   
@@ -418,13 +428,13 @@ uint8_t fonemain_sms_thread_controller(void)
   
   if (redraw_draft) {
     redraw_draft = 0;
-    
+
     // For SMS messages, we need to know if the line count has changed
     calc_break_points(buffers.textbox.draft,
 		      FONT_UI,
 		      RIGHT_AREA_WIDTH_PX, // text field in px
 		      RENDER_COLUMNS - 1 - RIGHT_AREA_START_GL);
-    
+
     // Only redraw the message draft if it hasn't changed how many lines it uses
     if (buffers.textbox.line_count == old_draft_line_count ) {
       af_redraw(active_field,active_field,0);
@@ -470,7 +480,7 @@ uint8_t fonemain_contact_list_controller(void)
   switch(PEEK(0xD610)) {
   case 0xF3: // F3 = switch to contact list
   case 0x20: case 0x0D: // (SPACE or RETURN also does it)
-    POKE(0xD610,0); // Remove F3 key event from queue
+    POKE(0xD610,0); // Remove key event from queue
     return PAGE_SMS_THREAD;
   case 0x11: // Cursor down
   case 0x91: // Cursor up

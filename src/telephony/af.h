@@ -13,8 +13,12 @@
 
 #define AF_MAX 4
 
-char af_retrieve_fast(char field, char active_field, uint16_t contact_id);
-char af_retrieve(char field, char active_field, uint16_t contact_id);
+extern uint8_t af_dirty;
+
+char af_retrieve_common(char field, char active_field, uint16_t contact_id,
+			uint8_t fastP);
+#define af_retrieve(A,B,C) af_retrieve_common(A,B,C,0)
+#define af_retrieve_fast(A,B,C) af_retrieve_common(A,B,C,1)
 
 char af_store(char active_field, uint16_t contact_id);
 char af_redraw(char active_field, char field, uint8_t y);

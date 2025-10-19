@@ -92,6 +92,9 @@ char sms_thread_display(unsigned int contact,
 
     af_retrieve(AF_SMS, active_field, contact);
 
+    TV8(">>line_count",buffers.textbox.line_count);
+    TNL();
+    
     try_or_fail(calc_break_points(buffers.textbox.draft,
 				  FONT_UI,
 				  RIGHT_AREA_WIDTH_PX, // text field in px
