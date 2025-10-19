@@ -75,7 +75,7 @@ char contact_draw_list(int16_t last_contact, int16_t current_contact)
   }
 
   if (last_contact < display_count) last_contact = display_count - 1;
-  
+
   while(next_row >= (SMS_FIRST_ROW - 1)) {
     // Highlight if current contact
     uint8_t activeP = AF_NONE;
@@ -98,6 +98,7 @@ char contact_draw_list(int16_t last_contact, int16_t current_contact)
     next_row -= 4;
     last_contact -= 1;
   }
+  TNL();
 
   
   return 0;

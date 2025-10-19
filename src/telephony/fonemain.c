@@ -434,10 +434,12 @@ uint8_t fonemain_sms_thread_controller(void)
 
 uint8_t fonemain_contact_list_controller(void)
 {
-  
+
+#define CONTACTS_PER_PAGE 6
+    
   if (redraw) {
     redraw = 0;
-    contact_draw_list(position, contact_id);
+    contact_draw_list(position - 1 + CONTACTS_PER_PAGE, contact_id);
   }
 
   // Wait for key press: This is the only time that we aren't "busy"    
@@ -449,8 +451,6 @@ uint8_t fonemain_contact_list_controller(void)
   }
   show_busy();
 
-#define CONTACTS_PER_PAGE 6
-  
   switch(PEEK(0xD610)) {
   case 0xF3: // F3 = switch to contact list
     POKE(0xD610,0); // Remove F3 key event from queue
@@ -459,11 +459,11 @@ uint8_t fonemain_contact_list_controller(void)
   case 0x91: // Cursor up
     if (PEEK(0xD610)==0x11)
       { if ((contact_id+1) < contact_count) contact_id++; }
-    else if (contact_id) contact_id--;
+    else if (contact_id>1) contact_id--;
     // Adjust window so that contact is visible
     if (contact_id >= contact_count) contact_id = contact_id-1;
     if (position > contact_id) position = contact_id;
-    if (position < (contact_id - CONTACTS_PER_PAGE))
+    if (position <= (contact_id - CONTACTS_PER_PAGE))
       position = contact_id + 1 - CONTACTS_PER_PAGE;
     if (position<1) position = 1;
 
