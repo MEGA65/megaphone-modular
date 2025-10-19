@@ -114,12 +114,13 @@ void save_and_redraw_active_field(int8_t active_field, uint16_t contact_id)
 
 
 // Global state for telephony software
-int position;
+int16_t position;
 char redraw, redraw_draft, reload_contact, erase_draft;
 char redraw_contact;
 unsigned char old_draft_line_count;
 unsigned char temp;
-unsigned int contact_id;
+int16_t contact_id;
+int16_t contact_count;
 unsigned char r;
 // active field needs to be signed, so that we can wrap field numbers
 int8_t active_field;
@@ -167,6 +168,10 @@ main(void)
   screen_setup_fonts();
 
   hal_init();
+
+  mount_state_set(MS_CONTACT_LIST, 0);
+  read_sector(0,1,0);
+  contact_count = record_allocate_next(SECTOR_BUFFER_ADDRESS) - 1;
   
   contact_id = 3;
   
@@ -193,7 +198,8 @@ main(void)
     if (current_page != last_page) redraw=1;
     last_page = current_page;
     switch (current_page) {
-    case PAGE_SMS_THREAD:  current_page = fonemain_sms_thread_controller(); break;
+    case PAGE_SMS_THREAD:
+      current_page = fonemain_sms_thread_controller(); break;
     case PAGE_CONTACTS:    current_page = fonemain_contact_list_controller(); break;
     default:
       // If something goes wrong, go back to contact list.
@@ -267,6 +273,9 @@ uint8_t fonemain_sms_thread_controller(void)
   switch(PEEK(0xD610)) {
   case 0xF3: // F3 = switch to contact list
     POKE(0xD610,0); // Remove F3 key event from queue
+    // Highlight the contact we have been reading the messages of
+    position = contact_id - 2;
+    if (position < 0) position = 0;
     return PAGE_CONTACTS;
   case 0x09: case 0x0F: // TAB - move fields
     
@@ -425,10 +434,6 @@ uint8_t fonemain_sms_thread_controller(void)
 
 uint8_t fonemain_contact_list_controller(void)
 {
-  mount_state_set(MS_CONTACT_LIST, 0);
-  read_sector(0,1,0);
-  int16_t contact_count = record_allocate_next(SECTOR_BUFFER_ADDRESS) - 1;
-  
   
   if (redraw) {
     redraw = 0;
@@ -443,22 +448,33 @@ uint8_t fonemain_contact_list_controller(void)
     continue;
   }
   show_busy();
+
+#define CONTACTS_PER_PAGE 6
   
   switch(PEEK(0xD610)) {
   case 0xF3: // F3 = switch to contact list
     POKE(0xD610,0); // Remove F3 key event from queue
     return PAGE_SMS_THREAD;
   case 0x11: // Cursor down
-    position++;
-    if (position==0) position=-1;
+  case 0x91: // Cursor up
+    if (PEEK(0xD610)==0x11)
+      { if ((contact_id+1) < contact_count) contact_id++; }
+    else if (contact_id) contact_id--;
+    // Adjust window so that contact is visible
+    if (contact_id >= contact_count) contact_id = contact_id-1;
+    if (position > contact_id) position = contact_id;
+    if (position < (contact_id - CONTACTS_PER_PAGE))
+      position = contact_id + 1 - CONTACTS_PER_PAGE;
+    if (position<1) position = 1;
+
     redraw = 1;
     break;
-  case 0x91: // Cursor up
-    position--;
-    if (position<=-contact_count) position=1-contact_count;
-    redraw = 1;
   }
   POKE(0xD610,0);
 
+  TV16("position",position);
+  TV16(", contact_id",contact_id);
+  TNL();
+  
   return PAGE_CONTACTS;
 }

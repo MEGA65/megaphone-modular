@@ -89,6 +89,46 @@ char af_retrieve(char field, char active_field, uint16_t contact_id)
   return 1;
 }
 
+// Assumes record containing feed has already been read from disk
+char af_retrieve_fast(char field, char active_field, uint16_t contact_id)
+{
+  switch(field) {
+  case AF_DIALPAD:
+    // XXX Where on earth are we storing this?
+    // Also we don't yet have a textbox for this on screen
+    break;
+  case AF_SMS:
+    // Mount contact D81s, so that we can retreive draft
+    try_or_fail(mount_contact_qso(contact_id));
+    // Read last record in disk to get any saved draft
+    read_record_by_id(0,USABLE_SECTORS_PER_DISK - 1,buffers.textbox.draft);
+    if (field==active_field) textbox_find_cursor();
+    return 0;
+  case AF_CONTACT_FIRSTNAME:
+  case AF_CONTACT_LASTNAME:
+  case AF_CONTACT_PHONENUMBER:
+    {
+      unsigned char *string
+	= find_field(buffers.textbox.contact_record, RECORD_DATA_SIZE,
+		     contact_field_lookup[field - AF_CONTACT_FIRSTNAME],
+		     NULL);    
+      lcopy((unsigned long)string, (unsigned long)buffers.textbox.draft, RECORD_DATA_SIZE);
+      if (field==active_field) textbox_find_cursor();
+      // Figure out where the end of the field is, and clamp it to fit.
+      buffers.textbox.draft_len=0;
+      while(buffers.textbox.draft[buffers.textbox.draft_len]) {
+	if (buffers.textbox.draft_len >= (RECORD_DATA_SIZE - 10)) break;
+	buffers.textbox.draft_len++;
+      }
+      buffers.textbox.draft[buffers.textbox.draft_len]=0;
+    return 0;
+    }
+  }
+
+  return 1;
+}
+
+
 char af_store(char active_field, uint16_t contact_id)
 {
   switch(active_field) {

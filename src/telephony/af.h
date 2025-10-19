@@ -13,7 +13,9 @@
 
 #define AF_MAX 4
 
+char af_retrieve_fast(char field, char active_field, uint16_t contact_id);
 char af_retrieve(char field, char active_field, uint16_t contact_id);
+
 char af_store(char active_field, uint16_t contact_id);
 char af_redraw(char active_field, char field, uint8_t y);
 

@@ -15,9 +15,13 @@ char mount_state_invalidate(void)
 char mount_state_set(uint8_t mode, uint16_t contact)
 {
   // We already have that mounted
-  if (mode==mount_state_mode
-      && contact == mount_state_contact) return 0;
-  
+  if (mode==mount_state_mode) {
+    // No need to re-mount for contact list with different contact ID,
+    // as they are all in the same D81 (for now, at least).
+    if (mode==MS_CONTACT_LIST) return 0;
+    if (contact == mount_state_contact ) return 0;
+  }
+
   mount_state_mode = MS_NONE;     
   
   char hex[2];

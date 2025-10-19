@@ -21,7 +21,9 @@ char contact_draw(uint8_t x, uint8_t y,
 
   unsigned char *labels[3]
     ={(unsigned char*)"First: ",(unsigned char *)"Last: ",(unsigned char *)"Phone: "};
-    
+
+  af_retrieve(AF_CONTACT_FIRSTNAME, active_field, contact_id);
+  
   for(uint8_t field=0;field<3;field++) {
     
     draw_string_nowrap(x, y+field,
@@ -35,8 +37,7 @@ char contact_draw(uint8_t x, uint8_t y,
 		       VIEWPORT_PADDED_LEFT,
 		       NULL,
 		       NULL);
-
-    af_retrieve(field + AF_CONTACT_FIRSTNAME, active_field, contact_id);
+    af_retrieve_fast(field + AF_CONTACT_FIRSTNAME, active_field, contact_id);
     if (active_field == AF_ALL)
       af_redraw(field + AF_CONTACT_FIRSTNAME,
 		field + AF_CONTACT_FIRSTNAME,y);
@@ -75,7 +76,7 @@ char contact_draw_list(int16_t last_contact, int16_t current_contact)
 
   if (last_contact < display_count) last_contact = display_count - 1;
   
-  while(next_row >= SMS_FIRST_ROW) {
+  while(next_row >= (SMS_FIRST_ROW - 1)) {
     // Highlight if current contact
     uint8_t activeP = AF_NONE;
     if (last_contact == current_contact) activeP = AF_ALL;
