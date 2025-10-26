@@ -9,7 +9,8 @@
 #include "screen.h"
 #include "buffers.h"
 
-unsigned long screen_ram = 0x12000;
+// $10000-$127FF is reserved for dial pad glyphs
+unsigned long screen_ram = 0x12800;
 unsigned long colour_ram = 0xff80800L;
 
 char *font_files[NUM_FONTS]={"EmojiColour","EmojiMono", "Sans", "UI"};
