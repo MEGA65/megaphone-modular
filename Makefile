@@ -1,4 +1,4 @@
-all:	tools/bomtool bin65/unicode-font-test.prg $(FONTS)
+all:	tools/bomtool bin65/fonemain.llvm.prg $(FONTS)
 
 LINUX_BINARIES=	src/telephony/linux/provision \
 		src/telephony/linux/import \
@@ -22,7 +22,7 @@ LD=   $(COMPILER_PATH)/ld.lld
 CL=   $(COMPILER_PATH)/mos-c64-clang -DLLVM -mcpu=mos45gs02
 HELPERS=        src/helper-llvm.c
 
-LDFLAGS += -Wl,-Map,bin65/unicode-font-test.map
+LDFLAGS += -Wl,-Map,bin65/fonemain.map
 LDFLAGS += -Wl,-T,src/telephony/asserts.ld
 # Produce reproducer tar when required for assisting with debugging
 LDFLAGS += -Wl,--reproduce=repro.tar
@@ -165,10 +165,10 @@ src/telephony/linux/thread:	src/telephony/linux/thread.c $(SRC_TELEPHONY_COMMON)
 src/telephony/linux/sortd81:	src/telephony/sortd81.c $(SRC_TELEPHONY_COMMON) $(HDR_TELEPHONY_COMMON) $(SRC_TELEPHONY_COMMON_LINUX) $(HDR_TELEPHONY_COMMON_LINUX)
 	gcc -Wall -g $(HDR_PATH_LINUX) -o $@ src/telephony/sortd81.c $(SRC_TELEPHONY_COMMON) $(SRC_TELEPHONY_COMMON_LINUX)
 
-bin65/unicode-font-test.cc65.prg:	src/telephony/unicode-font-test.c $(NATIVE_TELEPHONY_COMMON)
+bin65/fonemain.cc65.prg:	src/telephony/fonemain.c $(NATIVE_TELEPHONY_COMMON)
 	mkdir -p bin65
 
-	$(CC65) $(COPT_M65) src/telephony/unicode-font-test.c
+	$(CC65) $(COPT_M65) src/telephony/fonemain.c
 	$(CC65) $(COPT_M65) src/telephony/screen.c
 	$(CC65) $(COPT_M65) src/telephony/mega65/hal.c
 	$(CC65) $(COPT_M65) src/telephony/buffers.c
@@ -185,18 +185,18 @@ bin65/unicode-font-test.cc65.prg:	src/telephony/unicode-font-test.c $(NATIVE_TEL
 	$(CC65) $(COPT_M65) src/mega65-libc/src/shres.c
 	$(CC65) $(COPT_M65) src/mega65-libc/src/memory.c
 	$(CC65) $(COPT_M65) src/mega65-libc/src/hal.c
-	$(CL65) -o bin65/unicode-font-test.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.s src/telephony/attr_tables.s $(OBJ_TELEPHONY_NATIVE) $(OBJ_MEGA65_LIBC) 
+	$(CL65) -o bin65/fonemain.prg -Iinclude -Isrc/mega65-libc/include src/telephony/fonemain.s src/telephony/attr_tables.s $(OBJ_TELEPHONY_NATIVE) $(OBJ_MEGA65_LIBC) 
 
 # For backtrace support we have to compile twice: Once to generate the map file, from which we
 # can generate the function list, and then a second time, where we link that in.
-bin65/unicode-font-test.llvm.prg:	src/telephony/unicode-font-test.c $(NATIVE_TELEPHONY_COMMON)
+bin65/fonemain.llvm.prg:	src/telephony/fonemain.c $(NATIVE_TELEPHONY_COMMON)
 	mkdir -p bin65
 	rm -f src/telephony/mega65/function_table.c
 	echo "struct function_table function_table[]={}; const unsigned int function_table_count=0; const unsigned char __wp_regs[9];" > src/telephony/mega65/function_table.c
-	$(CC) -o bin65/unicode-font-test.llvm.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.c src/telephony/attr_tables.c src/telephony/helper-llvm.s src/telephony/mega65/hal.c src/telephony/mega65/hal_asm_llvm.s $(NATIVE_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS)
-	tools/function_table.py bin65/unicode-font-test.map src/telephony/mega65/function_table.c
-	$(CC) -o bin65/unicode-font-test.llvm.prg -Iinclude -Isrc/mega65-libc/include src/telephony/unicode-font-test.c src/telephony/attr_tables.c src/telephony/helper-llvm.s src/telephony/mega65/hal.c src/telephony/mega65/hal_asm_llvm.s $(NATIVE_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS)
-	llvm-objdump -drS --print-imm-hex bin65/unicode-font-test.llvm.prg.elf >bin65/unicode-font-test.llvm.dump
+	$(CC) -o bin65/fonemain.llvm.prg -Iinclude -Isrc/mega65-libc/include src/telephony/fonemain.c src/telephony/attr_tables.c src/telephony/helper-llvm.s src/telephony/mega65/hal.c src/telephony/mega65/hal_asm_llvm.s $(NATIVE_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS)
+	tools/function_table.py bin65/fonemain.map src/telephony/mega65/function_table.c
+	$(CC) -o bin65/fonemain.llvm.prg -Iinclude -Isrc/mega65-libc/include src/telephony/fonemain.c src/telephony/attr_tables.c src/telephony/helper-llvm.s src/telephony/mega65/hal.c src/telephony/mega65/hal_asm_llvm.s $(NATIVE_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS)
+	llvm-objdump -drS --print-imm-hex bin65/fonemain.llvm.prg.elf >bin65/fonemain.llvm.dump
 
 test:	$(LINUX_BINARIES)
 	src/telephony/linux/provision 
