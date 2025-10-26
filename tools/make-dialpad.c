@@ -153,7 +153,7 @@ unsigned char nybl_pick(unsigned char c, int pickHigh)
   return c&0xf;
 }
 
-void render_glyph(FT_Face face, uint32_t codepoint, int pen_x) {
+void render_glyph(FT_Face face, FT_Face alt_face, uint32_t codepoint, int pen_x) {
     clear_output();
 
     FT_Matrix matrix = {
@@ -163,9 +163,14 @@ void render_glyph(FT_Face face, uint32_t codepoint, int pen_x) {
         (FT_Fixed)(1.0 * 0x10000)         // scale Y
     };
     FT_Set_Transform(face, &matrix, NULL);
-    
+
+    FT_Face the_face = face;
     FT_UInt glyph_index = FT_Get_Char_Index(face, codepoint);
     if (glyph_index == 0) {
+      glyph_index = FT_Get_Char_Index(alt_face, codepoint);
+      the_face = alt_face;
+    }
+    if (glyph_index == 0) {    
         fprintf(stderr, "Warning: Glyph not found for U+%04X\n", codepoint);
         return;
     }
@@ -178,14 +183,14 @@ void render_glyph(FT_Face face, uint32_t codepoint, int pen_x) {
     }
 #endif
     
-    if (FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER)) {
+    if (FT_Load_Glyph(the_face, glyph_index, FT_LOAD_RENDER)) {
         fprintf(stderr, "Warning: Could not render U+%04X\n", codepoint);
         return;
     }
 
     
-    FT_Bitmap *bmp = &face->glyph->bitmap;
-    int width = face->glyph->advance.x >> 6;
+    FT_Bitmap *bmp = &the_face->glyph->bitmap;
+    int width = the_face->glyph->advance.x >> 6;
     int is_color = (bmp->pixel_mode == FT_PIXEL_MODE_BGRA);
 
     if (width > 63 ) {
@@ -201,7 +206,7 @@ void render_glyph(FT_Face face, uint32_t codepoint, int pen_x) {
     // Allocate pixel buffer
     uint8_t pixel_data[OUTPUT_HEIGHT][32] = {{0}}; // max 64px wide using nybls = 32 bytes per row
 
-    int y_offset = BASELINE - face->glyph->bitmap_top;
+    int y_offset = BASELINE - the_face->glyph->bitmap_top;
 
     fprintf(stdout,"DEBUG: pixel mode = ");
     switch(bmp->pixel_mode) {
@@ -297,6 +302,58 @@ void render_glyph(FT_Face face, uint32_t codepoint, int pen_x) {
 }
 
 
+unsigned long utf8_next_codepoint(unsigned char **s)
+{
+  unsigned char *p;
+  unsigned long cp = 0;
+
+  if (!s || !(*s)) return 0L;
+
+  p = *s;
+  
+  if (p[0] < 0x80) {
+    cp = p[0];
+    (*s)++;
+    return cp;
+  }
+
+  // 2-byte sequence: 110xxxxx 10xxxxxx
+  if ((p[0] & 0xE0) == 0xC0) {
+    if ((p[1] & 0xC0) != 0x80) return 0xFFFDL; // invalid continuation
+    cp = ((p[0] & 0x1F) << 6) | (p[1] & 0x3F);
+    *s += 2;
+    return cp;
+  }
+
+  // 3-byte sequence: 1110xxxx 10xxxxxx 10xxxxxx
+  if ((p[0] & 0xF0) == 0xE0) {
+    if ((p[1] & 0xC0) != 0x80 || (p[2] & 0xC0) != 0x80) return 0xFFFDL;
+    cp = ((unsigned long)(p[0] & 0x0F) << 12) |
+      ((unsigned long)(p[1] & 0x3F) << 6) |
+         (p[2] & 0x3F);
+    *s += 3;
+    return cp;
+  }
+
+  // 4-byte sequence: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+  // e.g., f0 9f 8d 92
+  if ((p[0] & 0xF8) == 0xF0) {
+    if ((p[1] & 0xC0) != 0x80 || (p[2] & 0xC0) != 0x80 || (p[3] & 0xC0) != 0x80)
+      return 0xFFFDL;
+    cp = (((unsigned long)(p[0] & 0x07)) << 18) |
+      (((unsigned long)(p[1] & 0x3F)) << 12) |
+       (((unsigned long)(p[2] & 0x3F)) << 6) |
+      (p[3] & 0x3F);
+    *s += 4;
+    return cp;
+  }
+
+  // Invalid or unsupported UTF-8 byte
+  (*s)++;
+  return 0xFFFDL;
+}
+
+
 int main(int argc, char** argv) {
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <font_file.otf> [+hex_codepoint or ascii] [...]\n", argv[0]);
@@ -304,6 +361,7 @@ int main(int argc, char** argv) {
     }
 
     const char* font_path = argv[1];
+    const char* alt_font_path = argv[2];
 
     char filename[8192];
     snprintf(filename,8192,"dialpad.NCM");
@@ -321,44 +379,31 @@ int main(int argc, char** argv) {
         FT_Done_FreeType(ft);
         return 1;
     }
+    FT_Face alt_face;
+    if (FT_New_Face(ft, alt_font_path, 0, &alt_face)) {
+        fprintf(stderr, "Could not load font: %s\n", alt_font_path);
+        FT_Done_FreeType(ft);
+        return 1;
+    }
 
     FT_Set_Pixel_Sizes(face, 0, HEIGHT);
+    FT_Set_Pixel_Sizes(alt_face, 0, HEIGHT);
 
     clear_output();
 
     int pen_x = 0;
 
-    if (argc==2) {
-      FT_ULong charcode;
-      FT_UInt glyph_index;
-      int pen_x = 0;
-      
-      charcode = FT_Get_First_Char(face, &glyph_index);
-      while (glyph_index != 0) {
-	render_glyph(face, charcode, pen_x);
-	// Optionally: pen_x += face->glyph->advance.x >> 6; (not used in per-glyph rendering)
-	charcode = FT_Get_Next_Char(face, charcode, &glyph_index);
-      }      
-    } else {
-      for (int i = 2; i < argc; i++) {
-        const char* arg = argv[i];
-        size_t len = strlen(arg);
-        for (size_t j = 0; j < len; j++) {
-	  uint32_t codepoint;
-	  if (j == 0 && arg[0] == '+') {
-	    codepoint = (uint32_t)strtol(arg + 1, NULL, 16);
-	    j = len;  // skip rest of string
-	  } else {
-	    codepoint = (uint8_t)arg[j];
-	  }
+    {
+      for (int i = 3; i < argc; i++) {
+        unsigned char* arg = (unsigned char *)argv[i];
+	while (*arg) {
+	  uint32_t codepoint = utf8_next_codepoint(&arg);
 	  
-	  
-	  render_glyph(face, codepoint,pen_x);
+	  render_glyph(face, alt_face, codepoint,pen_x);
 	  
 	  // pen_x += face->glyph->advance.x >> 6;
         }
-      }
-      
+      }      
     }
 
     FT_Done_Face(face);
