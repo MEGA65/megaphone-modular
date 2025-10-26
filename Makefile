@@ -65,7 +65,7 @@ tools/make-dialpad:	tools/make-dialpad.c
 	gcc -o tools/make-dialpad tools/make-dialpad.c -I/usr/include/freetype2 -lfreetype
 
 dialpad.NCM:	tools/make-dialpad
-	tools/make-dialpad fonts/Orbitron/Orbitron-ExtraBold.ttf fonts/noto/NotoEmoji-VariableFont_wght.ttf "0123456789#*☎✖🙉" 
+	tools/make-dialpad fonts/Orbitron/Orbitron-ExtraBold.ttf fonts/noto/NotoEmoji-VariableFont_wght.ttf "0123456789#*☎✖🙊" 
 
 tools/gen_attr_tables:	tools/gen_attr_tables.c
 	gcc -o tools/gen_attr_tables tools/gen_attr_tables.c

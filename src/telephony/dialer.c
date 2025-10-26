@@ -42,11 +42,15 @@ void dialpad_draw_button(unsigned char symbol_num,
     screen_ram_addr += 0x200 - 4*2;  colour_ram_addr += 0x200 - 4*2;
   }
   
+  
 }
 
 void dialpad_draw(char active_field)
 {
-  uint8_t seq[12]={1,2,3,4,5,6,7,8,9,11,0,10};
+  uint8_t seq[12]={1,2,3,
+		   4,5,6,
+		   7,8,9,
+		   11,0,10};
 
   // Draw GOTOX to right of dialpad, so that right display area
   // remains aligned.
@@ -62,5 +66,12 @@ void dialpad_draw(char active_field)
     if (x>(X_START+6+6)) { x=X_START; y+=5; }
   }
 
+  // Call button : Green unless in a call
+  dialpad_draw_button(12,5,22, 0x25);  // 0x20 = reverse
+  // Mute button (only valid if not activated and not in a call
+  dialpad_draw_button(13,5+6,22, 0x2b);  // 0x20 = reverse
+  // Hang up button (only valid if in a call)
+  dialpad_draw_button(14,5+6+6,22, 0x2b);  // 0x20 = reverse
+  
   
 }
