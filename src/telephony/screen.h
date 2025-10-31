@@ -1,4 +1,4 @@
-#define RENDER_COLUMNS 145
+#define RENDER_COLUMNS 144
 #define MAX_ROWS 30
 
 // Space for dummy line, status bar, a gap, a contact and a gap

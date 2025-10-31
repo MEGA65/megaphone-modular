@@ -54,11 +54,11 @@ void dialpad_draw(char active_field)
 
   // Draw GOTOX to right of dialpad, so that right display area
   // remains aligned.
-  for(int y=2;y<MAX_ROWS;y++) draw_goto(38,y,38*8-1);
+  for(int y=2;y<MAX_ROWS;y++) draw_goto(40,y,40*8-1);
 
-#define X_START 5
+#define X_START 8
   int x = X_START;
-  int y = 5;
+  int y = 11;
   for(int d=0;d<=11;d++) {
     // Draw digits all in RED by default
     dialpad_draw_button(seq[d],x,y, (active_field==AF_DIALPAD)? 0x2e : 0x2b);  // 0x20 = reverse
@@ -66,12 +66,16 @@ void dialpad_draw(char active_field)
     if (x>(X_START+6+6)) { x=X_START; y+=5; }
   }
 
+  y=11;
   // Call button : Green unless in a call
-  dialpad_draw_button(12,5,22, 0x25);  // 0x20 = reverse
+  dialpad_draw_button(12,2,y, 0x25);  // 0x20 = reverse
   // Mute button (only valid if not activated and not in a call
-  dialpad_draw_button(13,5+6,22, 0x2b);  // 0x20 = reverse
+  dialpad_draw_button(14,2,y+5, 0x2b);  // 0x20 = reverse
   // Hang up button (only valid if in a call)
-  dialpad_draw_button(14,5+6+6,22, 0x2b);  // 0x20 = reverse
-  
+  dialpad_draw_button(13,2,y+5+5, 0x2b);  // 0x20 = reverse
+
+  // Draw invisible button to make it all line up
+  dialpad_draw_button(13,2,y+5+5+5, 0x06);
+
   
 }
