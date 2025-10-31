@@ -1,6 +1,7 @@
 #include "includes.h"
 #include <string.h>
 
+#include "features.h"
 #include "buffers.h"
 #include "contacts.h"
 #include "records.h"
@@ -174,10 +175,12 @@ char sms_log_to_contact(unsigned int contact_ID,
   // XXX - Don't need it, because we have the allocation stuff.
   // XXX - But it could still make it a little more efficient.
 
+#ifdef MAINTAIN_THREAD_INDEX
   // 8. Update thread index for this message
   index_buffer_clear();
   index_buffer_update(message,strlen((char *)message));
   index_update_from_buffer(DRIVE_1,record_number);
+#endif
   
   buffers_unlock(LOCK_TELEPHONY);    
 
