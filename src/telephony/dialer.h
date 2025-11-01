@@ -10,4 +10,4 @@
 void dialpad_draw(char active_field);
 
 void dialpad_set_call_state(char call_state);
-void dialpad_draw_call_state(void);
+void dialpad_draw_call_state(char active_field);

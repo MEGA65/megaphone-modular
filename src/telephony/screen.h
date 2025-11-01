@@ -48,7 +48,7 @@ char screen_shuffle_glyphs_right(uint8_t x_source, uint8_t y,
 char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start, // Starting coordinates in glyphs
 			unsigned char f, // font
 			unsigned char colour, // colour
-			unsigned char *utf8,		     // Number of pixels available for width
+		        unsigned char *utf8,		     // Number of pixels available for width
 			unsigned int x_pixel_start,
 			unsigned int x_pixels_viewport,
 			// Number of glyphs available
@@ -76,7 +76,7 @@ void load_glyph(int font, unsigned long codepoint, unsigned int cache_slot);
 unsigned char lookup_glyph(int font, unsigned long codepoint,unsigned char *pixels_used, unsigned int *glyph_id);
 
 char pick_font_by_codepoint(unsigned long cp, unsigned char default_font);
-unsigned long utf8_next_codepoint(unsigned char **s);
+unsigned long utf8_next_codepoint(unsigned char **const s);
 
 char calc_break_points(unsigned char *str,int font,unsigned int box_width_pixels, unsigned int box_width_glyphs);
 char string_render_analyse(unsigned char *str,

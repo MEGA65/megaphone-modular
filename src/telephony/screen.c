@@ -456,7 +456,7 @@ char pad_string_viewport(unsigned char x_glyph_start, unsigned char y_glyph, // 
 char draw_string_nowrap(unsigned char x_glyph_start, unsigned char y_glyph_start, // Starting coordinates in glyphs
 			unsigned char f, // font
 			unsigned char colour, // colour
-			unsigned char *utf8,		     // Number of pixels available for width
+		        unsigned char *utf8,		     // Number of pixels available for width
 			unsigned int x_start_px,
 			unsigned int x_pixels_viewport,
 			// Number of glyphs available
@@ -935,6 +935,8 @@ char screen_shuffle_glyphs_right(uint8_t x_source, uint8_t y,
   
   if (width_gl>127) return 1;
 
+  if (!width_gl) return 0;
+  
   lcopy((unsigned long)screen_ram + src_offset,
 	(unsigned long)shuffle_buffer, width_gl*2);
   lcopy((unsigned long)shuffle_buffer,
@@ -1027,7 +1029,8 @@ void textbox_insert_cursor(uint16_t ofs)
   if (buffers.textbox.draft_len >= (RECORD_DATA_SIZE-1)) { fail(2); return; }
 
   buffers.textbox.draft_cursor_position=ofs;
-  if (ofs<buffers.textbox.draft_len) {
+  if ( (ofs<buffers.textbox.draft_len)
+      && (buffers.textbox.draft_len != buffers.textbox.draft_cursor_position)) {
     lcopy((unsigned long)&buffers.textbox.draft[ofs],
 	  (unsigned long)&buffers.textbox.draft[ofs+1],
 	  buffers.textbox.draft_len - buffers.textbox.draft_cursor_position);
@@ -1051,10 +1054,11 @@ void textbox_find_cursor(void)
 	  position<buffers.textbox.draft_len;
 	  position++) {
 	if (buffers.textbox.draft[position]==CURSOR_CHAR) {
-	  // Found an extra cursor: Delete it.	  
-	  lcopy((unsigned long)&buffers.textbox.draft[position+1],
-		(unsigned long)&buffers.textbox.draft[position],
-		buffers.textbox.draft_len - position);
+	  // Found an extra cursor: Delete it.
+	  if (buffers.textbox.draft_len != position)
+	    lcopy((unsigned long)&buffers.textbox.draft[position+1],
+		  (unsigned long)&buffers.textbox.draft[position],
+		  buffers.textbox.draft_len - position);
 	  buffers.textbox.draft_len--;
 	}
       }
@@ -1085,10 +1089,11 @@ void textbox_remove_cursor(void)
     // Cursor has already been removed
     return;
   }
-  
-  lcopy((unsigned long)&buffers.textbox.draft[buffers.textbox.draft_cursor_position+1],
-	(unsigned long)&buffers.textbox.draft[buffers.textbox.draft_cursor_position],
-	buffers.textbox.draft_len - buffers.textbox.draft_cursor_position);
+
+  if (buffers.textbox.draft_len != buffers.textbox.draft_cursor_position)
+    lcopy((unsigned long)&buffers.textbox.draft[buffers.textbox.draft_cursor_position+1],
+	  (unsigned long)&buffers.textbox.draft[buffers.textbox.draft_cursor_position],
+	  buffers.textbox.draft_len - buffers.textbox.draft_cursor_position);
   buffers.textbox.draft_len--;
 }
 

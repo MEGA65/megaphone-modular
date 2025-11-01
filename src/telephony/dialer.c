@@ -13,34 +13,66 @@ unsigned char call_state_dtmf_history[32]={0};
 // XXX Use the fact that chip RAM at 0x60000 reads as zeroes :)
 #define DIALPAD_BLANK_GLYPH_ADDR 0x60000
 
+static unsigned char MSG_DIAL[]
+= "Dial or select contact";
+static unsigned char MSG_CALLING[]
+= "Calling...";
+static unsigned char MSG_INCOMING[]
+= "Incoming Call...";
+static unsigned char MSG_EMPTY[]
+= "";
+static unsigned char MSG_INCALL[]
+= "In Call ";
+static unsigned char MSG_ENDED[]
+= "Call Ended ";
+
 unsigned char *call_state_messages[CALLSTATE_MAX+1]={
-  (unsigned char *)"Use dialpad or long-press contact to call",
-  (unsigned char *)"Calling...",
-  (unsigned char *)"Incoming Call...",
-  (unsigned char *)"In Call ",
-  (unsigned char *)"Call Ended ",
-  (unsigned char *)"Use dialpad or hold-contact to call"
+  MSG_DIAL,
+  MSG_CALLING,
+  MSG_INCOMING,
+  MSG_EMPTY,
+  MSG_EMPTY, // MSG_ENDED,
+  MSG_EMPTY, // MSG_DIAL
 };
 
-#define CALL_STATE_LINES 5
+#define CALL_STATE_LINES 6
+#define CALL_STATE_LINE_DIALED_NUMBER 3
+#define CALL_STATE_LINE_DTMF_HISTORY 5
 uint8_t call_state_colours[CALL_STATE_LINES]={
-  0x01,0x0e,0x81,0x06,0x81
+  0x01,
+  0x06,
+  0x0e,
+  0x81,
+  0x06,
+  0x81
 };
 
-void dialpad_draw_call_state(void)
+void dialpad_draw_call_state(char active_field)
 {
   if (call_state>CALLSTATE_MAX) call_state = CALLSTATE_IDLE;
 
   unsigned char *s;
   
+  // Neither number field is active by default
+  call_state_colours[CALL_STATE_LINE_DIALED_NUMBER]=0x8c;
+  call_state_colours[CALL_STATE_LINE_DTMF_HISTORY]=0x8c;
+
+  if (active_field==AF_DIALPAD) {
+    if (call_state == CALLSTATE_CONNECTED)
+      call_state_colours[CALL_STATE_LINE_DTMF_HISTORY]=0x81;
+    else   
+      call_state_colours[CALL_STATE_LINE_DIALED_NUMBER]=0x81;
+  }
+  
   for(uint8_t l=0;l<CALL_STATE_LINES;l++) {
+    s = MSG_EMPTY;
     switch(l) {
     case 0: s = call_state_messages[(uint8_t)call_state]; break;
-    case 1: s = (unsigned char *)""; break;
     case 2: s = call_state_contact_name; break;
     case 3: s = call_state_number; break;
-    case 4: s = call_state_dtmf_history; break;
+    case 5: s = call_state_dtmf_history; break;
     }
+    //    mega65_uart_printptr(s);
     draw_string_nowrap(2,3+l,
 		       FONT_UI,
 		       call_state_colours[l],

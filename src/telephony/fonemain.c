@@ -211,7 +211,7 @@ main(void)
 
   dialpad_set_call_state(CALLSTATE_NUMBER_ENTRY);
   dialpad_draw(active_field);  
-  dialpad_draw_call_state();
+  dialpad_draw_call_state(active_field);
   
   statusbar_draw();
   
@@ -320,6 +320,8 @@ uint8_t fonemain_sms_thread_controller(void)
     // Now redraw what we need to
     if (active_field == AF_DIALPAD || prev_active_field == AF_DIALPAD ) {
       dialpad_draw(active_field);	
+      // Update dialer field highlighting as required
+      dialpad_draw_call_state(active_field);
     }
     
     // Load draft with the correct field
@@ -462,7 +464,10 @@ uint8_t fonemain_contact_list_controller(void)
 {
 
 #define CONTACTS_PER_PAGE 6
-    
+
+  // There is only one active field in this view
+  //  active_field = AF_DIALPAD;
+  
   if (redraw) {
     redraw = 0;
 
