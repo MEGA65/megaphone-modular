@@ -31,8 +31,8 @@ unsigned char *call_state_messages[CALLSTATE_MAX+1]={
   MSG_CALLING,
   MSG_INCOMING,
   MSG_EMPTY,
-  MSG_EMPTY, // MSG_ENDED,
-  MSG_EMPTY, // MSG_DIAL
+  MSG_ENDED,
+  MSG_DIAL
 };
 
 #define CALL_STATE_LINES 6
