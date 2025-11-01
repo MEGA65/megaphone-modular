@@ -48,6 +48,15 @@ uint8_t call_state_colours[CALL_STATE_LINES]={
   0x81
 };
 
+unsigned char dialpad_lookup_button(unsigned char d)
+{
+  if (d>='1'&&d<='9') return d-'1';
+  if (d=='*') return 9;
+  if (d=='0') return 10;
+  if (d=='#') return 11;
+  return 99;
+}
+
 void dialpad_draw_call_state(char active_field)
 {
   if (call_state>CALLSTATE_MAX) call_state = CALLSTATE_IDLE;
@@ -185,7 +194,7 @@ void dialpad_draw_button(unsigned char symbol_num,
   
 }
 
-void dialpad_draw(char active_field)
+void dialpad_draw(char active_field, uint8_t button_restrict)
 {
   uint8_t seq[12]={1,2,3,
 		   4,5,6,
@@ -201,9 +210,12 @@ void dialpad_draw(char active_field)
 #define X_START 8
   int x = X_START;
   int y = 11;
+  uint8_t colour = (active_field==AF_DIALPAD)? 0x2e : 0x2b;  // 0x20 = reverse
+  if (button_restrict!=DIALPAD_ALL) colour = 0x22; // red highlight
   for(int d=0;d<=11;d++) {
     // Draw digits all in RED by default
-    dialpad_draw_button(seq[d],x,y, (active_field==AF_DIALPAD)? 0x2e : 0x2b);  // 0x20 = reverse
+    if (d==button_restrict||(button_restrict==DIALPAD_ALL))
+      dialpad_draw_button(seq[d],x,y, colour);
     x+=6;
     if (x>(X_START+6+6)) { x=X_START; y+=5; }
   }
@@ -237,6 +249,11 @@ void dialpad_dial_digit(unsigned char d)
 
     unsigned char *s = dialpad_current_string();
 
+    uint8_t button_id = dialpad_lookup_button(d);
+
+    // Highlight button
+    if (button_id!=99) dialpad_draw(AF_DIALPAD,button_id);
+    
     for(uint8_t o=0;o<NUMBER_FIELD_LEN;o++) {
       if ((!s[o])||(s[o]==CURSOR_CHAR)) {
 	s[o]=d;
@@ -256,6 +273,9 @@ void dialpad_dial_digit(unsigned char d)
     s[NUMBER_FIELD_LEN-1]=0;
     
     dialpad_draw_call_state(AF_DIALPAD);
+
+    // Clear highlight on button
+    if (button_id!=99) dialpad_draw(button_id,DIALPAD_ALL);    
   }
 
   

@@ -213,7 +213,7 @@ main(void)
 
   dialpad_set_call_state(CALLSTATE_NUMBER_ENTRY);
   dialpad_hide_show_cursor(active_field);
-  dialpad_draw(active_field);  
+  dialpad_draw(active_field,DIALPAD_ALL);  
   dialpad_draw_call_state(active_field);
   
   statusbar_draw();
@@ -226,7 +226,7 @@ main(void)
       reset_view(current_page);
 
       dialpad_hide_show_cursor(active_field);
-      dialpad_draw(active_field);  
+      dialpad_draw(active_field,DIALPAD_ALL);  
       dialpad_draw_call_state(active_field);      
     }
     last_page = current_page;
@@ -328,7 +328,7 @@ uint8_t fonemain_sms_thread_controller(void)
     
     // Now redraw what we need to
     if (active_field == AF_DIALPAD || prev_active_field == AF_DIALPAD ) {
-      dialpad_draw(active_field);	
+      dialpad_draw(active_field,DIALPAD_ALL);
       // Update dialer field highlighting as required
       dialpad_draw_call_state(active_field);
     }

@@ -7,8 +7,8 @@
 #define CALLSTATE_IDLE 5
 #define CALLSTATE_MAX CALLSTATE_IDLE
 
-void dialpad_draw(char active_field);
-
+#define DIALPAD_ALL 99
+void dialpad_draw(char active_field,uint8_t button_restrict);
 void dialpad_set_call_state(char call_state);
 void dialpad_draw_call_state(char active_field);
 void dialpad_dial_digit(unsigned char d);
