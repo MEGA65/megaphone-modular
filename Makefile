@@ -81,6 +81,7 @@ SRC_TELEPHONY_COMMON=	src/telephony/d81.c \
 			src/telephony/buffers.c \
 			src/telephony/search.c \
 			src/telephony/sms.c \
+			src/telephony/shstate.c \
 			src/telephony/mountstate.c \
 			src/telephony/slab.c
 
@@ -103,6 +104,7 @@ OBJ_TELEPHONY_NATIVE=	src/telephony/d81.s \
 			src/telephony/buffers.s \
 			src/telephony/search.s \
 			src/telephony/sms.s \
+			src/telephony/shstate.s \
 			src/telephony/mountstate.s \
 			src/telephony/smsscreens.s \
 			src/telephony/contactscreens.s \
@@ -120,6 +122,8 @@ HDR_TELEPHONY_COMMON=	src/telephony/records.h \
 			src/telephony/buffers.h \
 			src/telephony/search.h \
 			src/telephony/sms.h \
+			src/telephony/shstate.h \
+			src/telephony/dialer.h \
 			src/telephony/slab.h
 
 OBJ_MEGA65_LIBC=	src/mega65-libc/src/shres.s \
@@ -177,6 +181,7 @@ bin65/fonemain.cc65.prg:	src/telephony/fonemain.c $(NATIVE_TELEPHONY_COMMON)
 	$(CC65) $(COPT_M65) src/telephony/sort.c
 	$(CC65) $(COPT_M65) src/telephony/search.c
 	$(CC65) $(COPT_M65) src/telephony/sms.c
+	$(CC65) $(COPT_M65) src/telephony/shstate.c
 	$(CC65) $(COPT_M65) src/telephony/smsscreens.c
 	$(CC65) $(COPT_M65) src/telephony/d81.c
 	$(CC65) $(COPT_M65) src/telephony/slab.c

@@ -5,6 +5,7 @@
 
 #include "includes.h"
 
+#include "shstate.h"
 #include "buffers.h"
 #include "screen.h"
 #include "records.h"
@@ -163,8 +164,10 @@ main(void)
   
   mega65_io_enable();
 
+  shared_init(); 
+  
   asm volatile ( "sei");  
-
+  
   // Install IRQ animator for waiting
   POKE(0x0314,(uint8_t)(((uint16_t)&irq_wait_animation)>>0));
   POKE(0x0315,(uint8_t)(((uint16_t)&irq_wait_animation)>>8));  

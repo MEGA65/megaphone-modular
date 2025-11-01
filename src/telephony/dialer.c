@@ -1,15 +1,9 @@
 #include "includes.h"
 
+#include "shstate.h"
 #include "dialer.h"
 #include "screen.h"
 #include "af.h"
-
-char call_state = CALLSTATE_NUMBER_ENTRY;
-uint16_t call_contact_id = -1;
-#define NUMBER_FIELD_LEN 32
-unsigned char call_state_contact_name[NUMBER_FIELD_LEN+2]={0};
-unsigned char call_state_number[NUMBER_FIELD_LEN+2]={0};
-unsigned char call_state_dtmf_history[NUMBER_FIELD_LEN+2]={0};
 
 // XXX Use the fact that chip RAM at 0x60000 reads as zeroes :)
 #define DIALPAD_BLANK_GLYPH_ADDR 0x60000
@@ -59,7 +53,8 @@ unsigned char dialpad_lookup_button(unsigned char d)
 
 void dialpad_draw_call_state(char active_field)
 {
-  if (call_state>CALLSTATE_MAX) call_state = CALLSTATE_IDLE;
+  if (shared.call_state>CALLSTATE_MAX)
+    shared.call_state = CALLSTATE_IDLE;
 
   unsigned char *s;
   
@@ -67,14 +62,14 @@ void dialpad_draw_call_state(char active_field)
   call_state_colours[CALL_STATE_LINE_DIALED_NUMBER]=0x8c;
   call_state_colours[CALL_STATE_LINE_DTMF_HISTORY]=0x06;
 
-  switch (call_state) {
+  switch (shared.call_state) {
   case CALLSTATE_CONNECTED:
   case CALLSTATE_DISCONNECTED:
     call_state_colours[CALL_STATE_LINE_DTMF_HISTORY]=0x86;
   }
   
   if (active_field==AF_DIALPAD) {
-    if (call_state == CALLSTATE_CONNECTED)
+    if (shared.call_state == CALLSTATE_CONNECTED)
       call_state_colours[CALL_STATE_LINE_DTMF_HISTORY]=0x81;
     else   
       call_state_colours[CALL_STATE_LINE_DIALED_NUMBER]=0x81;
@@ -83,10 +78,10 @@ void dialpad_draw_call_state(char active_field)
   for(uint8_t l=0;l<CALL_STATE_LINES;l++) {
     s = MSG_EMPTY;
     switch(l) {
-    case 0: s = call_state_messages[(uint8_t)call_state]; break;
-    case 2: s = call_state_contact_name; break;
-    case 3: s = call_state_number; break;
-    case 5: s = call_state_dtmf_history; break;
+    case 0: s = call_state_messages[(uint8_t)shared.call_state]; break;
+    case 2: s = shared.call_state_contact_name; break;
+    case 3: s = shared.call_state_number; break;
+    case 5: s = shared.call_state_dtmf_history; break;
     }
     //    mega65_uart_printptr(s);
     draw_string_nowrap(2,3+l,
@@ -108,7 +103,8 @@ void dialpad_draw_call_state(char active_field)
 void dialpad_set_call_state(char new_state)
 {
 
-  if (call_state>CALLSTATE_MAX) call_state = CALLSTATE_IDLE;
+  if (shared.call_state>CALLSTATE_MAX)
+    shared.call_state = CALLSTATE_IDLE;
   
   
   switch(new_state) {
@@ -117,15 +113,15 @@ void dialpad_set_call_state(char new_state)
   case CALLSTATE_CONNECTING:
     break;
   case CALLSTATE_CONNECTED:
-    if (call_state == CALLSTATE_RINGING) {
+    if (shared.call_state == CALLSTATE_RINGING) {
       // XXX Log accepted inbound call call  "➡️☎️ at XYZ"
     }
-    if (call_state == CALLSTATE_CONNECTING) {      
+    if (shared.call_state == CALLSTATE_CONNECTING) {      
       // XXX Log successful outbound call "☎️➡️ at XYZ"
     }
     break;
   case CALLSTATE_DISCONNECTED:
-    switch(call_state) {
+    switch(shared.call_state) {
     case CALLSTATE_CONNECTING:
       // XXX Log failed/rejected call "☎️❌ at XYZ"
       break;
@@ -141,17 +137,17 @@ void dialpad_set_call_state(char new_state)
     break;
   default:
   case CALLSTATE_IDLE:
-    if (call_state != CALLSTATE_IDLE) {
+    if (shared.call_state != CALLSTATE_IDLE) {
       // Erase contact info
-      call_contact_id = -1;
-      call_state_contact_name[0]=0;
-      call_state_number[0]=0;
-      call_state_dtmf_history[0]=0;
+      shared.call_contact_id = -1;
+      shared.call_state_contact_name[0]=0;
+      shared.call_state_number[0]=0;
+      shared.call_state_dtmf_history[0]=0;
     }
     break;
   }
 
-  call_state = new_state;		     
+  shared.call_state = new_state;		     
   
 }
 
@@ -235,8 +231,8 @@ void dialpad_draw(char active_field, uint8_t button_restrict)
 
 unsigned char *dialpad_current_string(void)
 {
-  if (call_state==CALLSTATE_CONNECTED) return call_state_dtmf_history;
-  return call_state_number;
+  if (shared.call_state==CALLSTATE_CONNECTED) return shared.call_state_dtmf_history;
+  return shared.call_state_number;
 }
   
 
