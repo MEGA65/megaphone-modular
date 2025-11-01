@@ -18,6 +18,8 @@
 #include "af.h"
 #include "mountstate.h"
 
+#undef HAS_SMS_THREAD_CONTROLLER
+
 #define PAGE_UNKNOWN 0
 #define PAGE_SMS_THREAD 1
 #define PAGE_CONTACTS 2
@@ -248,6 +250,9 @@ main(void)
     
 uint8_t fonemain_sms_thread_controller(void)
 {  
+#ifndef HAS_SMS_THREAD_CONTROLLER
+  // XXX Switch to binary that has SMS thread controller
+#else
   if (reload_contact) {
     reload_contact = 0;
     
@@ -476,7 +481,8 @@ uint8_t fonemain_sms_thread_controller(void)
   }
   // Acknowledge key press
   POKE(0xD610,0);
-
+#endif
+  
   return PAGE_SMS_THREAD;
 }
 
