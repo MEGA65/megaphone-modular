@@ -151,6 +151,7 @@ void reset_view(uint8_t current_page)
   // For convenience, highlight the first contact field on creation
   if (new_contact) { active_field = 2; new_contact=0; }
   if (current_page==PAGE_SMS_THREAD) { active_field = AF_SMS; }
+  dialpad_hide_show_cursor(active_field);
 }
 
 int
@@ -224,6 +225,7 @@ main(void)
     if (current_page != last_page) {
       reset_view(current_page);
 
+      dialpad_hide_show_cursor(active_field);
       dialpad_draw(active_field);  
       dialpad_draw_call_state(active_field);      
     }
