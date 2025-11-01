@@ -2,6 +2,18 @@
 import sys
 import re
 
+def clean_symbol(name: str) -> str:
+    # If there's a section like "(.init.000)", keep it starting at '('
+    i = name.find('(')
+    if i != -1:
+        return name[i:]  # keep leading '('
+    # Otherwise, if there's a path, keep the basename (drop the '/')
+    j = name.rfind('/')
+    if j != -1:
+        return name[j+1:]
+    # Otherwise leave as-is
+    return name
+
 USAGE = f"usage: {sys.argv[0]} <mapfile> <output.c>"
 
 if len(sys.argv) != 3:
@@ -57,7 +69,7 @@ with open(mapfile, "r") as f:
                 # Skip synthetic/file markers if any
                 if name.startswith("bin") or name.endswith(".o:"):
                     continue
-                entries.append((addr, name))
+                entries.append((addr, clean_symbol(name)))
 
 # Basic validation
 missing = []
