@@ -252,7 +252,11 @@ void dialpad_dial_digit(unsigned char d)
     uint8_t button_id = dialpad_lookup_button(d);
 
     // Highlight button
-    if (button_id!=99) dialpad_draw(AF_DIALPAD,button_id);
+    if (button_id!=99) {
+      dialpad_draw(AF_DIALPAD,button_id);
+      // Wait a few frames to make highlight obvious
+      POKE(0x0200,00); while(PEEK(0x0200)<0x05) continue;
+    }
     
     for(uint8_t o=0;o<NUMBER_FIELD_LEN;o++) {
       if ((!s[o])||(s[o]==CURSOR_CHAR)) {
@@ -272,7 +276,7 @@ void dialpad_dial_digit(unsigned char d)
     dialpad_draw_call_state(AF_DIALPAD);
 
     // Clear highlight on button
-    if (button_id!=99) dialpad_draw(button_id,DIALPAD_ALL);    
+    dialpad_draw(AF_DIALPAD,DIALPAD_ALL);
   }
 
   

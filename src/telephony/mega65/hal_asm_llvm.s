@@ -5,6 +5,9 @@
 
 irq_wait_animation:
 
+	;; Frame counter for delays
+	inc $0200
+	
 	;; Move weight down the screen
 	inc $d005
 	inc $d005
