@@ -1,4 +1,6 @@
-all:	tools/bomtool bin65/fonemain.llvm.prg $(FONTS)
+PROGRAMS := foneinit fonemain
+
+all:	tools/bomtool $(PROGRAMS:%=bin65/%.llvm.prg) $(FONTS)
 
 LINUX_BINARIES=	src/telephony/linux/provision \
 		src/telephony/linux/import \
@@ -194,14 +196,17 @@ bin65/fonemain.cc65.prg:	src/telephony/fonemain.c $(NATIVE_TELEPHONY_COMMON)
 
 # For backtrace support we have to compile twice: Once to generate the map file, from which we
 # can generate the function list, and then a second time, where we link that in.
-bin65/fonemain.llvm.prg:	src/telephony/fonemain.c $(NATIVE_TELEPHONY_COMMON)
+HELPER_SRCS=	 src/telephony/attr_tables.c src/telephony/helper-llvm.s \
+		 src/telephony/mega65/hal.c src/telephony/mega65/hal_asm_llvm.s
+bin65/%.llvm.prg:	src/telephony/%.c $(NATIVE_TELEPHONY_COMMON)
 	mkdir -p bin65
 	rm -f src/telephony/mega65/function_table.c
 	echo "struct function_table function_table[]={}; const unsigned int function_table_count=0; const unsigned char __wp_regs[9];" > src/telephony/mega65/function_table.c
-	$(CC) -o bin65/fonemain.llvm.prg -Iinclude -Isrc/mega65-libc/include src/telephony/fonemain.c src/telephony/attr_tables.c src/telephony/helper-llvm.s src/telephony/mega65/hal.c src/telephony/mega65/hal_asm_llvm.s $(NATIVE_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS)
-	tools/function_table.py bin65/fonemain.map src/telephony/mega65/function_table.c
-	$(CC) -o bin65/fonemain.llvm.prg -Iinclude -Isrc/mega65-libc/include src/telephony/fonemain.c src/telephony/attr_tables.c src/telephony/helper-llvm.s src/telephony/mega65/hal.c src/telephony/mega65/hal_asm_llvm.s $(NATIVE_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS)
-	llvm-objdump -drS --print-imm-hex bin65/fonemain.llvm.prg.elf >bin65/fonemain.llvm.dump
+	$(CC) -o bin65/$*.llvm.prg -Iinclude -Isrc/mega65-libc/include $< $(HELPER_SRCS) $(NATIVE_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS)
+	tools/function_table.py bin65/$*.map src/telephony/mega65/function_table.c
+	$(CC) -o bin65/$*.llvm.prg -Iinclude -Isrc/mega65-libc/include $< $(HELPER_SRCS) $(NATIVE_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS)
+	llvm-objdump -drS --print-imm-hex bin65/$*.llvm.prg.elf >bin65/$*.llvm.dump
+
 
 test:	$(LINUX_BINARIES)
 	src/telephony/linux/provision 
