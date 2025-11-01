@@ -129,26 +129,6 @@ int8_t active_field;
 int8_t prev_active_field;
 uint8_t new_contact;
 
-unsigned int first_message_displayed;
-
-void reset_view(uint8_t current_page)
-{
-  position = -1;
-  redraw = 1;
-  reload_contact = 1;
-  redraw_contact = 1;
-  erase_draft = 0;
-  first_message_displayed = -1;
-  old_draft_line_count = -1;
-  
-  active_field = AF_DIALPAD;
-
-  // For convenience, highlight the first contact field on creation
-  if (new_contact) { active_field = 2; new_contact=0; }
-  if (current_page==PAGE_SMS_THREAD) { active_field = AF_SMS; }
-  dialpad_hide_show_cursor(active_field);
-}
-
 int
 #else
 void
