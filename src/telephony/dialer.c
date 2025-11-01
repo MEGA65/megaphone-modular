@@ -55,8 +55,14 @@ void dialpad_draw_call_state(char active_field)
   
   // Neither number field is active by default
   call_state_colours[CALL_STATE_LINE_DIALED_NUMBER]=0x8c;
-  call_state_colours[CALL_STATE_LINE_DTMF_HISTORY]=0x8c;
+  call_state_colours[CALL_STATE_LINE_DTMF_HISTORY]=0x06;
 
+  switch (call_state) {
+  case CALLSTATE_CONNECTED:
+  case CALLSTATE_DISCONNECTED:
+    call_state_colours[CALL_STATE_LINE_DTMF_HISTORY]=0x86;
+  }
+  
   if (active_field==AF_DIALPAD) {
     if (call_state == CALLSTATE_CONNECTED)
       call_state_colours[CALL_STATE_LINE_DTMF_HISTORY]=0x81;

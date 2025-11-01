@@ -352,6 +352,7 @@ void load_glyph(int font, unsigned long codepoint, unsigned int cache_slot)
     // Glyph doesn't exist in this font.
     return;
   }
+
   try_or_fail(shread(glyph_buffer,256,&fonts[font]));
   
 #endif
@@ -1085,7 +1086,11 @@ void textbox_remove_cursor(void)
   }
 
   if (!buffers.textbox.draft_len) return;
-  if (buffers.textbox.draft_cursor_position==buffers.textbox.draft_len) {
+
+  // Don't remove if the cursor is already gone
+  if (buffers.textbox.draft[buffers.textbox.draft_cursor_position]!=CURSOR_CHAR) return;
+    
+  if (buffers.textbox.draft_cursor_position>=buffers.textbox.draft_len) {
     // Cursor has already been removed
     return;
   }

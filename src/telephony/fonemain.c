@@ -136,7 +136,7 @@ uint8_t new_contact;
 
 unsigned int first_message_displayed;
 
-void reset_view(void)
+void reset_view(uint8_t current_page)
 {
   position = -1;
   redraw = 1;
@@ -150,6 +150,7 @@ void reset_view(void)
 
   // For convenience, highlight the first contact field on creation
   if (new_contact) { active_field = 2; new_contact=0; }
+  if (current_page==PAGE_SMS_THREAD) { active_field = AF_SMS; }
 }
 
 int
@@ -204,9 +205,9 @@ main(void)
   uint8_t last_page = PAGE_UNKNOWN;   
   contact_id = 2;
   new_contact = 0;
-  
-  reset_view();
 
+  reset_view(current_page);
+    
   af_retrieve(active_field, active_field, contact_id);
 
   dialpad_set_call_state(CALLSTATE_NUMBER_ENTRY);
@@ -220,7 +221,10 @@ main(void)
   while(1) {
     // Reload and redraw things as required when changing views.
     if (current_page != last_page) {
-      reset_view();
+      reset_view(current_page);
+
+      dialpad_draw(active_field);  
+      dialpad_draw_call_state(active_field);      
     }
     last_page = current_page;
     switch (current_page) {
@@ -465,9 +469,6 @@ uint8_t fonemain_contact_list_controller(void)
 
 #define CONTACTS_PER_PAGE 6
 
-  // There is only one active field in this view
-  active_field = AF_DIALPAD;
-  
   if (redraw) {
     redraw = 0;
 
