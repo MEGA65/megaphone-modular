@@ -6,7 +6,8 @@
 irq_wait_animation:
 
 	;; Frame counter for delays
-	inc $0200
+	;; XXX - Must match SHARED_ADDR in shshate.h
+	inc $033C
 	
 	;; Move weight down the screen
 	inc $d005
@@ -26,7 +27,7 @@ irq_wait_animation:
 	lda $d012
 	sta $d004
 	
-not_at_bottom:	
+not_at_bottom:
 	jmp $ea31
 	
 llvm_copy_arg1_to_0100:	

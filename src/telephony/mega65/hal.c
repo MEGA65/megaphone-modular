@@ -445,19 +445,25 @@ void dump_backtrace(void) {
 
 void nmi_catcher(void)
 {
-    uint8_t a,x,y,p,s, pcl, pch;
+  uint8_t a,x,y,z,p,s, pcl, pch;
     uint16_t pc_after, brk_addr;
 
     // Save A, X, Y; read S, saved PCL/PCH/P from the stack frame
     __asm__ volatile ("tsx\n\ttxa" : "=a"(s) : : "x");          // get S (post-push)
+
+    __asm__ volatile("tza"         // Z -> A
+		   : "=a"(z)      // output: A goes into 'z'
+		   :              // no inputs
+		   : "cc");       // flags changed by TZA       
     
+    // Everything else comes from the stack frame
     __asm__ volatile ("lda $0103,x" : "=a"(a)   : : "x","memory");
     __asm__ volatile ("lda $0102,x" : "=a"(x)   : : "x","memory");
     __asm__ volatile ("lda $0101,x" : "=a"(y)   : : "x","memory");
     __asm__ volatile ("lda $0104,x" : "=a"(p)   : : "x","memory");
     __asm__ volatile ("lda $0105,x" : "=a"(pcl) : : "x","memory");
     __asm__ volatile ("lda $0106,x" : "=a"(pch) : : "x","memory");       
-    
+
     pc_after  = (uint16_t)((pch << 8) | pcl);
     brk_addr  = pc_after - 2;             // BRK opcode address
 
@@ -466,6 +472,7 @@ void nmi_catcher(void)
     mega65_uart_print(" A:"); mega65_uart_printhex(a);
     mega65_uart_print(" X:"); mega65_uart_printhex(x);
     mega65_uart_print(" Y:"); mega65_uart_printhex(y);
+    mega65_uart_print(" Z:"); mega65_uart_printhex(z);
     mega65_uart_print(" P:"); mega65_uart_printhex(p);
     mega65_uart_print(" S:"); mega65_uart_printhex(s);
     mega65_uart_print("\r\n");

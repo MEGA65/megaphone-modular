@@ -251,7 +251,8 @@ void dialpad_dial_digit(unsigned char d)
     if (button_id!=99) {
       dialpad_draw(AF_DIALPAD,button_id);
       // Wait a few frames to make highlight obvious
-      POKE(0x0200,00); while(PEEK(0x0200)<0x05) continue;
+      shared.frame_counter = 0x00;
+      while(shared.frame_counter<0x05) continue;
     }
     
     for(uint8_t o=0;o<NUMBER_FIELD_LEN;o++) {

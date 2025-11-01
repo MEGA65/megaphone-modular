@@ -3,10 +3,12 @@
 #include "shstate.h"
 #include "dialer.h"
 
+// struct shared_state_t shared;
+
 void shared_init(void)
-{
+{  
   if (shared.magic != SHARED_MAGIC) {
-    lfill(SHARED_ADDR,0x00,SHARED_SIZE);
+    lfill((unsigned long)&shared,0x00,SHARED_SIZE);
     shared.magic = SHARED_MAGIC;
     shared.version = SHARED_VERSION;
 
