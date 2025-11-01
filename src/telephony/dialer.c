@@ -30,7 +30,7 @@ unsigned char *call_state_messages[CALLSTATE_MAX+1]={
   MSG_DIAL,
   MSG_CALLING,
   MSG_INCOMING,
-  MSG_INCOMING,
+  MSG_INCALL,
   MSG_ENDED,
   MSG_DIAL
 };
@@ -79,7 +79,7 @@ void dialpad_draw_call_state(char active_field)
 		       s,
 		       16,
 		       RIGHT_AREA_START_PX - 16 - 40,
-		       RIGHT_AREA_START_GL,
+		       RIGHT_AREA_START_GL - 2,
 		       NULL,
 		       VIEWPORT_PADDED_RIGHT,
 		       NULL,
@@ -187,7 +187,9 @@ void dialpad_draw(char active_field)
 
   // Draw GOTOX to right of dialpad, so that right display area
   // remains aligned.
-  for(int y=2;y<MAX_ROWS;y++) draw_goto(40,y,40*8-1);
+  // Note that we use y=3 as start, so that if we skip any pixels the blank line 2
+  // will be used as the source.
+  for(int y=3;y<MAX_ROWS;y++) draw_goto(RIGHT_AREA_START_GL-1,y,RIGHT_AREA_START_PX);
 
 #define X_START 8
   int x = X_START;
