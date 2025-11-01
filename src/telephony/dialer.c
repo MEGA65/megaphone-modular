@@ -7,9 +7,9 @@
 char call_state = CALLSTATE_NUMBER_ENTRY;
 uint16_t call_contact_id = -1;
 #define NUMBER_FIELD_LEN 32
-unsigned char call_state_contact_name[NUMBER_FIELD_LEN]={0};
-unsigned char call_state_number[NUMBER_FIELD_LEN]={0};
-unsigned char call_state_dtmf_history[NUMBER_FIELD_LEN]={0};
+unsigned char call_state_contact_name[NUMBER_FIELD_LEN+2]={0};
+unsigned char call_state_number[NUMBER_FIELD_LEN+2]={0};
+unsigned char call_state_dtmf_history[NUMBER_FIELD_LEN+2]={0};
 
 // XXX Use the fact that chip RAM at 0x60000 reads as zeroes :)
 #define DIALPAD_BLANK_GLYPH_ADDR 0x60000
@@ -260,12 +260,9 @@ void dialpad_dial_digit(unsigned char d)
 	if (d==0x14) {
 	  if (o>0) { s[o-1]=CURSOR_CHAR; s[o]=0; }
 	  else { s[0]=CURSOR_CHAR; s[1]=0; }
-	} else 	if ((o+1)<NUMBER_FIELD_LEN) {
-	  s[o+1]=0;
-	  if ((o+2)<NUMBER_FIELD_LEN) {
-	    s[o+1]=CURSOR_CHAR;
-	    s[o+2]=0;
-	  }
+	} else 	{
+	  s[o+1]=CURSOR_CHAR;
+	  s[o+2]=0;
 	}
 	break;
       }
@@ -291,16 +288,16 @@ void dialpad_clear(void)
 
 void dialpad_hide_show_cursor(char active_field)
 {
-    unsigned char *s = dialpad_current_string();
-
-    for(uint8_t o=0;o<NUMBER_FIELD_LEN;o++) {
-      if ((!s[o])||(s[o]==CURSOR_CHAR)) {
-	if (active_field==AF_DIALPAD) {
-	  s[o]=CURSOR_CHAR;
-	  if (o<(NUMBER_FIELD_LEN-1)) s[o+1]=0;
-	  else s[o]=0;
-	} else s[o]=0;
-	break;
-      }
+  unsigned char *s = dialpad_current_string();
+  
+  for(uint8_t o=0;o<NUMBER_FIELD_LEN;o++) {
+    if ((!s[o])||(s[o]==CURSOR_CHAR)) {
+      if (active_field==AF_DIALPAD) {
+	s[o]=CURSOR_CHAR;
+	s[o+1]=0;
+      } else s[o]=0;
+      break;
     }
+  }
+  s[NUMBER_FIELD_LEN-1]=0;  
 }

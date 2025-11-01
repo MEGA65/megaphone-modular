@@ -635,9 +635,6 @@ char calc_break_points(unsigned char *str,
 			    buffers.textbox.pixel_widths,
 			    buffers.textbox.glyph_widths,
 			    buffers.textbox.break_costs);
-  lcopy((unsigned long)buffers.textbox.pixel_widths,0x18000L,RECORD_DATA_SIZE);
-  lcopy((unsigned long)buffers.textbox.glyph_widths,0x19000L,RECORD_DATA_SIZE);
-  lcopy((unsigned long)buffers.textbox.break_costs,0x1A000L,RECORD_DATA_SIZE);
 
   w_g=0;
   w_px=0;
