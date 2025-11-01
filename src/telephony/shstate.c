@@ -1,7 +1,7 @@
 #include "includes.h"
 
-#include "shstate.h"
 #include "dialer.h"
+#include "shstate.h"
 
 // struct shared_state_t shared;
 

@@ -8,13 +8,13 @@
 #include "records.h"
 #include "screen.h"
 #include "buffers.h"
+#include "shstate.h"
 
 // $10000-$127FF is reserved for dial pad glyphs
 unsigned long screen_ram = 0x12800;
 unsigned long colour_ram = 0xff80800L;
 
 char *font_files[NUM_FONTS]={"EmojiColour","EmojiMono", "Sans", "UI"};
-struct shared_resource fonts[NUM_FONTS];
 unsigned long required_flags = SHRES_FLAG_FONT | SHRES_FLAG_16x16 | SHRES_FLAG_UNICODE;
 
 char screen_setup_fonts(void)
@@ -25,7 +25,7 @@ char screen_setup_fonts(void)
 
   for(i=0;i<NUM_FONTS;i++) {
 
-    try_or_fail(shopen(font_files[i],7,&fonts[i]));
+    try_or_fail(shopen(font_files[i],7,&shared.fonts[i]));
     if (tof_r) {
       //      printf("ERROR: Failed to open font '%s'\n", font_files[i]);
       err++;
@@ -348,12 +348,12 @@ void load_glyph(int font, unsigned long codepoint, unsigned int cache_slot)
 #else
   // Seek to and load glyph from font in shared resources
   
-  if (shseek(&fonts[font],codepoint<<8,SEEK_SET)) {
+  if (shseek(&shared.fonts[font],codepoint<<8,SEEK_SET)) {
     // Glyph doesn't exist in this font.
     return;
   }
 
-  try_or_fail(shread(glyph_buffer,256,&fonts[font]));
+  try_or_fail(shread(glyph_buffer,256,&shared.fonts[font]));
   
 #endif
 

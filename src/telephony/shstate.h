@@ -8,6 +8,8 @@
 
 #include <stdint.h>
 
+#include "screen.h"
+
 #define SHARED_VERSION 0x01
 #define SHARED_MAGIC 0xfade
 
@@ -31,6 +33,8 @@ typedef struct shared_state_t {
   unsigned char call_state_contact_name[NUMBER_FIELD_LEN+2];
   unsigned char call_state_number[NUMBER_FIELD_LEN+2];
   unsigned char call_state_dtmf_history[NUMBER_FIELD_LEN+2];
+
+  struct shared_resource fonts[NUM_FONTS];
   
 } Shared;
 
