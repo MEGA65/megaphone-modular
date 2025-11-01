@@ -211,6 +211,7 @@ main(void)
   af_retrieve(active_field, active_field, contact_id);
 
   dialpad_set_call_state(CALLSTATE_NUMBER_ENTRY);
+  dialpad_hide_show_cursor(active_field);
   dialpad_draw(active_field);  
   dialpad_draw_call_state(active_field);
   
@@ -320,6 +321,8 @@ uint8_t fonemain_sms_thread_controller(void)
     else active_field++;
     if (active_field > AF_MAX ) active_field = 0;
     if (active_field < 0 ) active_field = AF_MAX;
+
+    dialpad_hide_show_cursor(active_field);
     
     // Now redraw what we need to
     if (active_field == AF_DIALPAD || prev_active_field == AF_DIALPAD ) {
@@ -364,14 +367,18 @@ uint8_t fonemain_sms_thread_controller(void)
     if (position<-1) { redraw=1; position++; }
     break;
   case 0x14: // DELETE
-    if (buffers.textbox.draft_cursor_position) {
-      lcopy((uint32_t)&buffers.textbox.draft[buffers.textbox.draft_cursor_position],
-	    (uint32_t)&buffers.textbox.draft[buffers.textbox.draft_cursor_position-1],
-	    RECORD_DATA_SIZE - (buffers.textbox.draft_cursor_position));
-      buffers.textbox.draft_cursor_position--;
-      buffers.textbox.draft_len--;
-      
-      save_and_redraw_active_field(active_field, contact_id);
+    if (active_field != AF_DIALPAD) {
+      if (buffers.textbox.draft_cursor_position) {
+	lcopy((uint32_t)&buffers.textbox.draft[buffers.textbox.draft_cursor_position],
+	      (uint32_t)&buffers.textbox.draft[buffers.textbox.draft_cursor_position-1],
+	      RECORD_DATA_SIZE - (buffers.textbox.draft_cursor_position));
+	buffers.textbox.draft_cursor_position--;
+	buffers.textbox.draft_len--;
+	
+	save_and_redraw_active_field(active_field, contact_id);
+      }
+    } else {
+      dialpad_dial_digit(PEEK(0xD610));
     }
     break;
     
@@ -383,9 +390,11 @@ uint8_t fonemain_sms_thread_controller(void)
     break;
     
   case 0x93: // CLR+HOME
-    textbox_erase_draft();
-    af_store(active_field, contact_id);
-    
+    if (active_field==AF_DIALPAD) dialpad_clear();
+    else {
+      textbox_erase_draft();
+      af_store(active_field, contact_id);
+    }
     redraw_draft=1;      
     break;
   case 0x91: // up arrow
@@ -423,7 +432,9 @@ uint8_t fonemain_sms_thread_controller(void)
   }
   if (PEEK(0xD610)>=0x20 && PEEK(0xD610) < 0x7F) {
     // It's a character to add to our draft message
-    if (buffers.textbox.draft_len < (RECORD_DATA_SIZE-1) ) {
+    if (active_field == AF_DIALPAD) {
+      dialpad_dial_digit(PEEK(0xD610));
+    } else if (buffers.textbox.draft_len < (RECORD_DATA_SIZE-1) ) {
       
       // Shuffle from cursor
       lcopy((uint32_t)&buffers.textbox.draft[buffers.textbox.draft_cursor_position],
@@ -510,7 +521,17 @@ uint8_t fonemain_contact_list_controller(void)
 
     redraw = 1;
     break;
+  case 0x93: // CLR+HOME
+    dialpad_clear();
+    break;
   }
+
+  if ((PEEK(0xD610)>=0x20 && PEEK(0xD610) < 0x7F)||(PEEK(0xD610)==0x14)) {
+    if (active_field == AF_DIALPAD) {
+      dialpad_dial_digit(PEEK(0xD610));
+    }
+  }
+    
   POKE(0xD610,0);
   
   return PAGE_CONTACTS;

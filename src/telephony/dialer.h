@@ -11,3 +11,6 @@ void dialpad_draw(char active_field);
 
 void dialpad_set_call_state(char call_state);
 void dialpad_draw_call_state(char active_field);
+void dialpad_dial_digit(unsigned char d);
+void dialpad_clear(void);
+void dialpad_hide_show_cursor(char active_field);
