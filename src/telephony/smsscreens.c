@@ -60,7 +60,6 @@ char sms_thread_display(unsigned int contact,
   // Draw GOTOX to right of dialpad, so that right display area
   // remains aligned.
   for(int y=2;y<MAX_ROWS;y++) draw_goto(RENDER_COLUMNS - 1,y,720);
-  for(int y=2;y<MAX_ROWS;y++) draw_goto(100,y,720);
   
   buffers_lock(LOCK_TEXTBOX);
 
@@ -95,7 +94,7 @@ char sms_thread_display(unsigned int contact,
     try_or_fail(calc_break_points(buffers.textbox.draft,
 				  FONT_UI,
 				  RIGHT_AREA_WIDTH_PX, // text field in px
-				  RENDER_COLUMNS - 1 - 45));
+				  VIRTUAL_COLUMNS - 1 - 45));
     
     y = MAX_ROWS - buffers.textbox.line_count - 1;
     bottom_row_available = MAX_ROWS - buffers.textbox.line_count - 1;
@@ -156,12 +155,19 @@ char sms_thread_display(unsigned int contact,
 
     bottom_row = buffers.textbox.line_count-1;
     while ((y+bottom_row) > bottom_row_available) bottom_row--;
+
+    // To maximise glyphs available for messages, we do a GOTOX to the starting indent.
+    // This safe because the row above it is blank, and thus gets copied down if the
+    // RRB doesn't render fresh pixels for it.
+    uint16_t start_pixel = RIGHT_AREA_START_PX + ( we_sent_it? SMS_TX_RX_OFFSET_PX : 0 );
+    for(uint8_t yy=y;yy<=(buffers.textbox.line_count - first_row);yy++)
+      draw_goto(RIGHT_AREA_START_GL-1, yy, start_pixel);		
     
     textbox_draw(we_sent_it? (RIGHT_AREA_START_PX+SMS_TX_RX_OFFSET_PX)/8 : RIGHT_AREA_START_PX/8, // column on screen
 		 y, // row on screen
-		 we_sent_it? (RIGHT_AREA_START_PX+SMS_TX_RX_OFFSET_PX) : RIGHT_AREA_START_PX, // start pixel
+		 start_pixel, // start pixel
 		 SMS_TEXT_BLOCK_WIDTH, // px width
-		 RENDER_COLUMNS - 1 - (we_sent_it? (RIGHT_AREA_START_GL+SMS_TX_RX_OFFSET_GL) : RIGHT_AREA_START_GL),   // glyph width
+		 VIRTUAL_COLUMNS - RIGHT_AREA_START_GL - 1,   // glyph width
 		 FONT_UI,
 		 we_sent_it ? 0x8D : 0x8F, // colour
 		 buffers.textbox.field,
