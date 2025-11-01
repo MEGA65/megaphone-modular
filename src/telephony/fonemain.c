@@ -146,7 +146,7 @@ void reset_view(void)
   first_message_displayed = -1;
   old_draft_line_count = -1;
   
-  active_field = 0;
+  active_field = AF_DIALPAD;
 
   // For convenience, highlight the first contact field on creation
   if (new_contact) { active_field = 2; new_contact=0; }
@@ -466,7 +466,7 @@ uint8_t fonemain_contact_list_controller(void)
 #define CONTACTS_PER_PAGE 6
 
   // There is only one active field in this view
-  //  active_field = AF_DIALPAD;
+  active_field = AF_DIALPAD;
   
   if (redraw) {
     redraw = 0;
