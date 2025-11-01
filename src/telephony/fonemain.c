@@ -208,8 +208,10 @@ main(void)
   reset_view();
 
   af_retrieve(active_field, active_field, contact_id);
-  
+
+  dialpad_set_call_state(CALLSTATE_NUMBER_ENTRY);
   dialpad_draw(active_field);  
+  dialpad_draw_call_state();
   
   statusbar_draw();
   
