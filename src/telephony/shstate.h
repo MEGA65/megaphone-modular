@@ -35,12 +35,37 @@ typedef struct shared_state_t {
   unsigned char call_state_dtmf_history[NUMBER_FIELD_LEN+2];
 
   struct shared_resource fonts[NUM_FONTS];
+
+  // For FONEMAIN/FONESMS contact list and SMS thread displays
+  int16_t position;
+  char redraw, redraw_draft, reload_contact, erase_draft;
+  char redraw_contact;
+  unsigned char old_draft_line_count;
+  unsigned char temp;
+  int16_t contact_id;
+  int16_t contact_count;
+  unsigned char r;
+  // active field needs to be signed, so that we can wrap field numbers
+  int8_t active_field;
+  int8_t prev_active_field;
+  uint8_t new_contact;
+
+  uint8_t current_page;
+  uint8_t last_page;
+  
+  unsigned int first_message_displayed;
   
 } Shared;
 
 //extern struct shared_state_t shared;
 
 #define shared (*(Shared *)SHARED_ADDR)
+
+#define PAGE_UNKNOWN 0
+#define PAGE_SMS_THREAD 1
+#define PAGE_CONTACTS 2
+uint8_t fonemain_sms_thread_controller(void);
+uint8_t fonemain_contact_list_controller(void);
 
 void shared_init(void);
 

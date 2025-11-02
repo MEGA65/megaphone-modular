@@ -227,5 +227,6 @@ sdcardprep:	$(LINUX_BINARIES)
 sdbin:	$(PROGRAMS:%=bin65/%.llvm.prg)
 	cp bin65/foneinit.llvm.prg /media/paul/MEGA65FDISK/PHONE/FONEINIT.PRG
 	cp bin65/fonemain.llvm.prg /media/paul/MEGA65FDISK/PHONE/FONEMAIN.PRG
+	cp bin65/fonesms.llvm.prg /media/paul/MEGA65FDISK/PHONE/FONESMS.PRG
 	umount /media/paul/MEGA65FDISK
 
