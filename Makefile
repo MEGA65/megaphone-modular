@@ -223,3 +223,9 @@ sdcardprep:	$(LINUX_BINARIES)
 	src/telephony/linux/provision /media/paul/MEGA65FDISK
 	python3 src/telephony/sms-stim.py -o stim.txt 10 100
 	src/telephony/linux/import stim.txt /media/paul/MEGA65FDISK
+
+sdbin:	$(PROGRAMS:%=bin65/%.llvm.prg)
+	cp bin65/foneinit.llvm.prg /media/paul/MEGA65FDISK/PHONE/FONEINIT.PRG
+	cp bin65/fonemain.llvm.prg /media/paul/MEGA65FDISK/PHONE/FONEMAIN.PRG
+	umount /media/paul/MEGA65FDISK
+
