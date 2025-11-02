@@ -8,6 +8,7 @@ void loader_exec(char *progname)
   // exec the other program
   mega65_cdroot();
   mega65_chdir("PHONE");
+
   mega65_dos_exechelper(progname);
 
   // Flag error

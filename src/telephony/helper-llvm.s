@@ -65,20 +65,6 @@ loadfile_routine:
 //	lda $d610
 //	beq lf1
 //	sta $d610
-	
-	;; Put dummy routine in at $080d, so that we can tell if it didn't load
-	lda #$ee
-	sta $080d
-	lda #$20
-	sta $080e
-	lda #$d0
-	sta $080f
-	lda #$4c
-	sta $0810
-	lda #$0d
-	sta $0811
-	lda #$08
-	sta $0812
 
 	; Now load the file to $07FF so that the load address bytes make it line up
 	;; to $0801
@@ -124,9 +110,9 @@ spaces_skipped:
 process_digit:
 	
 	lda $0800,x
-	cmp #$39
+	cmp #$3A
 	bcs got_digits
-	cmp #$2f
+	cmp #$30
 	bcc got_digits
 
 	;; Multiply accumulated value by 10
@@ -165,7 +151,7 @@ process_digit:
 	bne process_digit
 
 got_digits:	
-
+	
 	;; Jump to JMP instruction that points to entry point
 	jmp $0100
 

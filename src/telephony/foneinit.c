@@ -18,54 +18,9 @@
 #include "af.h"
 #include "mountstate.h"
 
+#include "loader.h"
+
 unsigned char i;
-
-char hex(unsigned char c)
-{
-  c&=0xf;
-  if (c<0xa) return '0'+c;
-  else return 'A'+c-10;
-}
-
-char *num_to_str(unsigned int n,char *s)
-{
-  char *start = s;
-  char active=0;
-  char c;
-  if (n>9999) {
-    c='0';
-    while(n>9999) { c++; n-=10000; }
-    *s = c;
-    s++;
-    active=1;
-  }
-  if (n>999||active) {
-    c='0';
-    while(n>999) { c++; n-=1000; }
-    *s = c;
-    s++;
-    active=1;
-  }
-  if (n>99||active) {
-    c='0';
-    while(n>99) { c++; n-=100; }
-    *s = c;
-    s++;
-    active=1;
-  }
-  if (n>9||active) {
-    c='0';
-    while(n>9) { c++; n-=10; }
-    *s = c;
-    s++;
-    active=1;
-  }
-  *s = '0'+n;
-  s++;
-  *s=0;
-
-  return start;
-}
 
 void fatal(const char *file, const char *function, int line, unsigned char r)
 {
@@ -87,8 +42,6 @@ void fatal(const char *file, const char *function, int line, unsigned char r)
 }
 
 #ifdef LLVM
-
-extern void irq_wait_animation(void);
 
 void save_and_redraw_active_field(int8_t active_field, uint16_t contact_id)
 {
@@ -139,7 +92,8 @@ main(void)
   mega65_io_enable();
 
   shared_init(); 
-    
+
+#if 0
   screen_setup();
   screen_clear();
   statusbar_setup();
@@ -155,10 +109,12 @@ main(void)
   }
 
   screen_setup_fonts();
-
+#endif
+  
   hal_init();
 
   // Chain to fonemain
+  loader_exec("FONEMAIN.PRG");
   
   return 0;
 }
