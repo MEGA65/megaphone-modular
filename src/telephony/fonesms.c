@@ -166,44 +166,11 @@ main(void)
 
   asm volatile ( "cli");  
   
-  screen_setup();
-  screen_clear();
-  statusbar_setup();
-
-  generate_rgb332_palette();
-  
-  // Make sure SD card is idle
-  if (PEEK(0xD680)&0x03) {
-    POKE(0xD680,0x00);
-    POKE(0xD680,0x01);
-    while(PEEK(0xD680)&0x3) continue;
-    usleep(500000L);
-  }
-
-  screen_setup_fonts();
-
   hal_init();
 
   mount_state_set(MS_CONTACT_LIST, 0);
   read_sector(0,1,0);
   shared.contact_count = record_allocate_next(SECTOR_BUFFER_ADDRESS) - 1;
-
-  // Start with contact list
-  uint8_t current_page = PAGE_CONTACTS;
-  uint8_t last_page = PAGE_UNKNOWN;   
-  shared.contact_id = 2;
-  shared.new_contact = 0;
-
-  reset_view(current_page);
-    
-  af_retrieve(shared.active_field, shared.active_field, shared.contact_id);
-
-  dialpad_set_call_state(CALLSTATE_NUMBER_ENTRY);
-  dialpad_hide_show_cursor(shared.active_field);
-  dialpad_draw(shared.active_field,DIALPAD_ALL);  
-  dialpad_draw_call_state(shared.active_field);
-  
-  statusbar_draw();
   
   show_busy();
 

@@ -22,6 +22,24 @@
 
 unsigned char i;
 
+void reset_view(uint8_t current_page)
+{
+  shared.position = -1;
+  shared.redraw = 1;
+  shared.reload_contact = 1;
+  shared.redraw_contact = 1;
+  shared.erase_draft = 0;
+  shared.first_message_displayed = -1;
+  shared.old_draft_line_count = -1;
+  
+  shared.active_field = AF_DIALPAD;
+
+  // For convenience, highlight the first contact field on creation
+  if (shared.new_contact) { shared.active_field = 2; shared.new_contact=0; }
+  if (current_page==PAGE_SMS_THREAD) { shared.active_field = AF_SMS; }
+  dialpad_hide_show_cursor(shared.active_field);
+}
+
 void fatal(const char *file, const char *function, int line, unsigned char r)
 {
   POKE(0xD031,0);
@@ -93,7 +111,6 @@ main(void)
 
   shared_init(); 
 
-#if 0
   screen_setup();
   screen_clear();
   statusbar_setup();
@@ -109,13 +126,33 @@ main(void)
   }
 
   screen_setup_fonts();
-#endif
   
   hal_init();
 
+  mount_state_set(MS_CONTACT_LIST, 0);
+  read_sector(0,1,0);
+  shared.contact_count = record_allocate_next(SECTOR_BUFFER_ADDRESS) - 1;
+
+  // Start with contact list
+  shared.current_page = PAGE_CONTACTS;
+  shared.last_page = PAGE_UNKNOWN;   
+  shared.contact_id = 2;
+  shared.new_contact = 0;
+
+  reset_view(shared.current_page);
+    
+  af_retrieve(shared.active_field, shared.active_field, shared.contact_id);
+
+  dialpad_set_call_state(CALLSTATE_NUMBER_ENTRY);
+  dialpad_hide_show_cursor(shared.active_field);
+  dialpad_draw(shared.active_field,DIALPAD_ALL);  
+  dialpad_draw_call_state(shared.active_field);
+  
+  statusbar_draw();
+  
   // Chain to fonemain
   loader_exec("FONEMAIN.PRG");
-  
+
   return 0;
 }
     
