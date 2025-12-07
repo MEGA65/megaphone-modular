@@ -1,7 +1,7 @@
-TOP = blinky
+TOP = megaphonepwr
 DEVICE = lp1k
 PACKAGE = cm36
-PCF = blinky.pcf
+PCF = megaphonepwr.pcf
 
 all: $(TOP).bin
 

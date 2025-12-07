@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity blinky is
+entity megaphonepwr is
     port (
         CLK : in std_logic;
         LED : out std_logic;
@@ -11,7 +11,7 @@ entity blinky is
     );
 end entity;
 
-architecture rtl of blinky is
+architecture rtl of megaphonepwr is
     signal counter : unsigned(27 downto 0) := (others => '0');
 begin
     process(clk)
@@ -22,6 +22,6 @@ begin
         end if;
     end process;
 
-    led <= counter(25);  -- slow blink
+    led <= counter(21);  -- slow blink
 end architecture;
 
