@@ -225,6 +225,8 @@ sdcardprep:	$(LINUX_BINARIES)
 	src/telephony/linux/import stim.txt /media/paul/MEGA65FDISK
 
 sdbin:	$(PROGRAMS:%=bin65/%.llvm.prg)
+
+sdpush: $(PROGRAMS:%=bin65/%.llvm.prg)	
 	cp bin65/foneinit.llvm.prg /media/paul/MEGA65FDISK/PHONE/FONEINIT.PRG
 	cp bin65/fonemain.llvm.prg /media/paul/MEGA65FDISK/PHONE/FONEMAIN.PRG
 	cp bin65/fonesms.llvm.prg /media/paul/MEGA65FDISK/PHONE/FONESMS.PRG
