@@ -7,7 +7,7 @@ irq_wait_animation:
 
 	;; Frame counter for delays
 	;; XXX - Must match SHARED_ADDR in shshate.h
-	inc $033C
+	inc $c000
 	
 	;; Move weight down the screen
 	inc $d005
