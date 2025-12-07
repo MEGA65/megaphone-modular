@@ -234,9 +234,12 @@ sdpush: $(PROGRAMS:%=bin65/%.llvm.prg)
 
 ftppush:	$(PROGRAMS:%=bin65/%.llvm.prg)
 	m65 -F
-	sleep 2
+	sleep 4
 	m65ftp -l /dev/ttyUSB0 -c "cd PHONE" -c "put bin65/foneinit.llvm.prg FONEINIT.PRG" -c "put bin65/fonemain.llvm.prg FONEMAIN.PRG" -c "put bin65/fonesms.llvm.prg FONESMS.PRG" -c "exit"
 
 ftprun:	ftppush
 	m65 -4 -r bin65/foneinit.llvm.prg
 
+ftpload:	ftppush
+	m65 -4 bin65/foneinit.llvm.prg
+	m65 -t run
