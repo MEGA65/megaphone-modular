@@ -328,53 +328,55 @@ void dialer_dial_contact(void)
 	unsigned char *lastName
 	  = find_field(buffers.textbox.contact_record, RECORD_DATA_SIZE,
 		       FIELD_LASTNAME,NULL);    
-	if (phoneNumber&&phoneNumber[0]) {
-	  uint8_t numbersMatch = 1;
+	uint8_t numbersMatch = 1;
+	if (phoneNumber&&phoneNumber[0]&&s[0]&&(s[0]!=CURSOR_CHAR)) {
 	  for(uint8_t i=0;s[i];i++)
 	    if ((s[i]!=CURSOR_CHAR)&&(phoneNumber[i]!=s[i])) { numbersMatch=0; break; }
-	  if (numbersMatch) {
-	    // We already have this number loaded, so actually trigger the call.
-	    modem_place_call();
-	  } else {
-	    lcopy((unsigned long)phoneNumber,
-		  (unsigned long)s,
-		  NUMBER_FIELD_LEN);
-	    // A couple of extra bytes are allocated to make sure it fits.
-	    s[NUMBER_FIELD_LEN]=0;
-	    
-	    for(uint8_t i=0;i<=NUMBER_FIELD_LEN;i++) {
-	      if(!s[i]||s[i]==CURSOR_CHAR) {
-		s[i]=CURSOR_CHAR;
-		s[i+1]=0;
-		break;
-	      }
+	} else numbersMatch=0;
+	if (numbersMatch) {
+	  // We already have this number loaded, so actually trigger the call.
+	  modem_place_call();
+	  POKE(0xD021,0x05);
+	} else {
+	  lcopy((unsigned long)phoneNumber,
+		(unsigned long)s,
+		NUMBER_FIELD_LEN);
+	  // A couple of extra bytes are allocated to make sure it fits.
+	  s[NUMBER_FIELD_LEN]=0;
+	  
+	  for(uint8_t i=0;i<=NUMBER_FIELD_LEN;i++) {
+	    if(!s[i]||s[i]==CURSOR_CHAR) {
+	      s[i]=CURSOR_CHAR;
+	      s[i+1]=0;
+	      break;
 	    }
-
-	    if (shared.call_state == CALLSTATE_DISCONNECTED) {
-	      shared.call_state = CALLSTATE_NUMBER_ENTRY;
-	    }
-
-	    // Set contact name for dialed number
-	    {
-	      unsigned char o_ofs=0;
-	      unsigned char i_ofs=0;
-	      for(i_ofs=0;firstName[i_ofs];i_ofs++) {
-		if (o_ofs<=NUMBER_FIELD_LEN) 
-		  shared.call_state_contact_name[o_ofs++] = firstName[i_ofs];
-	      }
-	      if (o_ofs) shared.call_state_contact_name[o_ofs++] = ' ';
-	      for(i_ofs=0;lastName[i_ofs];i_ofs++) {
-		if (o_ofs<=NUMBER_FIELD_LEN) 
-		  shared.call_state_contact_name[o_ofs++] = lastName[i_ofs];
-	      }
-	      shared.call_state_contact_name[o_ofs++] = 0;
-	    }
-	    
-	    // Cause dialpad to be redrawn
-	    dialpad_draw_call_state(shared.active_field);
 	  }
+	  
+	  if (shared.call_state == CALLSTATE_DISCONNECTED) {
+	    shared.call_state = CALLSTATE_NUMBER_ENTRY;
+	  }
+	  
+	  // Set contact name for dialed number
+	  {
+	    unsigned char o_ofs=0;
+	    unsigned char i_ofs=0;
+	    for(i_ofs=0;firstName[i_ofs];i_ofs++) {
+	      if (o_ofs<=NUMBER_FIELD_LEN) 
+		shared.call_state_contact_name[o_ofs++] = firstName[i_ofs];
+	    }
+	    if (o_ofs) shared.call_state_contact_name[o_ofs++] = ' ';
+	    for(i_ofs=0;lastName[i_ofs];i_ofs++) {
+	      if (o_ofs<=NUMBER_FIELD_LEN) 
+		shared.call_state_contact_name[o_ofs++] = lastName[i_ofs];
+	    }
+	    shared.call_state_contact_name[o_ofs++] = 0;
+	  }
+	  
+	  // Cause dialpad to be redrawn
+	  dialpad_draw_call_state(shared.active_field);
 	}
       }
+      break;
     }
 
 }
