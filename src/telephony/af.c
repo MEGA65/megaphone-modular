@@ -62,6 +62,7 @@ char af_retrieve_common(char field, char active_field, uint16_t contact_id,
   case AF_DIALPAD:
     // XXX Where on earth are we storing this?
     // Also we don't yet have a textbox for this on screen
+    
     break;
   case AF_SMS:
     // Mount contact D81s, so that we can retreive draft

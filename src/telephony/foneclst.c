@@ -258,6 +258,42 @@ uint8_t fonemain_contact_list_controller(void)
   case 0x93: // CLR+HOME
     dialpad_clear();
     break;
+  case 0xF1: // Select contact to dial -- but only if call state allows it.
+    switch (shared.call_state) 
+    {
+    case CALLSTATE_NUMBER_ENTRY:
+    case CALLSTATE_IDLE:
+    case CALLSTATE_DISCONNECTED:
+      // Load contact
+      if (!contact_read(shared.contact_id,buffers.textbox.contact_record)) {      
+	// Copy number to the dialer
+	unsigned char *s = dialpad_current_string();
+	unsigned char *phoneNumber
+	  = find_field(buffers.textbox.contact_record, RECORD_DATA_SIZE,
+		       FIELD_PHONENUMBER,NULL);    
+	if (phoneNumber)
+	lcopy((unsigned long)phoneNumber,
+	      (unsigned long)s,
+	      NUMBER_FIELD_LEN);
+
+	// A couple of extra bytes are allocated to make sure it fits.
+	s[NUMBER_FIELD_LEN]=0;
+
+	for(i=0;i<=NUMBER_FIELD_LEN;i++) {
+	  if(!s[i]||s[i]==CURSOR_CHAR) {
+	    s[i]=CURSOR_CHAR;
+	    s[i+1]=0;
+	    break;
+	  }
+	}
+	
+	// Cause dialpad to be redrawn
+	dialpad_draw_call_state(shared.active_field);
+      }
+    }
+    break;
+  case 0x1F: // HELP key
+    break;
   }
 
   if ((PEEK(0xD610)>=0x20 && PEEK(0xD610) < 0x7F)||(PEEK(0xD610)==0x14)) {
