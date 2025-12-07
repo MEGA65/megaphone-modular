@@ -1,0 +1,10 @@
+stateDiagram-v2
+    [*] --> NUMBER_ENTRY : Initialisation
+    NUMBER_ENTRY --> CONNECTING : Request Outbound Call
+    CONNECTING --> DISCONNECTED : Call Establishment Failed
+    CONNECTING --> CONNECTED : Call Established
+    CONNECTED --> DISCONNECTED : Call Terminated
+    NUMBER_ENTRY --> RINGING : Incoming call detected
+    RINGING --> CONNECTED : Answer call
+    RINGING --> DISCONNECTED : Hang Up / Call Terminated
+    DISCONNECTED --> NUMBER_ENTRY : Begin Entering NUMBER_ENTRY
