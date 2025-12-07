@@ -152,8 +152,8 @@ main(void)
   
   statusbar_draw();
   
-  // Chain to fonemain
-  loader_exec("FONEMAIN.PRG");
+  // Chain to contact list
+  loader_exec("FONECLST.PRG");
 
   return 0;
 }
