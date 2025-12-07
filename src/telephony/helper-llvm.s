@@ -151,9 +151,10 @@ process_digit:
 	bne process_digit
 
 got_digits:	
-	inc $d020
-	bra got_digits
 
+	;; Disable IRQs as otherwise all manner of horrible things happen
+	sei
+	
 	;; Make $FFD2 do nothing, so that when llvm-mos's default CRT0 for the C64
 	;; asks for lower-case text mode, nothing happens.
 	lda #$60
@@ -162,7 +163,7 @@ got_digits:
 	sta $0326
 	lda #$01
 	sta $0327
-	
+
 	;; Jump to JMP instruction that points to entry point
 	jmp $0100
 

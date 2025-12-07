@@ -151,18 +151,18 @@ main(void)
   shared_init(); 
   
   asm volatile ( "sei");  
+
+  mega65_uart_print("*** FONESMS entered\r\n");
   
   // Install IRQ animator for waiting
   POKE(0x0314,(uint8_t)(((uint16_t)&irq_wait_animation)>>0));
   POKE(0x0315,(uint8_t)(((uint16_t)&irq_wait_animation)>>8));  
-  
-  // Install NMI/BRK catcher
-  POKE(0x0316,(uint8_t)(((uint16_t)&nmi_catcher)>>0));
-  POKE(0x0317,(uint8_t)(((uint16_t)&nmi_catcher)>>8));
+
+  // Install NMI and BRK catchers
+  POKE(0x0316,(uint8_t)(((uint16_t)&brk_catcher)>>0));
+  POKE(0x0317,(uint8_t)(((uint16_t)&brk_catcher)>>8));
   POKE(0x0318,(uint8_t)(((uint16_t)&nmi_catcher)>>0));
   POKE(0x0319,(uint8_t)(((uint16_t)&nmi_catcher)>>8));
-  POKE(0xFFFE,(uint8_t)(((uint16_t)&nmi_catcher)>>0));
-  POKE(0xFFFF,(uint8_t)(((uint16_t)&nmi_catcher)>>8));
 
   asm volatile ( "cli");  
   
@@ -176,8 +176,8 @@ main(void)
 
   while(1) {
     // Reload and redraw things as required when changing views.
-    if (current_page != last_page) {
-      reset_view(current_page);
+    if (shared.current_page != shared.last_page) {
+      reset_view(shared.current_page);
 
       dialpad_hide_show_cursor(shared.active_field);
       dialpad_draw(shared.active_field,DIALPAD_ALL);  

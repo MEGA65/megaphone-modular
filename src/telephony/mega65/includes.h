@@ -57,6 +57,7 @@ struct function_table {
 
 void dump_backtrace(void);
 void nmi_catcher(void);
+void brk_catcher(void);
 
 char mega65_dos_exechelper(char *image_name);
 char read_file_from_sdcard(char *filename,uint32_t load_address);

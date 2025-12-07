@@ -2,6 +2,9 @@
 
 void loader_exec(char *progname)
 {
+  // Disable memory write protection
+  lpoke(0xFFD5000L,0x00); 
+
   // Unhook IRQ
   asm volatile ("jsr $ff8a"); // Restore default KERNAL vectors
 

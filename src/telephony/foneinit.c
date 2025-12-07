@@ -111,6 +111,8 @@ main(void)
 
   shared_init(); 
 
+  mega65_uart_print("*** FONEINIT entered\r\n");
+  
   screen_setup();
   screen_clear();
   statusbar_setup();
