@@ -172,10 +172,10 @@ src/telephony/linux/thread:	src/telephony/linux/thread.c $(SRC_TELEPHONY_COMMON)
 src/telephony/linux/sortd81:	src/telephony/sortd81.c $(SRC_TELEPHONY_COMMON) $(HDR_TELEPHONY_COMMON) $(SRC_TELEPHONY_COMMON_LINUX) $(HDR_TELEPHONY_COMMON_LINUX)
 	gcc -Wall -g $(HDR_PATH_LINUX) -o $@ src/telephony/sortd81.c $(SRC_TELEPHONY_COMMON) $(SRC_TELEPHONY_COMMON_LINUX)
 
-bin65/fonemain.cc65.prg:	src/telephony/fonemain.c $(NATIVE_TELEPHONY_COMMON)
+bin65/fonesms.cc65.prg:	src/telephony/fonesms.c $(NATIVE_TELEPHONY_COMMON)
 	mkdir -p bin65
 
-	$(CC65) $(COPT_M65) src/telephony/fonemain.c
+	$(CC65) $(COPT_M65) src/telephony/fonesms.c
 	$(CC65) $(COPT_M65) src/telephony/screen.c
 	$(CC65) $(COPT_M65) src/telephony/mega65/hal.c
 	$(CC65) $(COPT_M65) src/telephony/buffers.c
@@ -228,14 +228,14 @@ sdbin:	$(PROGRAMS:%=bin65/%.llvm.prg)
 
 sdpush: $(PROGRAMS:%=bin65/%.llvm.prg)	
 	cp bin65/foneinit.llvm.prg /media/paul/MEGA65FDISK/PHONE/FONEINIT.PRG
-	cp bin65/fonemain.llvm.prg /media/paul/MEGA65FDISK/PHONE/FONEMAIN.PRG
+	cp bin65/foneclst.llvm.prg /media/paul/MEGA65FDISK/PHONE/FONECLST.PRG
 	cp bin65/fonesms.llvm.prg /media/paul/MEGA65FDISK/PHONE/FONESMS.PRG
 	umount /media/paul/MEGA65FDISK
 
 ftppush:	$(PROGRAMS:%=bin65/%.llvm.prg)
 	m65 -F
 	sleep 4
-	m65ftp -l /dev/ttyUSB0 -c "cd PHONE" -c "put bin65/foneinit.llvm.prg FONEINIT.PRG" -c "put bin65/fonemain.llvm.prg FONEMAIN.PRG" -c "put bin65/fonesms.llvm.prg FONESMS.PRG" -c "exit"
+	m65ftp -l /dev/ttyUSB0 -c "cd PHONE" -c "put bin65/foneinit.llvm.prg FONEINIT.PRG" -c "put bin65/foneclst.llvm.prg FONECLST.PRG" -c "put bin65/fonesms.llvm.prg FONESMS.PRG" -c "exit"
 
 ftprun:	ftppush
 	m65 -4 -r bin65/foneinit.llvm.prg
