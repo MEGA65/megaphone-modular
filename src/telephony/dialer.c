@@ -235,18 +235,18 @@ void dialpad_draw(char active_field, uint8_t button_restrict)
     break;
   case CALLSTATE_CONNECTED:
     btn_colour_phone = 0x2b; 
-    btn_colour_mute = 0x25;
+    btn_colour_mute = 0x2e;
     btn_colour_end = 0x22;
     break;
   case CALLSTATE_CONNECTING:
-    btn_colour_phone = 0x2b; 
-    btn_colour_mute = 0x25;
-    btn_colour_end = 0x2b;
+    btn_colour_phone = 0x37;   // Blinking yellow to tell us something is happening
+    btn_colour_mute = 0x2e;
+    btn_colour_end = 0x22;
     break;
   case CALLSTATE_RINGING:
   default:
     btn_colour_phone = 0x2b; 
-    btn_colour_mute = 0x25;
+    btn_colour_mute = 0x2e;
     btn_colour_end = 0x2b;
     break;
   }    
@@ -272,6 +272,10 @@ unsigned char *dialpad_current_string(void)
 
 void dialpad_dial_digit(unsigned char d)
 {
+  if (d==' '||d==0x0d) {
+    modem_place_call();    
+  }
+  
   if (d>'a'&&d<='d') d=d-'a'+'A';
   if ((d>='0'&&d<='9')||(d>='A'&&d<='D')||(d=='*')||(d=='#')||(d=='+')||(d==0x14)) {
     // Is valid DTMF or other dialing character
