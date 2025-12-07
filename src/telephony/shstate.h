@@ -13,10 +13,8 @@
 #define SHARED_VERSION 0x01
 #define SHARED_MAGIC 0xfade
 
-#define SHARED_ADDR 0x033C
-#define SHARED_TOP 0x03FF
-// XXX If we get rid of the KERNAL, we can use from $0200 -- $03FF
-// But for now, we have to not stomp the NMI handler address.
+#define SHARED_ADDR 0xC000
+#define SHARED_TOP 0xCFFF
 #define SHARED_SIZE (SHARED_TOP + 1 - SHARED_ADDR)
 
 
@@ -54,6 +52,13 @@ typedef struct shared_state_t {
   uint8_t last_page;
   
   unsigned int first_message_displayed;
+
+// 128KB buffer for 128KB / 256 bytes per glyph = 512 unique unicode glyphs on screen at once
+#define GLYPH_DATA_START 0x40000
+#define GLYPH_CACHE_SIZE 512
+  unsigned long cached_codepoints[GLYPH_CACHE_SIZE];
+  unsigned char cached_fontnums[GLYPH_CACHE_SIZE];
+  unsigned char cached_glyph_flags[GLYPH_CACHE_SIZE];
   
 } Shared;
 

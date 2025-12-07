@@ -289,6 +289,9 @@ extern unsigned char colour_ram_1[64];
 
 unsigned int row0_offset;
 
+#define BYTES_PER_GLYPH 256
+unsigned char glyph_buffer[BYTES_PER_GLYPH];
+
 void draw_goto(int x,int y, uint16_t goto_pos)
 {
   // Get offset within screen and colour RAM for both rows of chars
@@ -301,16 +304,6 @@ void draw_goto(int x,int y, uint16_t goto_pos)
   
 }
 
-
-// 128KB buffer for 128KB / 256 bytes per glyph = 512 unique unicode glyphs on screen at once
-#define GLYPH_DATA_START 0x40000
-#define GLYPH_CACHE_SIZE 512
-#define BYTES_PER_GLYPH 256
-unsigned long cached_codepoints[GLYPH_CACHE_SIZE];
-unsigned char cached_fontnums[GLYPH_CACHE_SIZE];
-unsigned char cached_glyph_flags[GLYPH_CACHE_SIZE];
-unsigned char glyph_buffer[BYTES_PER_GLYPH];
-
 void reset_glyph_cache(void)
 {
   unsigned long ofs;
@@ -320,13 +313,13 @@ void reset_glyph_cache(void)
     lfill(GLYPH_DATA_START,0x00,(size_t)count);
     ofs+=count;
   }
-  lfill((unsigned long)cached_codepoints,0x00,GLYPH_CACHE_SIZE*sizeof(unsigned long));
+  lfill((unsigned long)shared.cached_codepoints,0x00,GLYPH_CACHE_SIZE*sizeof(unsigned long));
 
   // Allocate unicode point 0x00001 = pseudo cursor
   // (2px wide full height bar)
-  cached_codepoints[0]=0x1;
-  cached_fontnums[0]=FONT_ALL;
-  cached_glyph_flags[0]=0x03;
+  shared.cached_codepoints[0]=0x1;
+  shared.cached_fontnums[0]=FONT_ALL;
+  shared.cached_glyph_flags[0]=0x03;
 #ifdef GRADED_CURSOR_ENDS
   lfill(GLYPH_DATA_START+0x00,0x80,0x100);
   lfill(GLYPH_DATA_START+0x08,0xFF,0x38);
@@ -370,9 +363,9 @@ void load_glyph(int font, unsigned long codepoint, unsigned int cache_slot)
 
   // Store glyph in the cache
   lcopy((unsigned long)glyph_buffer,GLYPH_DATA_START + ((unsigned long)cache_slot<<8), BYTES_PER_GLYPH);
-  cached_codepoints[cache_slot]=codepoint;
-  cached_fontnums[cache_slot]=font;
-  cached_glyph_flags[cache_slot]=glyph_flags;
+  shared.cached_codepoints[cache_slot]=codepoint;
+  shared.cached_fontnums[cache_slot]=font;
+  shared.cached_glyph_flags[cache_slot]=glyph_flags;
 
 }
 
@@ -828,9 +821,9 @@ unsigned char lookup_glyph(int font, unsigned long codepoint,unsigned char *pixe
   unsigned int i;
   
   for(i=0;i<GLYPH_CACHE_SIZE;i++) {
-    if (!cached_codepoints[i]) break;
-    if (cached_codepoints[i]==codepoint
-	&&((cached_fontnums[i]==FONT_ALL)||(cached_fontnums[i]==font))) break;
+    if (!shared.cached_codepoints[i]) break;
+    if (shared.cached_codepoints[i]==codepoint
+	&&((shared.cached_fontnums[i]==FONT_ALL)||(shared.cached_fontnums[i]==font))) break;
   }
 
   if (i==GLYPH_CACHE_SIZE) {
@@ -843,16 +836,16 @@ unsigned char lookup_glyph(int font, unsigned long codepoint,unsigned char *pixe
     return 0;
   }
 
-  if (cached_codepoints[i]!=codepoint) {
+  if (shared.cached_codepoints[i]!=codepoint) {
     load_glyph(font, codepoint, i);
   } 
 
-  if (pixels_used) *pixels_used = cached_glyph_flags[i]&0x1f;
+  if (pixels_used) *pixels_used = shared.cached_glyph_flags[i]&0x1f;
 
   if (glyph_id) *glyph_id = i;
 
   // How many glyphs does it use?
-  if (cached_glyph_flags[i]>8) return 2; else return 1;
+  if (shared.cached_glyph_flags[i]>8) return 2; else return 1;
 }
 
 char draw_glyph(int x, int y, int font, unsigned long codepoint,unsigned char colour, unsigned char *pixels_used)
@@ -888,8 +881,8 @@ char draw_glyph(int x, int y, int font, unsigned long codepoint,unsigned char co
   */
 
   // Construct 6-bit table index entry
-  table_index = cached_glyph_flags[i]&0x1f;
-  table_index |= (cached_glyph_flags[i]>>2)&0x20;
+  table_index = shared.cached_glyph_flags[i]&0x1f;
+  table_index |= (shared.cached_glyph_flags[i]>>2)&0x20;
 
   // Get offset within screen and colour RAM for both rows of chars
   row0_offset = (y<<9) + (x<<1);
@@ -903,10 +896,10 @@ char draw_glyph(int x, int y, int font, unsigned long codepoint,unsigned char co
   lpoke(colour_ram + row0_offset + 1, ((colour_ram_1[table_index]+colour+reverse) ));
 
   // Set the number of pixels wide
-  if (pixels_used) *pixels_used = cached_glyph_flags[i]&0x1f;
+  if (pixels_used) *pixels_used = shared.cached_glyph_flags[i]&0x1f;
   
   // And the 2nd column, if required
-  if ((cached_glyph_flags[i]&0x1f)>8) {
+  if ((shared.cached_glyph_flags[i]&0x1f)>8) {
     // Screen RAM
     lpoke(screen_ram + row0_offset + 2, ((i&0x3f)<<2) + 2 );
     lpoke(screen_ram + row0_offset + 3, screen_ram_1_right[table_index] + (i>>6) + 0x10);
