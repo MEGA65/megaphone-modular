@@ -45,6 +45,10 @@ void modem_place_call(void)
   shared.call_state_timeout = MODEM_CALL_ESTABLISHMENT_TIMEOUT_SECONDS * FRAMES_PER_SECOND;
 
   // XXX - Send ATDT to modem
+
+  dialpad_draw(shared.active_field, DIALPAD_ALL);
+  dialpad_draw_call_state(shared.active_field);
+  
 }
 
 void modem_answer_call(void)
@@ -55,7 +59,10 @@ void modem_answer_call(void)
 
     // XXX - Send ATA to modem
 
-    shared.call_state_timeout = 0;    
+    shared.call_state_timeout = 0;
+
+    dialpad_draw(shared.active_field, DIALPAD_ALL);
+    dialpad_draw_call_state(shared.active_field);    
   }
 }
 
@@ -69,6 +76,9 @@ void modem_hangup_call(void)
     shared.call_state_timeout = 0;
 
     // XXX - Send ATH0 to modem
+
+    dialpad_draw(shared.active_field, DIALPAD_ALL);
+    dialpad_draw_call_state(shared.active_field);    
   }
 }
 

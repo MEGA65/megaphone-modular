@@ -245,9 +245,12 @@ uint8_t fonemain_contact_list_controller(void)
     shared.new_contact = 1;
     // FALL THROUGH (dropping into contact edit / SMS thread display)
   case 0xF3: // F3 = switch to contact list
-  case 0x20: case 0x0D: // (SPACE or RETURN also does it)
     POKE(0xD610,0); // Remove key event from queue
     return PAGE_SMS_THREAD;
+  case 0x20: case 0x0D: // SPACE or RETURN dials number if set
+    if ((shared.call_state_number[0])&&(shared.call_state_number[0]!=CURSOR_CHAR))
+      modem_place_call();
+    break;
   case 0x11: // Cursor down
   case 0x91: // Cursor up
     if (PEEK(0xD610)==0x11)
