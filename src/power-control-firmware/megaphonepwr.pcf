@@ -2,12 +2,16 @@
 
 #   FPGA pins:
 
+# On board yellow LED
 set_io LED B6
 
 set_io CLK D1
 
-set_io RX  A3
-set_io TX  B3
+# USB UART
+set_io USB_RX  A3
+set_io USB_TX  B3
+
+# Power enables to sub-systems
 
 #   PMOD FULL (PMOD3)
 
@@ -22,14 +26,14 @@ set_io TX  B3
 #    | 3V3  3V3 |
 #     ----------
 #
-set_io --warn-no-port PMOD1 B4
-set_io --warn-no-port PMOD2 C6
-set_io --warn-no-port PMOD3 B5
-set_io --warn-no-port PMOD4 E3
-set_io --warn-no-port PMOD5 E1
-set_io --warn-no-port PMOD6 C2
-set_io --warn-no-port PMOD7 B1
-set_io --warn-no-port PMOD8 A1
+set_io --warn-no-port B4 B4
+set_io --warn-no-port C6 C6
+set_io --warn-no-port B5 B5
+set_io --warn-no-port E3 E3
+set_io --warn-no-port E1 E1
+set_io --warn-no-port C2 C2
+set_io --warn-no-port B1 B1
+set_io --warn-no-port A1 A1
 
 #   PMOD LEFT (PMOD2)
 
@@ -44,10 +48,12 @@ set_io --warn-no-port PMOD8 A1
 #    | 3V3 | 
 #     -----
 #
-set_io --warn-no-port PMODL1 B3
-set_io --warn-no-port PMODL2 A3
-set_io --warn-no-port PMODL3 B6
-set_io --warn-no-port PMODL4 C5
+# WARNING: B6 also drives the LED
+set_io --warn-no-port B3 B3
+set_io --warn-no-port A3 A3
+set_io --warn-no-port C5 C5
+
+# The right PMOD has potentially only one usable pin on it.
 
 #   PMOD RIGHT (PMOD1)
 
@@ -62,8 +68,10 @@ set_io --warn-no-port PMODL4 C5
 #    | E2  | 
 #     -----
 #
+# WARNING: A1 and B1 are duplicated on the PMOD!
+# WARNING: D1 is clock input pin
 set_io --warn-no-port PMODR1 A1
 set_io --warn-no-port PMODR2 B1
 set_io --warn-no-port PMODR3 D1
-set_io --warn-no-port PMODR4 E2
+set_io --warn-no-port E2 E2
 
