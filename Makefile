@@ -8,9 +8,6 @@ LINUX_BINARIES=	src/telephony/linux/provision \
 		src/telephony/linux/thread \
 		src/telephony/linux/search
 
-CC65=cc65 -t c64
-CL65=cl65 -t c64
-
 COPT_M65=	-Iinclude	-Isrc/telephony/mega65 -Isrc/mega65-libc/include
 
 COMPILER=llvm
@@ -90,34 +87,12 @@ SRC_TELEPHONY_COMMON=	src/telephony/d81.c \
 NATIVE_TELEPHONY_COMMON=	$(SRC_TELEPHONY_COMMON) \
 			src/telephony/screen.c \
 			src/telephony/dialer.c \
+			src/telephony/modem.c \
 			src/telephony/status.c \
 			src/telephony/smsscreens.c \
 			src/telephony/af.c \
 			src/telephony/contactscreens.c \
 			src/telephony/wait_sprite.c \
-
-
-OBJ_TELEPHONY_NATIVE=	src/telephony/d81.s \
-			src/telephony/records.s \
-			src/telephony/screen.s \
-			src/telephony/contacts.s \
-			src/telephony/sort.s \
-			src/telephony/index.s \
-			src/telephony/buffers.s \
-			src/telephony/search.s \
-			src/telephony/sms.s \
-			src/telephony/loader.s \
-			src/telephony/shstate.s \
-			src/telephony/mountstate.s \
-			src/telephony/smsscreens.s \
-			src/telephony/contactscreens.s \
-			src/telephony/af.s \
-			src/telephony/slab.s \
-			src/telephony/dialer.s \
-			src/telephony/status.s \
-			src/telephony/mega65/hal.s \
-			src/telephony/mega65/hal_asm.s \
-			src/telephony/helper-cc65.s \
 
 HDR_TELEPHONY_COMMON=	src/telephony/records.h \
 			src/telephony/contacts.h \
@@ -128,13 +103,6 @@ HDR_TELEPHONY_COMMON=	src/telephony/records.h \
 			src/telephony/shstate.h \
 			src/telephony/dialer.h \
 			src/telephony/slab.h
-
-OBJ_MEGA65_LIBC=	src/mega65-libc/src/shres.s \
-			src/mega65-libc/src/cc65/shres_asm.s \
-			src/mega65-libc/src/memory.s \
-			src/mega65-libc/src/cc65/memory_asm.s \
-			src/mega65-libc/src/cc65/fileio.s \
-			src/mega65-libc/src/hal.s
 
 SRC_MEGA65_LIBC_LLVM=	src/mega65-libc/src/shres.c \
 			src/mega65-libc/src/llvm/shres_asm.s \
@@ -171,30 +139,6 @@ src/telephony/linux/thread:	src/telephony/linux/thread.c $(SRC_TELEPHONY_COMMON)
 
 src/telephony/linux/sortd81:	src/telephony/sortd81.c $(SRC_TELEPHONY_COMMON) $(HDR_TELEPHONY_COMMON) $(SRC_TELEPHONY_COMMON_LINUX) $(HDR_TELEPHONY_COMMON_LINUX)
 	gcc -Wall -g $(HDR_PATH_LINUX) -o $@ src/telephony/sortd81.c $(SRC_TELEPHONY_COMMON) $(SRC_TELEPHONY_COMMON_LINUX)
-
-bin65/fonesms.cc65.prg:	src/telephony/fonesms.c $(NATIVE_TELEPHONY_COMMON)
-	mkdir -p bin65
-
-	$(CC65) $(COPT_M65) src/telephony/fonesms.c
-	$(CC65) $(COPT_M65) src/telephony/screen.c
-	$(CC65) $(COPT_M65) src/telephony/mega65/hal.c
-	$(CC65) $(COPT_M65) src/telephony/buffers.c
-	$(CC65) $(COPT_M65) src/telephony/contacts.c
-	$(CC65) $(COPT_M65) src/telephony/index.c
-	$(CC65) $(COPT_M65) src/telephony/sort.c
-	$(CC65) $(COPT_M65) src/telephony/search.c
-	$(CC65) $(COPT_M65) src/telephony/sms.c
-	$(CC65) $(COPT_M65) src/telephony/loader.c
-	$(CC65) $(COPT_M65) src/telephony/shstate.c
-	$(CC65) $(COPT_M65) src/telephony/smsscreens.c
-	$(CC65) $(COPT_M65) src/telephony/d81.c
-	$(CC65) $(COPT_M65) src/telephony/slab.c
-	$(CC65) $(COPT_M65) src/telephony/records.c
-	$(CC65) $(COPT_M65) src/telephony/attr_tables.c
-	$(CC65) $(COPT_M65) src/mega65-libc/src/shres.c
-	$(CC65) $(COPT_M65) src/mega65-libc/src/memory.c
-	$(CC65) $(COPT_M65) src/mega65-libc/src/hal.c
-	$(CL65) -o bin65/fonemain.prg -Iinclude -Isrc/mega65-libc/include src/telephony/fonemain.s src/telephony/attr_tables.s $(OBJ_TELEPHONY_NATIVE) $(OBJ_MEGA65_LIBC) 
 
 # For backtrace support we have to compile twice: Once to generate the map file, from which we
 # can generate the function list, and then a second time, where we link that in.

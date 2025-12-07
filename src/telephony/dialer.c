@@ -3,13 +3,17 @@
 #include "shstate.h"
 #include "dialer.h"
 #include "screen.h"
+#include "records.h"
+#include "contacts.h"
+#include "buffers.h"
 #include "af.h"
+#include "modem.h"
 
 // XXX Use the fact that chip RAM at 0x60000 reads as zeroes :)
 #define DIALPAD_BLANK_GLYPH_ADDR 0x60000
 
 static unsigned char MSG_DIAL[]
-= "Dial or select contact";
+= "Dial number or F1 to dial contact";
 static unsigned char MSG_CALLING[]
 = "Calling...";
 static unsigned char MSG_INCOMING[]
@@ -19,27 +23,26 @@ static unsigned char MSG_EMPTY[]
 static unsigned char MSG_INCALL[]
 = "In Call ";
 static unsigned char MSG_ENDED[]
-= "Call Ended ";
+= "Call Ended.";
 
 unsigned char *call_state_messages[CALLSTATE_MAX+1]={
   MSG_DIAL,
   MSG_CALLING,
   MSG_INCOMING,
   MSG_INCALL,
-  MSG_ENDED,
-  MSG_DIAL
+  MSG_ENDED
 };
 
 #define CALL_STATE_LINES 6
 #define CALL_STATE_LINE_DIALED_NUMBER 3
 #define CALL_STATE_LINE_DTMF_HISTORY 5
 uint8_t call_state_colours[CALL_STATE_LINES]={
-  0x01,
-  0x06,
-  0x0e,
-  0x81,
-  0x06,
-  0x81
+  0x01,    // Instructions
+  0x06,    // Blank line
+  0x0e,    // Contact name
+  0x81,    // Number being dialed
+  0x06,    // Blank line
+  0x81     // DTMF dial history
 };
 
 unsigned char dialpad_lookup_button(unsigned char d)
@@ -54,7 +57,7 @@ unsigned char dialpad_lookup_button(unsigned char d)
 void dialpad_draw_call_state(char active_field)
 {
   if (shared.call_state>CALLSTATE_MAX)
-    shared.call_state = CALLSTATE_IDLE;
+    shared.call_state = CALLSTATE_NUMBER_ENTRY;
 
   unsigned char *s;
   
@@ -104,7 +107,7 @@ void dialpad_set_call_state(char new_state)
 {
 
   if (shared.call_state>CALLSTATE_MAX)
-    shared.call_state = CALLSTATE_IDLE;
+    shared.call_state = CALLSTATE_NUMBER_ENTRY;
   
   
   switch(new_state) {
@@ -136,8 +139,8 @@ void dialpad_set_call_state(char new_state)
     }
     break;
   default:
-  case CALLSTATE_IDLE:
-    if (shared.call_state != CALLSTATE_IDLE) {
+    switch (shared.call_state) {
+    case CALLSTATE_NUMBER_ENTRY:
       // Erase contact info
       shared.call_contact_id = -1;
       shared.call_state_contact_name[0]=0;
@@ -269,6 +272,9 @@ void dialpad_dial_digit(unsigned char d)
       }
     }
     s[NUMBER_FIELD_LEN-1]=0;
+
+    // Erase any contact name we are displaying
+    
     
     dialpad_draw_call_state(AF_DIALPAD);
 
@@ -301,4 +307,74 @@ void dialpad_hide_show_cursor(char active_field)
     }
   }
   s[NUMBER_FIELD_LEN-1]=0;  
+}
+
+void dialer_dial_contact(void)
+{
+  switch (shared.call_state) 
+    {
+    case CALLSTATE_NUMBER_ENTRY:
+    case CALLSTATE_DISCONNECTED:
+      // Load contact
+      if (!contact_read(shared.contact_id,buffers.textbox.contact_record)) {      
+	// Copy number to the dialer
+	unsigned char *s = dialpad_current_string();
+	unsigned char *phoneNumber
+	  = find_field(buffers.textbox.contact_record, RECORD_DATA_SIZE,
+		       FIELD_PHONENUMBER,NULL);    
+	unsigned char *firstName
+	  = find_field(buffers.textbox.contact_record, RECORD_DATA_SIZE,
+		       FIELD_FIRSTNAME,NULL);    
+	unsigned char *lastName
+	  = find_field(buffers.textbox.contact_record, RECORD_DATA_SIZE,
+		       FIELD_LASTNAME,NULL);    
+	if (phoneNumber&&phoneNumber[0]) {
+	  uint8_t numbersMatch = 1;
+	  for(uint8_t i=0;s[i];i++)
+	    if ((s[i]!=CURSOR_CHAR)&&(phoneNumber[i]!=s[i])) { numbersMatch=0; break; }
+	  if (numbersMatch) {
+	    // We already have this number loaded, so actually trigger the call.
+	    modem_place_call();
+	  } else {
+	    lcopy((unsigned long)phoneNumber,
+		  (unsigned long)s,
+		  NUMBER_FIELD_LEN);
+	    // A couple of extra bytes are allocated to make sure it fits.
+	    s[NUMBER_FIELD_LEN]=0;
+	    
+	    for(uint8_t i=0;i<=NUMBER_FIELD_LEN;i++) {
+	      if(!s[i]||s[i]==CURSOR_CHAR) {
+		s[i]=CURSOR_CHAR;
+		s[i+1]=0;
+		break;
+	      }
+	    }
+
+	    if (shared.call_state == CALLSTATE_DISCONNECTED) {
+	      shared.call_state = CALLSTATE_NUMBER_ENTRY;
+	    }
+
+	    // Set contact name for dialed number
+	    {
+	      unsigned char o_ofs=0;
+	      unsigned char i_ofs=0;
+	      for(i_ofs=0;firstName[i_ofs];i_ofs++) {
+		if (o_ofs<=NUMBER_FIELD_LEN) 
+		  shared.call_state_contact_name[o_ofs++] = firstName[i_ofs];
+	      }
+	      if (o_ofs) shared.call_state_contact_name[o_ofs++] = ' ';
+	      for(i_ofs=0;lastName[i_ofs];i_ofs++) {
+		if (o_ofs<=NUMBER_FIELD_LEN) 
+		  shared.call_state_contact_name[o_ofs++] = lastName[i_ofs];
+	      }
+	      shared.call_state_contact_name[o_ofs++] = 0;
+	    }
+	    
+	    // Cause dialpad to be redrawn
+	    dialpad_draw_call_state(shared.active_field);
+	  }
+	}
+      }
+    }
+
 }
