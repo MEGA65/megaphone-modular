@@ -232,3 +232,11 @@ sdpush: $(PROGRAMS:%=bin65/%.llvm.prg)
 	cp bin65/fonesms.llvm.prg /media/paul/MEGA65FDISK/PHONE/FONESMS.PRG
 	umount /media/paul/MEGA65FDISK
 
+ftppush:	$(PROGRAMS:%=bin65/%.llvm.prg)
+	m65 -F
+	sleep 2
+	m65ftp -l /dev/ttyUSB0 -c "cd PHONE" -c "put bin65/foneinit.llvm.prg FONEINIT.PRG" -c "put bin65/fonemain.llvm.prg FONEMAIN.PRG" -c "put bin65/fonesms.llvm.prg FONESMS.PRG" -c "exit"
+
+ftprun:	ftppush
+	m65 -4 -r bin65/foneinit.llvm.prg
+
