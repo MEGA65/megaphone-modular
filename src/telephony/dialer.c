@@ -221,11 +221,41 @@ void dialpad_draw(char active_field, uint8_t button_restrict)
 
   y=11;
   // Call button : Green unless in a call
-  dialpad_draw_button(12,2,y, 0x25);  // 0x20 = reverse
+
+  uint8_t btn_colour_phone;
+  uint8_t btn_colour_mute;
+  uint8_t btn_colour_end;
+
+  switch(shared.call_state) {
+  case CALLSTATE_NUMBER_ENTRY:
+  case CALLSTATE_DISCONNECTED:
+    btn_colour_phone = 0x25; // Reverse green
+    btn_colour_mute = 0x2b; // Reverse grey (inactive)
+    btn_colour_end = 0x2b;
+    break;
+  case CALLSTATE_CONNECTED:
+    btn_colour_phone = 0x2b; 
+    btn_colour_mute = 0x25;
+    btn_colour_end = 0x22;
+    break;
+  case CALLSTATE_CONNECTING:
+    btn_colour_phone = 0x2b; 
+    btn_colour_mute = 0x25;
+    btn_colour_end = 0x2b;
+    break;
+  case CALLSTATE_RINGING:
+  default:
+    btn_colour_phone = 0x2b; 
+    btn_colour_mute = 0x25;
+    btn_colour_end = 0x2b;
+    break;
+  }    
+
+  dialpad_draw_button(12,2,y, btn_colour_phone);
   // Mute button (only valid if not activated and not in a call
-  dialpad_draw_button(14,2,y+5, 0x2b);  // 0x20 = reverse
+  dialpad_draw_button(14,2,y+5, btn_colour_mute);
   // Hang up button (only valid if in a call)
-  dialpad_draw_button(13,2,y+5+5, 0x2b);  // 0x20 = reverse
+  dialpad_draw_button(13,2,y+5+5, btn_colour_end);
 
   // Draw invisible button to make it all line up
   dialpad_draw_button(13,2,y+5+5+5, 0x06);
@@ -262,8 +292,10 @@ void dialpad_dial_digit(unsigned char d)
     if (button_id!=99) {
       dialpad_draw(AF_DIALPAD,button_id);
       // Wait a few frames to make highlight obvious
-      shared.frame_counter = 0x00;
-      while(shared.frame_counter<0x05) continue;
+      for(uint8_t i=0;i<5;i++) {
+	uint16_t frame_count = shared.frame_counter;
+	while(shared.frame_counter==frame_count) continue;
+      }
     }
     
     for(uint8_t o=0;o<NUMBER_FIELD_LEN;o++) {
@@ -382,10 +414,9 @@ void dialer_dial_contact(void)
 	  if (shared.call_state == CALLSTATE_DISCONNECTED) {
 	    shared.call_state = CALLSTATE_NUMBER_ENTRY;
 	  }
-	  
-	  // Cause dialpad to be redrawn
-	  dialpad_draw_call_state(shared.active_field);
 	}
+	// Cause dialpad to be redrawn
+	dialpad_draw_call_state(shared.active_field);
       }
       break;
     }

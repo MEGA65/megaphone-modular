@@ -20,7 +20,7 @@
 
 typedef struct shared_state_t {
   // Gets updated byt irq_wait_animation in hal_asm_llvm.s
-  volatile unsigned char frame_counter;
+  volatile uint16_t frame_counter;
 
   unsigned short magic;
   unsigned char version;
@@ -31,7 +31,8 @@ typedef struct shared_state_t {
   unsigned char call_state_contact_name[NUMBER_FIELD_LEN+2];
   unsigned char call_state_number[NUMBER_FIELD_LEN+2];
   unsigned char call_state_dtmf_history[NUMBER_FIELD_LEN+2];
-
+  uint16_t call_state_timeout;
+  
   struct shared_resource fonts[NUM_FONTS];
 
   // For FONEMAIN/FONESMS contact list and SMS thread displays

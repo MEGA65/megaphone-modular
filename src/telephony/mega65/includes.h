@@ -7,6 +7,8 @@
 #include "mega65/memory.h"
 #include "mega65/fileio.h"
 
+#define FRAMES_PER_SECOND 50
+
 // 6E00 = SD card, 6C00 = FDC
 #define SECTOR_BUFFER_ADDRESS 0xFFD6C00L
 
