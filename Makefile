@@ -224,18 +224,20 @@ sdcardprep:	$(LINUX_BINARIES)
 	python3 src/telephony/sms-stim.py -o stim.txt 10 100
 	src/telephony/linux/import stim.txt /media/paul/MEGA65FDISK
 
-sdbin:	$(PROGRAMS:%=bin65/%.llvm.prg)
+sdbin:	bin65/foneinit.llvm.prg bin65/foneclst.llvm.prg bin65/fonesms.llvm.prg
 
-sdpush: $(PROGRAMS:%=bin65/%.llvm.prg)	
+sdpush: sdbin
 	cp bin65/foneinit.llvm.prg /media/paul/MEGA65FDISK/PHONE/FONEINIT.PRG
 	cp bin65/foneclst.llvm.prg /media/paul/MEGA65FDISK/PHONE/FONECLST.PRG
 	cp bin65/fonesms.llvm.prg /media/paul/MEGA65FDISK/PHONE/FONESMS.PRG
 	umount /media/paul/MEGA65FDISK
 
-ftppush:	$(PROGRAMS:%=bin65/%.llvm.prg)
+ftppush:	sdbin
 	m65 -F
-	sleep 4
-	m65ftp -l /dev/ttyUSB0 -c "cd PHONE" -c "put bin65/foneinit.llvm.prg FONEINIT.PRG" -c "put bin65/foneclst.llvm.prg FONECLST.PRG" -c "put bin65/fonesms.llvm.prg FONESMS.PRG" -c "exit"
+	sleep 2
+	m65ftp -l /dev/ttyUSB0 -c "cd PHONE" -c "put bin65/foneinit.llvm.prg FONEINIT.PRG"
+	m65ftp -l /dev/ttyUSB0 -c "cd PHONE" -c "put bin65/foneclst.llvm.prg FONECLST.PRG"
+	m65ftp -l /dev/ttyUSB0 -c "cd PHONE" -c "put bin65/fonesms.llvm.prg FONESMS.PRG" -c "exit"
 
 ftprun:	ftppush
 	m65 -4 -r bin65/foneinit.llvm.prg
