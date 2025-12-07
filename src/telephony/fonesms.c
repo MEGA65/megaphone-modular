@@ -18,6 +18,7 @@
 #include "status.h"
 #include "af.h"
 #include "mountstate.h"
+#include "modem.h"
 
 unsigned char i;
 
@@ -167,9 +168,6 @@ main(void)
 
   while(1) {
     // Reload and redraw things as required when changing views.
-    mega65_uart_print("Current page = ");
-    mega65_uart_printhex(shared.current_page);
-    mega65_uart_print("\r\n");
     if (shared.current_page != shared.last_page) {
       reset_view(shared.current_page);
 
@@ -248,6 +246,7 @@ uint8_t fonemain_sms_thread_controller(void)
   while(!PEEK(0xD610)) {
     // Keep the clock updated
     statusbar_draw_time();
+    modem_poll();
     continue;
   }
   show_busy();

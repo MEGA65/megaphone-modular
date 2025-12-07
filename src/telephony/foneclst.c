@@ -18,6 +18,7 @@
 #include "status.h"
 #include "af.h"
 #include "mountstate.h"
+#include "modem.h"
 
 #define PAGE_UNKNOWN 0
 #define PAGE_SMS_THREAD 1
@@ -175,6 +176,8 @@ main(void)
   show_busy();
 
   while(1) {
+    modem_poll();
+
     // Reload and redraw things as required when changing views.
     if (shared.current_page != shared.last_page) {
       reset_view(shared.current_page);
@@ -230,6 +233,7 @@ uint8_t fonemain_contact_list_controller(void)
   while(!PEEK(0xD610)) {
     // Keep the clock updated
     statusbar_draw_time();
+    modem_poll();
     continue;
   }
   show_busy();

@@ -42,7 +42,7 @@ void modem_place_call(void)
 {
   shared.call_state = CALLSTATE_CONNECTING;
   shared.frame_counter = 0;
-  shared.call_state_timeout = 120 * FRAMES_PER_SECOND;
+  shared.call_state_timeout = MODEM_CALL_ESTABLISHMENT_TIMEOUT_SECONDS * FRAMES_PER_SECOND;
 
   // XXX - Send ATDT to modem
 }

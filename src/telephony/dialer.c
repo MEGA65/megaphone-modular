@@ -330,6 +330,7 @@ void dialpad_clear(void)
     unsigned char *s = dialpad_current_string();
     s[0]=CURSOR_CHAR;
     s[1]=0;
+    shared.call_state_contact_name[0]=0;
     dialpad_draw_call_state(AF_DIALPAD);
 }
 
