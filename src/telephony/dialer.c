@@ -246,6 +246,14 @@ void dialpad_dial_digit(unsigned char d)
   if ((d>='0'&&d<='9')||(d>='A'&&d<='D')||(d=='*')||(d=='#')||(d=='+')||(d==0x14)) {
     // Is valid DTMF or other dialing character
 
+    // Erase contact name if we are hand-modifying the number being dialed
+    switch (shared.call_state) {
+    case CALLSTATE_NUMBER_ENTRY:
+    case CALLSTATE_DISCONNECTED:    
+      shared.call_state = CALLSTATE_NUMBER_ENTRY;
+      shared.call_state_contact_name[0]=0;
+    }
+    
     unsigned char *s = dialpad_current_string();
 
     uint8_t button_id = dialpad_lookup_button(d);
@@ -328,6 +336,26 @@ void dialer_dial_contact(void)
 	unsigned char *lastName
 	  = find_field(buffers.textbox.contact_record, RECORD_DATA_SIZE,
 		       FIELD_LASTNAME,NULL);    
+
+	// Set contact name for dialed number
+	// (We do this before the numbers match check, so that if you
+	// hand-dial a contact, and then hit F1 on that contact, it will
+	// still draw the contact name as well as immediately place the call.
+	{
+	  unsigned char o_ofs=0;
+	  unsigned char i_ofs=0;
+	  for(i_ofs=0;firstName[i_ofs];i_ofs++) {
+	    if (o_ofs<=NUMBER_FIELD_LEN) 
+	      shared.call_state_contact_name[o_ofs++] = firstName[i_ofs];
+	  }
+	  if (o_ofs) shared.call_state_contact_name[o_ofs++] = ' ';
+	  for(i_ofs=0;lastName[i_ofs];i_ofs++) {
+	    if (o_ofs<=NUMBER_FIELD_LEN) 
+	      shared.call_state_contact_name[o_ofs++] = lastName[i_ofs];
+	  }
+	  shared.call_state_contact_name[o_ofs++] = 0;
+	}	  
+
 	uint8_t numbersMatch = 1;
 	if (phoneNumber&&phoneNumber[0]&&s[0]&&(s[0]!=CURSOR_CHAR)) {
 	  for(uint8_t i=0;s[i];i++)
@@ -336,7 +364,6 @@ void dialer_dial_contact(void)
 	if (numbersMatch) {
 	  // We already have this number loaded, so actually trigger the call.
 	  modem_place_call();
-	  POKE(0xD021,0x05);
 	} else {
 	  lcopy((unsigned long)phoneNumber,
 		(unsigned long)s,
@@ -354,22 +381,6 @@ void dialer_dial_contact(void)
 	  
 	  if (shared.call_state == CALLSTATE_DISCONNECTED) {
 	    shared.call_state = CALLSTATE_NUMBER_ENTRY;
-	  }
-	  
-	  // Set contact name for dialed number
-	  {
-	    unsigned char o_ofs=0;
-	    unsigned char i_ofs=0;
-	    for(i_ofs=0;firstName[i_ofs];i_ofs++) {
-	      if (o_ofs<=NUMBER_FIELD_LEN) 
-		shared.call_state_contact_name[o_ofs++] = firstName[i_ofs];
-	    }
-	    if (o_ofs) shared.call_state_contact_name[o_ofs++] = ' ';
-	    for(i_ofs=0;lastName[i_ofs];i_ofs++) {
-	      if (o_ofs<=NUMBER_FIELD_LEN) 
-		shared.call_state_contact_name[o_ofs++] = lastName[i_ofs];
-	    }
-	    shared.call_state_contact_name[o_ofs++] = 0;
 	  }
 	  
 	  // Cause dialpad to be redrawn
