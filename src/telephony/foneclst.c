@@ -268,6 +268,12 @@ uint8_t fonemain_contact_list_controller(void)
   case 0xF1: // Select contact to dial -- but only if call state allows it.
     dialer_dial_contact();
     break;
+  case 0xF5: // toggle mute
+    modem_toggle_mute();
+    break;
+  case 0xF7: // Hang up
+    modem_hangup_call();
+    break;
   case 0x1F: // HELP key
     break;
   }

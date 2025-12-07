@@ -18,11 +18,7 @@ void modem_poll(void)
     switch(shared.call_state) {
     case CALLSTATE_CONNECTING:
     case CALLSTATE_RINGING:
-      // XXX - Send ATH0 to modem
-      shared.call_state = CALLSTATE_DISCONNECTED;
-      dialpad_draw(shared.active_field, DIALPAD_ALL);
-      dialpad_draw_call_state(shared.active_field);
-    
+      modem_hangup_call();    
       break;      
     }
   }
@@ -34,6 +30,8 @@ void modem_poll(void)
   // SMS RX notification
   // Network time
   // Network signal
+  // Network name
+  // Call mute status
 
   // What else?
 }
@@ -77,15 +75,28 @@ void modem_hangup_call(void)
 
     // XXX - Send ATH0 to modem
 
-    dialpad_draw(shared.active_field, DIALPAD_ALL);
-    dialpad_draw_call_state(shared.active_field);    
+    // Clear mute flag when ending a call
+    // This call also does the dialpad redraw for us
+    modem_unmute_call();
   }
+}
+
+void modem_toggle_mute(void)
+{
+  if (shared.call_state_muted) modem_unmute_call();
+  else modem_mute_call();
 }
 
 void modem_mute_call(void)
 {
+  shared.call_state_muted = 1;
+  dialpad_draw(shared.active_field, DIALPAD_ALL);
+  dialpad_draw_call_state(shared.active_field);    
 }
 
 void modem_unmute_call(void)
 {
+  shared.call_state_muted = 0;
+  dialpad_draw(shared.active_field, DIALPAD_ALL);
+  dialpad_draw_call_state(shared.active_field);    
 }

@@ -32,6 +32,7 @@ typedef struct shared_state_t {
   unsigned char call_state_number[NUMBER_FIELD_LEN+2];
   unsigned char call_state_dtmf_history[NUMBER_FIELD_LEN+2];
   uint16_t call_state_timeout;
+  char call_state_muted;
   
   struct shared_resource fonts[NUM_FONTS];
 

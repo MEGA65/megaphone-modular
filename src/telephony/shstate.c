@@ -15,7 +15,6 @@ void shared_init(void)
     shared.call_state = CALLSTATE_NUMBER_ENTRY;
     shared.call_contact_id = -1;
 
-    shared.frame_counter = 0;
   }
   if (shared.version != SHARED_VERSION) {
     fail(1);

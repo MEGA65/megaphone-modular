@@ -235,18 +235,18 @@ void dialpad_draw(char active_field, uint8_t button_restrict)
     break;
   case CALLSTATE_CONNECTED:
     btn_colour_phone = 0x2b; 
-    btn_colour_mute = 0x2e;
+    btn_colour_mute = shared.call_state_muted ? 0x32 : 0x2e;
     btn_colour_end = 0x22;
     break;
   case CALLSTATE_CONNECTING:
     btn_colour_phone = 0x37;   // Blinking yellow to tell us something is happening
-    btn_colour_mute = 0x2e;
+    btn_colour_mute = shared.call_state_muted ? 0x32 : 0x2e;
     btn_colour_end = 0x22;
     break;
   case CALLSTATE_RINGING:
   default:
     btn_colour_phone = 0x2b; 
-    btn_colour_mute = 0x2e;
+    btn_colour_mute = shared.call_state_muted ? 0x32 : 0x2e;
     btn_colour_end = 0x2b;
     break;
   }    
