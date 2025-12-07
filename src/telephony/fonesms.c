@@ -21,6 +21,9 @@
 
 unsigned char i;
 
+unsigned char temp;
+unsigned char r;
+
 char hex(unsigned char c)
 {
   c&=0xf;
@@ -191,57 +194,54 @@ main(void)
     
 uint8_t fonemain_sms_thread_controller(void)
 {  
-#ifndef HAS_SMS_THREAD_CONTROLLER
-  // XXX Switch to binary that has SMS thread controller
-#else
-  if (reload_contact) {
-    reload_contact = 0;
+  if (shared.reload_contact) {
+    shared.reload_contact = 0;
     
     // Redisplay contact at top of screen
     
     // Mount contacts 
-    if (!contact_read(contact_id,buffers.textbox.contact_record)) {
-      redraw_contact = 1;
+    if (!contact_read(shared.contact_id,buffers.textbox.contact_record)) {
+      shared.redraw_contact = 1;
     }
     
     // Clear draft initially
     textbox_erase_draft();
     
     // Mount contact D81s, so that we can retreive draft
-    r = mount_contact_qso(contact_id);
+    r = mount_contact_qso(shared.contact_id);
     if (r) fatal(__FILE__,__FUNCTION__,__LINE__,r);
-    if (!erase_draft) {
+    if (!shared.erase_draft) {
       // Read last record in disk to get any saved draft
       read_record_by_id(0,USABLE_SECTORS_PER_DISK -1,buffers.textbox.draft);
       textbox_find_cursor();
       
     }
-    erase_draft = 0;
+    shared.erase_draft = 0;
     
-    redraw = 1;      
+    shared.redraw = 1;      
   }
   
-  if (redraw_contact) {
-    redraw_contact = 0;
+  if (shared.redraw_contact) {
+    shared.redraw_contact = 0;
     contact_draw(RIGHT_AREA_START_GL, 3,
 		 RIGHT_AREA_START_PX,
 		 RENDER_COLUMNS - 1 - RIGHT_AREA_START_GL,
 		 // Subtract a bit of space for scroll bar etc
 		 RIGHT_AREA_WIDTH_PX - 16,
 		 shared.contact_id,
-		 active_field // which field is currently active/highlighted
+		 shared.active_field // which field is currently active/highlighted
 		 );
   }       
   
-  if (redraw) {
-    sms_thread_display(contact_id,position,
+  if (shared.redraw) {
+    sms_thread_display(shared.contact_id, shared.position,
 		       1, // Show message edit box
-		       active_field,
-		       &first_message_displayed);
+		       shared.active_field,
+		       &shared.first_message_displayed);
     // And make sure we have the current field retrieved after
-    af_retrieve(shared.active_field, active_field, shared.contact_id);
+    af_retrieve(shared.active_field, shared.active_field, shared.contact_id);
   }
-  redraw=0;
+  shared.redraw=0;
   
   // Wait for key press: This is the only time that we aren't "busy"    
   hide_busy();
@@ -256,36 +256,36 @@ uint8_t fonemain_sms_thread_controller(void)
   case 0xF3: // F3 = switch to contact list
     POKE(0xD610,0); // Remove F3 key event from queue
     // Highlight the contact we have been reading the messages of
-    position = shared.contact_id - 2;
-    if (position < 0) position = 0;
+    shared.position = shared.contact_id - 2;
+    if (shared.position < 0) shared.position = 0;
     return PAGE_CONTACTS;
   case 0x09: case 0x0F: // TAB - move fields
     
     // Redraw old field sans cursor or selection
     textbox_remove_cursor();
     // Save any changes to the field before TABing to next field
-    af_store(shared.active_field,contact_id);
-    af_redraw(AF_NONE,active_field,0);
+    af_store(shared.active_field,shared.contact_id);
+    af_redraw(AF_NONE,shared.active_field,0);
     
-    prev_active_field = active_field;
-    if (PEEK(0xD610)==0x0F) active_field--; // shift+tab = 0x0f
-    else active_field++;
-    if (shared.active_field > AF_MAX ) active_field = 0;
-    if (shared.active_field < 0 ) active_field = AF_MAX;
+    shared.prev_active_field = shared.active_field;
+    if (PEEK(0xD610)==0x0F) shared.active_field--; // shift+tab = 0x0f
+    else shared.active_field++;
+    if (shared.active_field > AF_MAX ) shared.active_field = 0;
+    if (shared.active_field < 0 ) shared.active_field = AF_MAX;
 
     dialpad_hide_show_cursor(shared.active_field);
     
     // Now redraw what we need to
-    if (shared.active_field == AF_DIALPAD || prev_active_field == AF_DIALPAD ) {
+    if (shared.active_field == AF_DIALPAD || shared.prev_active_field == AF_DIALPAD ) {
       dialpad_draw(shared.active_field,DIALPAD_ALL);
       // Update dialer field highlighting as required
       dialpad_draw_call_state(shared.active_field);
     }
     
     // Load draft with the correct field
-    af_retrieve(shared.active_field, active_field, shared.contact_id);
+    af_retrieve(shared.active_field, shared.active_field, shared.contact_id);
     // textbox_find_cursor();
-    af_redraw(shared.active_field,active_field,0);
+    af_redraw(shared.active_field, shared.active_field,0);
     
     break;
   case 0x0d: // RETURN = send message
@@ -295,27 +295,27 @@ uint8_t fonemain_sms_thread_controller(void)
       buffers_unlock(LOCK_TEXTBOX);
       
       textbox_remove_cursor();
-      sms_send_to_contact(contact_id,buffers.textbox.draft);
+      sms_send_to_contact(shared.contact_id,buffers.textbox.draft);
       buffers_unlock(LOCK_TELEPHONY);      
       
       // Sending to a contact unmounts the thread, so we need to fix that
-      try_or_fail(mount_contact_qso(contact_id));
+      try_or_fail(mount_contact_qso(shared.contact_id));
       
       // Clear saved draft
       textbox_erase_draft();
       write_record_by_id(0,USABLE_SECTORS_PER_DISK -1, buffers.textbox.draft);
       
-      reload_contact = 1;
-      erase_draft = 1;
+      shared.reload_contact = 1;
+      shared.erase_draft = 1;
     }
     break;
   case 0x11: // down arrow
     
     // Save any changes to active field before redrawing causes it to be reloaded
     textbox_remove_cursor();
-    af_store(shared.active_field,contact_id);            
+    af_store(shared.active_field,shared.contact_id);            
     
-    if (position<-1) { redraw=1; position++; }
+    if (shared.position<-1) { shared.redraw=1; shared.position++; }
     break;
   case 0x14: // DELETE
     if (shared.active_field != AF_DIALPAD) {
@@ -334,10 +334,10 @@ uint8_t fonemain_sms_thread_controller(void)
     break;
     
   case 0x94: // SHIFT+DEL = delete last message in the thread.
-    sms_delete_message(contact_id,
+    sms_delete_message(shared.contact_id,
 		       -1 // last message in the thread
 		       );
-    redraw = 1;
+    shared.redraw = 1;
     break;
     
   case 0x93: // CLR+HOME
@@ -346,15 +346,15 @@ uint8_t fonemain_sms_thread_controller(void)
       textbox_erase_draft();
       af_store(shared.active_field, shared.contact_id);
     }
-    redraw_draft=1;      
+    shared.redraw_draft=1;      
     break;
   case 0x91: // up arrow
     
     // Save any changes to active field before redrawing causes it to be reloaded
     textbox_remove_cursor();
-    af_store(shared.active_field,contact_id);            
+    af_store(shared.active_field,shared.contact_id);            
     
-    if (first_message_displayed>1) { redraw=1; position--; }
+    if (shared.first_message_displayed>1) { shared.redraw=1; shared.position--; }
     break;
   case 0x1d: // cursor right
     if (buffers.textbox.draft_cursor_position < (buffers.textbox.draft_len-1)) {
@@ -365,7 +365,7 @@ uint8_t fonemain_sms_thread_controller(void)
       buffers.textbox.draft[buffers.textbox.draft_cursor_position+1] = CURSOR_CHAR;
       buffers.textbox.draft[buffers.textbox.draft_cursor_position] = temp;
       buffers.textbox.draft_cursor_position++;
-      redraw_draft = 1;
+      shared.redraw_draft = 1;
     }
     break;
   case 0x9d: // cursor left
@@ -377,7 +377,7 @@ uint8_t fonemain_sms_thread_controller(void)
       buffers.textbox.draft[buffers.textbox.draft_cursor_position-1] = CURSOR_CHAR;
       buffers.textbox.draft[buffers.textbox.draft_cursor_position] = temp;
       buffers.textbox.draft_cursor_position--;
-      redraw_draft = 1;
+      shared.redraw_draft = 1;
     }
     break;
   }
@@ -397,12 +397,12 @@ uint8_t fonemain_sms_thread_controller(void)
       
       save_and_redraw_active_field(shared.active_field, shared.contact_id);
       
-      redraw_draft = 1;
+      shared.redraw_draft = 1;
     }
   }
   
-  if (redraw_draft) {
-    redraw_draft = 0;
+  if (shared.redraw_draft) {
+    shared.redraw_draft = 0;
 
     // For SMS messages, we need to know if the line count has changed
     calc_break_points(buffers.textbox.draft,
@@ -411,18 +411,17 @@ uint8_t fonemain_sms_thread_controller(void)
 		      RENDER_COLUMNS - 1 - RIGHT_AREA_START_GL);
 
     // Only redraw the message draft if it hasn't changed how many lines it uses
-    if (buffers.textbox.line_count == old_draft_line_count ) {
-      af_redraw(shared.active_field,active_field,0);
+    if (buffers.textbox.line_count == shared.old_draft_line_count ) {
+      af_redraw(shared.active_field,shared.active_field,0);
     } else {
-      redraw = 1;
+      shared.redraw = 1;
     }
     
-    old_draft_line_count = buffers.textbox.line_count;      
+    shared.old_draft_line_count = buffers.textbox.line_count;      
     
   }
   // Acknowledge key press
   POKE(0xD610,0);
-#endif
   
   return PAGE_SMS_THREAD;
 }
