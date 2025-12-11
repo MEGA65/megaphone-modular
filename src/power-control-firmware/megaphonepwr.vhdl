@@ -41,10 +41,31 @@ architecture rtl of megaphonepwr is
     signal pwr_rx_ack : std_logic := '0';
     signal pwr_rx_ready : std_logic;
 
+    -- Default to 2Mbps for cellular UART
+    signal cel_uart_div : unsigned(23 downto 0) := to_unsigned(3,24);
+    
+    signal cel_tx_data : unsigned(7 downto 0) := x"00";     
+    signal cel_tx_trigger : std_logic := '0';
+    signal cel_tx_ready : std_logic := '0';
 
+    signal cel_rx_data : unsigned(7 downto 0);     
+    signal cel_rx_ack : std_logic := '0';
+    signal cel_rx_ready : std_logic;
+
+    -- Default to 2Mbps for cellular UART
+    signal bypass_uart_div : unsigned(23 downto 0) := to_unsigned(3,24);
+    
+    signal bypass_tx_data : unsigned(7 downto 0) := x"00";     
+    signal bypass_tx_trigger : std_logic := '0';
+    signal bypass_tx_ready : std_logic := '0';
+
+    signal bypass_rx_data : unsigned(7 downto 0);     
+    signal bypass_rx_ack : std_logic := '0';
+    signal bypass_rx_ready : std_logic;    
     
 begin
-    
+
+  -- Primary power management interface that links to the main FPGA
     management_uart_tx: entity work.uart_tx_ctrl
       port map (
         send    => pwr_tx_trigger,
@@ -61,6 +82,44 @@ begin
         data_ready => pwr_rx_ready,
         data_acknowledge => pwr_rx_ack,
         uart_rx => usb_rx
+        );
+
+    -- UART that connects to the cellular modem
+    cellular_uart_tx: entity work.uart_tx_ctrl
+      port map (
+        send    => cel_tx_trigger,
+        BIT_TMR_MAX => cel_uart_div,
+        clk     => CLK,
+        data    => cel_tx_data,
+        ready   => cel_tx_ready,
+        uart_tx => B5);
+    cellular_uart_rx: entity work.uart_rx
+      port map (
+        clk => clk,
+        bit_rate_divisor => cel_uart_div,
+        data => cel_rx_data,
+        data_ready => cel_rx_ready,
+        data_acknowledge => cel_rx_ack,
+        uart_rx => E3
+        );
+
+    -- UART pass through for main FPGA to cellular modem
+    bypass_uart_tx: entity work.uart_tx_ctrl
+      port map (
+        send    => bypass_tx_trigger,
+        BIT_TMR_MAX => bypass_uart_div,
+        clk     => CLK,
+        data    => bypass_tx_data,
+        ready   => bypass_tx_ready,
+        uart_tx => E1);
+    bypass_uart_rx: entity work.uart_rx
+      port map (
+        clk => clk,
+        bit_rate_divisor => bypass_uart_div,
+        data => bypass_rx_data,
+        data_ready => bypass_rx_ready,
+        data_acknowledge => bypass_rx_ack,
+        uart_rx => C2
         );
 
     
