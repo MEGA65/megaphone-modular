@@ -37,12 +37,15 @@ architecture rtl of megaphonepwr is
     signal pwr_tx_trigger : std_logic := '0';
     signal pwr_tx_ready : std_logic := '0';
 
-    signal pwr_uart_tx : std_logic := '0';
-    signal pwr_uart_rx : std_logic;
+    signal pwr_rx_data : unsigned(7 downto 0);     
+    signal pwr_rx_ack : std_logic := '0';
+    signal pwr_rx_ready : std_logic;
+
+
     
 begin
     
-    management_uart: entity work.uart_tx_ctrl
+    management_uart_tx: entity work.uart_tx_ctrl
       port map (
         send    => pwr_tx_trigger,
         BIT_TMR_MAX => to_unsigned(3,24),  -- 12MHz / ( 3x 2) = 2Mbps
@@ -50,7 +53,17 @@ begin
         data    => pwr_tx_data,
         ready   => pwr_tx_ready,
         uart_tx => USB_TX); -- Also tied to pin B3
+    management_uart_rx: entity work.uart_rx
+      port map (
+        clk => clk,
+        bit_rate_divisor => to_unsigned(3,24), -- 12MHz / ( 3x2) = 2Mbps
+        data => pwr_rx_data,
+        data_ready => pwr_rx_ready,
+        data_acknowledge => pwr_rx_ack,
+        uart_rx => usb_rx
+        );
 
+    
     process(clk)
     begin
         if rising_edge(clk) then

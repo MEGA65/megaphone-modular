@@ -41,17 +41,7 @@ begin  -- behavioural
     -- purpose: based on last 8 samples of uart_rx, decide if the average signal is a 1 or a 0
   begin
     if rising_edge(CLK) then
-    
-      if false then
-      if rx_state /= Idle then
-        report "UART" & name &": rx_state = " & uart_rx_state'image(rx_state)
-          & ", bit_timer=$" & to_hstring(bit_timer)
-          & ", bit_position="
-          & integer'image(bit_position)
-          & ", bit_rate_divisor=$" & to_hstring(bit_rate_divisor);
-      end if;
-      end if;
-      
+          
       uart_rx_debounced <= uart_rx_debounced(2 downto 0) & uart_rx;
       if uart_rx_debounced = x"0" and uart_rx_bit = '1' then
         uart_rx_bit <= '0';
@@ -74,7 +64,7 @@ begin  -- behavioural
       -- XXX Should debounce this!
       if rx_state = Idle and uart_rx_bit='0' and rx_gone_high = '1' then
         report "UART"&name&": start receiving byte (divider = $"
-          & to_hstring(bit_rate_divisor) & ")" severity note;
+          & to_hexstring(bit_rate_divisor) & ")" severity note;
         -- Start receiving next byte
 --        report "UART"&name&": zeroing bit_timer";
         bit_timer <= (others => '0');
@@ -102,7 +92,7 @@ begin  -- behavioural
           rx_state <= WaitingForNextBit;
         else
           -- This was the last bit
-          report "UART"&name&": Finished receiving byte. Value = $" & to_hstring(rx_data(8 downto 1)) severity note;
+          report "UART"&name&": Finished receiving byte. Value = $" & to_hexstring(rx_data(8 downto 1)) severity note;
           data <= unsigned(rx_data(8 downto 1));
           data_ready <= '1';
           data_ready_internal <= '1';
