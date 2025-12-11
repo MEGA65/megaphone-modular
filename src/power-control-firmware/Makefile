@@ -6,7 +6,7 @@ PCF = megaphonepwr.pcf
 all: $(TOP).bin
 
 $(TOP).json: $(TOP).vhdl
-	yosys -m ghdl -p "ghdl --std=08 -fexplicit -g $(TOP).vhdl uart_rx.vhdl uart_tx_ctrl.vhdl debugtools.vhdl -e $(TOP); synth_ice40 -json $(TOP).json -top $(TOP)"
+	yosys -m ghdl -p "ghdl --std=08 -fexplicit -g $(TOP).vhdl uart_rx.vhdl uart_tx_ctrl.vhdl ice_bram.vhdl debugtools.vhdl -e $(TOP); synth_ice40 -json $(TOP).json -top $(TOP)"
 
 
 $(TOP).asc: $(TOP).json $(PCF)
