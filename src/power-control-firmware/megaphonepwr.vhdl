@@ -32,6 +32,8 @@ end entity;
 
 architecture rtl of megaphonepwr is
 
+  constant UART_SPEED_TIMER : integer := (12_000_000 / 2) / 115_200;
+  
   signal pwr_tx_data : unsigned(7 downto 0) := x"00";     
   signal pwr_tx_trigger : std_logic := '0';
   signal pwr_tx_ready : std_logic := '0';
@@ -103,15 +105,15 @@ begin
   management_uart_tx: entity work.uart_tx_ctrl
     port map (
       send    => pwr_tx_trigger,
-      BIT_TMR_MAX => to_unsigned(3,24),  -- 12MHz / ( 3x 2) = 2Mbps
+      BIT_TMR_MAX => to_unsigned(UART_SPEED_TIMER,24),
       clk     => CLK,
       data    => pwr_tx_data,
       ready   => pwr_tx_ready,
-      uart_tx => USB_TX);
+      uart_tx => USB_TX);  
   management_uart_rx: entity work.uart_rx
     port map (
       clk => clk,
-      bit_rate_divisor => to_unsigned(3,24), -- 12MHz / ( 3x2) = 2Mbps
+      bit_rate_divisor => to_unsigned(UART_SPEED_TIMER,24),
       data => pwr_rx_data,
       data_ready => pwr_rx_ready,
       data_acknowledge => pwr_rx_ack,
