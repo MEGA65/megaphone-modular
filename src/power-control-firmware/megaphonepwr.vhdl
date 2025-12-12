@@ -73,7 +73,7 @@ architecture rtl of megaphonepwr is
   signal cel_log_waddr : unsigned(8 downto 0) := to_unsigned(0,9);
   signal cel_log_wdata : std_logic_vector(7 downto 0) := (others => '0');
   signal cel_log_raddr : unsigned(8 downto 0) := to_unsigned(0,9);
-  signal cel_log_rdata : unsigned(7 downto 0);
+  signal cel_log_rdata : std_logic_vector(7 downto 0);
 
 begin
 

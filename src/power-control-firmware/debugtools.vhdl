@@ -13,6 +13,7 @@ package debugtools is
     function to_hexstring(sv: unsigned) return string;
     function to_hexstring(sv: signed) return string;
     function safe_to_integer(sv : unsigned) return integer;
+    function clog2(n : natural) return natural;
     procedure HWRITE(L:inout LINE; VALUE:in BIT_VECTOR;
     JUSTIFIED:in SIDE := RIGHT; FIELD:in WIDTH := 0);
 
@@ -20,6 +21,20 @@ end debugtools;
 
 package body debugtools is
 
+  --------------------------------------------------------------------
+  -- Compute ceil(log2(n))
+  --------------------------------------------------------------------
+  function clog2(n : natural) return natural is
+    variable i : natural := 0;
+    variable v : natural := 1;
+  begin
+    while v < n loop
+      v := v * 2;
+      i := i + 1;
+    end loop;
+    return i;
+  end function;
+  
       procedure HWRITE(L:inout LINE; VALUE:in BIT_VECTOR;
     JUSTIFIED:in SIDE := RIGHT; FIELD:in WIDTH := 0) is      
       variable quad: bit_vector(0 to 3);
