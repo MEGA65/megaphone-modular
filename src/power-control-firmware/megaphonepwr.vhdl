@@ -151,6 +151,10 @@ begin
   process(clk)
   begin
     if rising_edge(clk) then
+
+      -- Don't write to BRAM by default
+      cel_log_we <= '0';
+
       -- Check for soft power button
       if B4 = '0' then
         if power_button_hold_counter /= (12_000_000 * 2) then
@@ -181,7 +185,12 @@ begin
         -- Log output from the modem if required.
         -- This continues until the end of a line is encountered
         if log_cel = '1' then
-          
+          cel_log_waddr <= cel_log_waddr + 1;
+          cel_log_we <= '1';
+          cel_log_wdata <= std_logic_vector(cel_rx_data);
+          if cel_rx_data = x"0d" or cel_rx_data = x"0a" then
+            log_cel <= '0';
+          end if;
         end if;
         
         -- Also consider what to do about what the cellular modem has sent.
@@ -240,8 +249,16 @@ begin
               LED <= '1';
               -- And begin logging what the cellular modem has to say, so that
               -- the main FPGA can interrogate us for it once they have powered
-              -- up.
+              -- up. (note that it will skip the +QIND from each line logged, so
+              -- we put a 'Q' into the log to mark the cause of logging.
+
+              -- Log until the next CR or LF
               log_cel <= '1';
+              -- Insert that Q into the log
+              cel_log_waddr <= cel_log_waddr + 1;
+              cel_log_we <= '1';
+              cel_log_wdata <= x"51"; -- ASCII 'Q'              
+              
             end if;
             qind_rx_state <= 0;
           when others => null;
