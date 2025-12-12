@@ -1,0 +1,22 @@
+MEGAphone power management System
+
+        ? - Show this message
+	P - Playback cellular modem event log
+	X - Clear cellular modem event log
+      0-9 - Power circuit (drive enable pin high)
+shift 0-9 - De-power circuit (pull enable pin low)
+
+Playback ends with NUL (0x00) character.
+Power status indication at 0.5Hz:
+     bit 7 : 1
+     bit 6 : set if cellular modem events logged
+  bits 5-0 : status of first six power circuits 
+
+VER:1
+MINOR:0
+CIRCUITS:4
+0:Main FPGA,LCD
+1:Auxilliary device 1
+2:Auxilliary device 2
+3:Auxilliary device 3
+END

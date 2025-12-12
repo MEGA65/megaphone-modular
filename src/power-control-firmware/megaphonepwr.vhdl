@@ -73,8 +73,12 @@ architecture rtl of megaphonepwr is
 
   constant CEL_LOG_BITS : integer := 9;
   constant CEL_LOG_MAX_ADDR : unsigned((CEL_LOG_BITS-1) downto 0) := "111111110";
+
+  constant CFG_BITS : integer := 10;
+  constant CFG_MAX_ADDR : unsigned((CFG_BITS-1) downto 0) := "1111111110";
   
   signal log_cel : std_logic := '0';
+  signal cel_log_notempty : std_logic;
   signal cel_log_playback : std_logic := '0';
   signal cel_log_we : std_logic := '0';
   signal cel_log_waddr : unsigned((CEL_LOG_BITS-1) downto 0) := to_unsigned(0,CEL_LOG_BITS);
@@ -82,9 +86,13 @@ architecture rtl of megaphonepwr is
   signal cel_log_raddr : unsigned((CEL_LOG_BITS-1) downto 0) := to_unsigned(0,CEL_LOG_BITS);
   signal cel_log_rdata : std_logic_vector(7 downto 0);
 
+  signal cfg_raddr : unsigned((CFG_BITS-1) downto 0) := to_unsigned(0,CFG_BITS);
+  signal cfg_rdata : std_logic_vector(7 downto 0);
+  
   signal idle_counter : integer range 0 to (12_000_000 * 2) := 0;
 
   signal report_power_status : std_logic := '0';   
+  signal report_configuration : std_logic := '1';   
   
 begin
 
@@ -100,6 +108,18 @@ begin
       r_addr => cel_log_raddr,
       r_data => cel_log_rdata
       );
+
+  cfg_ram: entity work.ice_bram_cfg
+    port map (
+      clk_w => clk,
+      we => '0',
+      w_addr => (others => '0'),
+      w_data => (others => '0'),
+      clk_r => clk,
+      r_addr => cfg_raddr,
+      r_data => cfg_rdata
+      );
+
   
   -- Primary power management interface that links to the main FPGA
   management_uart_tx: entity work.uart_tx_ctrl
@@ -163,6 +183,12 @@ begin
   begin
     if rising_edge(clk) then
 
+      if cel_log_waddr > 1 then
+        cel_log_notempty <= '1';
+      else
+        cel_log_notempty <= '0';
+      end if;
+      
       pwr_tx_trigger <= '0';
       cel_tx_trigger <= '0';
       bypass_tx_trigger <= '0';      
@@ -173,13 +199,25 @@ begin
       
       report_power_status <= '0';
 
+      if report_configuration='1' then
+        if pwr_tx_ready = '1' then
+          pwr_tx_data <= unsigned(cfg_rdata);
+          pwr_tx_trigger <= '1';
+          if (cfg_rdata = x"00") then
+            report_configuration <= '0';
+          end if;
+          cfg_raddr <= cfg_raddr + 1;
+        end if;
+      end if;
+      
       if report_power_status = '1' then
         if pwr_tx_ready = '1' then
           pwr_tx_data(0) <= LED;
           pwr_tx_data(1) <= C6;
           pwr_tx_data(2) <= C5;
           pwr_tx_data(3) <= E2;
-          pwr_tx_data(6 downto 4) <= (others => '0');
+          pwr_tx_data(5 downto 4) <= (others => '0');
+          pwr_tx_data(6) <= cel_log_notempty;
           pwr_tx_data(7) <= '1';
           pwr_tx_trigger <= '1';
         else
@@ -200,10 +238,14 @@ begin
       -- Check for soft power button
       if B4 = '0' then
         if power_button_hold_counter /= (12_000_000 * 2) then
-          LED <= '1';
           power_button_hold_counter <= power_button_hold_counter + 1;
-        else
-          LED <= '0';
+          if power_button_hold_counter = 1 then
+            LED <= '1';
+            report_power_status <= '1';
+          elsif power_button_hold_counter = (12_000_000 * 2 - 2) then
+            LED <= '0';
+            report_power_status <= '1';
+          end if;
         end if;
       else
         power_button_hold_counter <= 0;
@@ -267,6 +309,7 @@ begin
             if ring_rx_state = 3 then
               -- Turn on power to main FPGA
               LED <= '1';
+              report_power_status <= '1';
             end if;
             ring_rx_state <= 0;
           when others => null;
@@ -297,6 +340,7 @@ begin
             if qind_rx_state = 4 then
               -- Turn on power to main FPGA
               LED <= '1';
+              report_power_status <= '1';
               -- And begin logging what the cellular modem has to say, so that
               -- the main FPGA can interrogate us for it once they have powered
               -- up. (note that it will skip the +QIND from each line logged, so
@@ -341,14 +385,14 @@ begin
             cel_log_waddr <= to_unsigned(0,CEL_LOG_BITS);
             cel_log_playback <= '0';
           when x"3f" => -- '?' Report power state
-            report_power_status <= '1';
+            report_configuration <= '1';
           when x"30" | x"20" =>  -- '0'/SPACE = control power supply 0 (LED / MAIN FPGA)
             LED <= pwr_rx_data(4);
             report_power_status <= '1';
           when x"31" | x"21" =>  -- '1'/'!' = control power supply 1
             C6 <= pwr_rx_data(4);
             report_power_status <= '1';
-          when x"32" | x"22" =>  -- '2'/'"' = control power supply 2
+          when x"32" | x"22" | x"40" =>  -- '2'/'"'(or '@' for US keyboards) = control power supply 2
             C5 <= pwr_rx_data(4);
             report_power_status <= '1';
           when x"33" | x"23" =>  -- '3'/'#' = control power supply 3
