@@ -39,6 +39,7 @@ architecture rtl of megaphonepwr is
   signal pwr_rx_data : unsigned(7 downto 0);     
   signal pwr_rx_ack : std_logic := '0';
   signal pwr_rx_ready : std_logic;
+  signal pwr_rx_ready_last : std_logic := '0';
 
   -- Default to 2Mbps for cellular UART
   signal cel_uart_div : unsigned(23 downto 0) := to_unsigned(3,24);
@@ -69,6 +70,7 @@ architecture rtl of megaphonepwr is
   signal qind_rx_state : integer range 0 to 5 := 0;
 
   signal log_cel : std_logic := '0';
+  signal cel_log_playback : std_logic := '0';
   signal cel_log_we : std_logic := '0';
   signal cel_log_waddr : unsigned(8 downto 0) := to_unsigned(0,9);
   signal cel_log_wdata : std_logic_vector(7 downto 0) := (others => '0');
@@ -185,9 +187,14 @@ begin
         -- Log output from the modem if required.
         -- This continues until the end of a line is encountered
         if log_cel = '1' then
-          cel_log_waddr <= cel_log_waddr + 1;
-          cel_log_we <= '1';
-          cel_log_wdata <= std_logic_vector(cel_rx_data);
+          -- We don't use the last byte in the cellular data log BRAM,
+          -- as we need that address free to confirm we have played back to
+          -- the end without looping back around.
+          if cel_log_waddr /= "111111110" then
+            cel_log_waddr <= cel_log_waddr + 1;
+            cel_log_we <= '1';
+            cel_log_wdata <= std_logic_vector(cel_rx_data);
+          end if;
           if cel_rx_data = x"0d" or cel_rx_data = x"0a" then
             log_cel <= '0';
           end if;
@@ -266,6 +273,45 @@ begin
         
       else
         bypass_tx_trigger <= '0';
+      end if;
+
+      ------------------------------------------------------------
+      -- Monitor UART from FPGA for commands
+      ------------------------------------------------------------
+      pwr_rx_ready_last <= pwr_rx_ready;
+      if pwr_rx_ready_last /= pwr_rx_ready then
+        case pwr_rx_data is
+          when x"50" => -- 'P' -- Play back logged cellular data.
+            if cel_log_waddr /= to_unsigned(0,9) then              
+              cel_log_playback <= '1';
+              cel_log_raddr <= to_unsigned(0,9);
+            else
+              -- Nothing in the log, so just indicate that with a NUL byte
+              pwr_tx_data <= x"00";
+              pwr_tx_trigger <= '1';
+            end if;                
+          when x"58" => -- 'X' Expunge cellular data log
+            cel_log_waddr <= to_unsigned(0,9);
+            cel_log_playback <= '0';
+            
+          when others =>
+            null;
+        end case;
+      end if;
+      if pwr_tx_ready = '1' then
+        if cel_log_playback = '1' then
+          pwr_tx_data <= unsigned(cel_log_rdata);
+          pwr_tx_trigger <= '1';
+          cel_log_raddr <= cel_log_raddr + 1;
+          -- If we reached the end of the log, then stop playing back.
+          if cel_log_raddr = cel_log_waddr then
+            pwr_tx_data <= x"00";
+            cel_log_playback <= '0';
+          end if;
+        else
+          -- See if we need to send anything else
+          null;
+        end if;
       end if;
     end if;
   end process;
