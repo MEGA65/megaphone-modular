@@ -305,7 +305,22 @@ begin
           when x"58" => -- 'X' Expunge cellular data log
             cel_log_waddr <= to_unsigned(0,CEL_LOG_BITS);
             cel_log_playback <= '0';
-            
+          when x"3f" => -- '?' Report power state
+            pwr_tx_data(0) <= LED;
+            pwr_tx_data(1) <= C6;
+            pwr_tx_data(2) <= C5;
+            pwr_tx_data(3) <= E2;
+            pwr_tx_data(6 downto 4) <= (others => '0');
+            pwr_tx_data(7) <= '1';
+            pwr_tx_trigger <= '1';
+          when x"30" | x"20" =>  -- '0'/SPACE = control power supply 0 (LED / MAIN FPGA)
+            LED <= pwr_rx_data(5);
+          when x"31" | x"21" =>  -- '1'/'!' = control power supply 1
+            C6 <= pwr_rx_data(5);
+          when x"32" | x"22" =>  -- '2'/'"' = control power supply 2
+            C5 <= pwr_rx_data(5);
+          when x"33" | x"23" =>  -- '3'/'#' = control power supply 3
+            E2 <= pwr_rx_data(5);
           when others =>
             null;
         end case;
