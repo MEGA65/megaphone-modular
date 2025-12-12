@@ -7,6 +7,7 @@ all: $(TOP).bin
 
 $(TOP).json: $(TOP).vhdl
 	yosys -m ghdl -p "ghdl --std=08 -fexplicit -g $(TOP).vhdl uart_rx.vhdl uart_tx_ctrl.vhdl ice_bram.vhdl debugtools.vhdl -e $(TOP); synth_ice40 -json $(TOP).json -top $(TOP)"
+	nextpnr-ice40 --$(DEVICE) --package $(PACKAGE) --pcf $(PCF) --json $(TOP).json --asc $(TOP).asc --log $(TOP).nextpnr.log
 
 
 $(TOP).asc: $(TOP).json $(PCF)

@@ -80,6 +80,10 @@ architecture rtl of megaphonepwr is
   signal cel_log_raddr : unsigned((CEL_LOG_BITS-1) downto 0) := to_unsigned(0,CEL_LOG_BITS);
   signal cel_log_rdata : std_logic_vector(7 downto 0);
 
+  signal idle_counter : integer range 0 to (12_000_000 * 2) := 0;
+
+  signal report_power_status : std_logic := '0';   
+  
 begin
 
   -- BRAM for buffering messages from the cellular modem so that the main FPGA
@@ -103,7 +107,7 @@ begin
       clk     => CLK,
       data    => pwr_tx_data,
       ready   => pwr_tx_ready,
-      uart_tx => USB_TX); -- Also tied to pin B3
+      uart_tx => USB_TX);
   management_uart_rx: entity work.uart_rx
     port map (
       clk => clk,
@@ -157,6 +161,29 @@ begin
   begin
     if rising_edge(clk) then
 
+      report_power_status <= '0';
+
+      if report_power_status = '1' then
+        if pwr_tx_ready = '1' then
+          pwr_tx_data(0) <= LED;
+          pwr_tx_data(1) <= C6;
+          pwr_tx_data(2) <= C5;
+          pwr_tx_data(3) <= E2;
+          pwr_tx_data(6 downto 4) <= (others => '0');
+          pwr_tx_data(7) <= '1';
+          pwr_tx_trigger <= '1';
+        else
+          report_power_status <= '1';
+        end if;
+      end if;
+      
+      if idle_counter /= (12_000_000 * 2 - 1) then
+        idle_counter <= idle_counter + 1;
+      else
+        idle_counter <= 0;
+        report_power_status <= '1';
+      end if;
+      
       pwr_rx_ack <= '0';
       bypass_rx_ack <= '0';
       cel_rx_ack <= '0';
@@ -292,6 +319,8 @@ begin
       if pwr_rx_ready_last='0' and pwr_rx_ready='1' then
         pwr_rx_ack <= '1';
 
+        idle_counter <= 0;
+        
         case pwr_rx_data is
           when x"50" => -- 'P' -- Play back logged cellular data.
             if cel_log_waddr /= to_unsigned(0,CEL_LOG_BITS) then              
@@ -306,13 +335,7 @@ begin
             cel_log_waddr <= to_unsigned(0,CEL_LOG_BITS);
             cel_log_playback <= '0';
           when x"3f" => -- '?' Report power state
-            pwr_tx_data(0) <= LED;
-            pwr_tx_data(1) <= C6;
-            pwr_tx_data(2) <= C5;
-            pwr_tx_data(3) <= E2;
-            pwr_tx_data(6 downto 4) <= (others => '0');
-            pwr_tx_data(7) <= '1';
-            pwr_tx_trigger <= '1';
+            report_power_status <= '1';
           when x"30" | x"20" =>  -- '0'/SPACE = control power supply 0 (LED / MAIN FPGA)
             LED <= pwr_rx_data(5);
           when x"31" | x"21" =>  -- '1'/'!' = control power supply 1
