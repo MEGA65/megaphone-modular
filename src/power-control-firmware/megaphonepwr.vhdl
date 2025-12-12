@@ -23,16 +23,16 @@ entity megaphonepwr is
     B4 : in std_logic;    -- Power button wake pin
     
     -- Power control pins for four subsystems
-    LED : out std_logic;  -- Also B6, used to control main FPGA power
-    C6 : out std_logic;   -- Sub-system C6 power enable
-    C5 : out std_logic;   -- Sub-system C5 power enable
-    E2 : out std_logic   -- Sub-system E2 power enable
+    LED : out std_logic := '1';  -- Also B6, used to control main FPGA power
+    C6 : out std_logic := '0';   -- Sub-system C6 power enable
+    C5 : out std_logic := '0';   -- Sub-system C5 power enable
+    E2 : out std_logic := '0'   -- Sub-system E2 power enable
     );
 end entity;
 
 architecture rtl of megaphonepwr is
 
-  constant UART_SPEED_TIMER : integer := (12_000_000 / 2) / 115_200;
+  constant UART_SPEED_TIMER : integer := (12_000_000 / 1) / 115_200;
   
   signal pwr_tx_data : unsigned(7 downto 0) := x"00";     
   signal pwr_tx_trigger : std_logic := '0';
@@ -163,6 +163,14 @@ begin
   begin
     if rising_edge(clk) then
 
+      pwr_tx_trigger <= '0';
+      cel_tx_trigger <= '0';
+      bypass_tx_trigger <= '0';      
+      
+      pwr_rx_ack <= '0';
+      bypass_rx_ack <= '0';
+      cel_rx_ack <= '0';
+      
       report_power_status <= '0';
 
       if report_power_status = '1' then
@@ -185,10 +193,6 @@ begin
         idle_counter <= 0;
         report_power_status <= '1';
       end if;
-      
-      pwr_rx_ack <= '0';
-      bypass_rx_ack <= '0';
-      cel_rx_ack <= '0';
       
       -- Don't write to BRAM by default
       cel_log_we <= '0';
@@ -339,13 +343,17 @@ begin
           when x"3f" => -- '?' Report power state
             report_power_status <= '1';
           when x"30" | x"20" =>  -- '0'/SPACE = control power supply 0 (LED / MAIN FPGA)
-            LED <= pwr_rx_data(5);
+            LED <= pwr_rx_data(4);
+            report_power_status <= '1';
           when x"31" | x"21" =>  -- '1'/'!' = control power supply 1
-            C6 <= pwr_rx_data(5);
+            C6 <= pwr_rx_data(4);
+            report_power_status <= '1';
           when x"32" | x"22" =>  -- '2'/'"' = control power supply 2
-            C5 <= pwr_rx_data(5);
+            C5 <= pwr_rx_data(4);
+            report_power_status <= '1';
           when x"33" | x"23" =>  -- '3'/'#' = control power supply 3
-            E2 <= pwr_rx_data(5);
+            E2 <= pwr_rx_data(4);
+            report_power_status <= '1';
           when others =>
             null;
         end case;
