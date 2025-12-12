@@ -69,12 +69,15 @@ architecture rtl of megaphonepwr is
   signal ring_rx_state : integer range 0 to 4 := 0;
   signal qind_rx_state : integer range 0 to 5 := 0;
 
+  constant CEL_LOG_BITS : integer := 9;
+  constant CEL_LOG_MAX_ADDR : unsigned((CEL_LOG_BITS-1) downto 0) := "111111110";
+  
   signal log_cel : std_logic := '0';
   signal cel_log_playback : std_logic := '0';
   signal cel_log_we : std_logic := '0';
-  signal cel_log_waddr : unsigned(8 downto 0) := to_unsigned(0,9);
+  signal cel_log_waddr : unsigned((CEL_LOG_BITS-1) downto 0) := to_unsigned(0,CEL_LOG_BITS);
   signal cel_log_wdata : std_logic_vector(7 downto 0) := (others => '0');
-  signal cel_log_raddr : unsigned(8 downto 0) := to_unsigned(0,9);
+  signal cel_log_raddr : unsigned((CEL_LOG_BITS-1) downto 0) := to_unsigned(0,CEL_LOG_BITS);
   signal cel_log_rdata : std_logic_vector(7 downto 0);
 
 begin
@@ -154,6 +157,10 @@ begin
   begin
     if rising_edge(clk) then
 
+      pwr_rx_ack <= '0';
+      bypass_rx_ack <= '0';
+      cel_rx_ack <= '0';
+      
       -- Don't write to BRAM by default
       cel_log_we <= '0';
 
@@ -174,6 +181,7 @@ begin
       -- (which is enforced above)
       bypass_rx_ready_last <= bypass_rx_ready;
       if bypass_rx_ready = '1' and bypass_rx_ready_last='0' then
+        bypass_rx_ack <= '1';
         cel_tx_trigger <= '1';
         cel_tx_data <= bypass_rx_data;
       else
@@ -181,6 +189,8 @@ begin
       end if;
       cel_rx_ready_last <= cel_rx_ready;
       if cel_rx_ready = '1' and cel_rx_ready_last='0' then
+        cel_rx_ack <= '1';
+
         bypass_tx_trigger <= '1';
         bypass_tx_data <= cel_rx_data;
 
@@ -190,7 +200,7 @@ begin
           -- We don't use the last byte in the cellular data log BRAM,
           -- as we need that address free to confirm we have played back to
           -- the end without looping back around.
-          if cel_log_waddr /= "111111110" then
+          if cel_log_waddr /= CEL_LOG_MAX_ADDR then
             cel_log_waddr <= cel_log_waddr + 1;
             cel_log_we <= '1';
             cel_log_wdata <= std_logic_vector(cel_rx_data);
@@ -279,19 +289,21 @@ begin
       -- Monitor UART from FPGA for commands
       ------------------------------------------------------------
       pwr_rx_ready_last <= pwr_rx_ready;
-      if pwr_rx_ready_last /= pwr_rx_ready then
+      if pwr_rx_ready_last='0' and pwr_rx_ready='1' then
+        pwr_rx_ack <= '1';
+
         case pwr_rx_data is
           when x"50" => -- 'P' -- Play back logged cellular data.
-            if cel_log_waddr /= to_unsigned(0,9) then              
+            if cel_log_waddr /= to_unsigned(0,CEL_LOG_BITS) then              
               cel_log_playback <= '1';
-              cel_log_raddr <= to_unsigned(0,9);
+              cel_log_raddr <= to_unsigned(0,CEL_LOG_BITS);
             else
               -- Nothing in the log, so just indicate that with a NUL byte
               pwr_tx_data <= x"00";
               pwr_tx_trigger <= '1';
             end if;                
           when x"58" => -- 'X' Expunge cellular data log
-            cel_log_waddr <= to_unsigned(0,9);
+            cel_log_waddr <= to_unsigned(0,CEL_LOG_BITS);
             cel_log_playback <= '0';
             
           when others =>
