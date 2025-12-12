@@ -200,18 +200,18 @@ begin
       report_power_status <= '0';
 
       if report_configuration='1' then
-        if pwr_tx_ready = '1' then
+        if pwr_tx_ready = '1' and pwr_tx_trigger='0' then
           pwr_tx_data <= unsigned(cfg_rdata);
           pwr_tx_trigger <= '1';
           if (cfg_rdata = x"00") then
             report_configuration <= '0';
+            cfg_raddr <= to_unsigned(0,CFG_BITS);
+          else
+            cfg_raddr <= cfg_raddr + 1;
           end if;
-          cfg_raddr <= cfg_raddr + 1;
         end if;
-      end if;
-      
-      if report_power_status = '1' then
-        if pwr_tx_ready = '1' then
+      elsif report_power_status = '1' then
+        if pwr_tx_ready = '1' and pwr_tx_trigger='0' then
           pwr_tx_data(0) <= LED;
           pwr_tx_data(1) <= C6;
           pwr_tx_data(2) <= C5;
@@ -223,8 +223,23 @@ begin
         else
           report_power_status <= '1';
         end if;
+      elsif cel_log_playback = '1' then
+        if pwr_tx_ready = '1' and pwr_tx_trigger='0' then
+          pwr_tx_data <= unsigned(cel_log_rdata);
+          pwr_tx_trigger <= '1';
+          cel_log_raddr <= cel_log_raddr + 1;
+          -- If we reached the end of the log, then stop playing back.
+          if cel_log_raddr = cel_log_waddr then
+            pwr_tx_data <= x"00";
+            cel_log_playback <= '0';
+            cel_log_raddr <= to_unsigned(0,CEL_LOG_BITS);
+          end if;
+        else
+          -- See if we need to send anything else
+          null;
+        end if;
       end if;
-      
+            
       if idle_counter /= (12_000_000 * 2 - 1) then
         idle_counter <= idle_counter + 1;
       else
@@ -384,9 +399,12 @@ begin
           when x"58" => -- 'X' Expunge cellular data log
             cel_log_waddr <= to_unsigned(0,CEL_LOG_BITS);
             cel_log_playback <= '0';
-          when x"3f" => -- '?' Report power state
+          when x"2e" => -- '.' Report power state
+            report_power_status <= '1';
+          when x"3f" => -- '?' Report configuration
             report_configuration <= '1';
-          when x"30" | x"20" =>  -- '0'/SPACE = control power supply 0 (LED / MAIN FPGA)
+            cfg_raddr <= to_unsigned(0,CFG_BITS);
+          when x"30" | x"20" | x"28" | x"29" =>  -- '0'/SPACE (or '(' or ')' for shift-0 on most keyboards = control power supply 0 (LED / MAIN FPGA)
             LED <= pwr_rx_data(4);
             report_power_status <= '1';
           when x"31" | x"21" =>  -- '1'/'!' = control power supply 1
@@ -401,21 +419,6 @@ begin
           when others =>
             null;
         end case;
-      end if;
-      if pwr_tx_ready = '1' then
-        if cel_log_playback = '1' then
-          pwr_tx_data <= unsigned(cel_log_rdata);
-          pwr_tx_trigger <= '1';
-          cel_log_raddr <= cel_log_raddr + 1;
-          -- If we reached the end of the log, then stop playing back.
-          if cel_log_raddr = cel_log_waddr then
-            pwr_tx_data <= x"00";
-            cel_log_playback <= '0';
-          end if;
-        else
-          -- See if we need to send anything else
-          null;
-        end if;
       end if;
     end if;
   end process;

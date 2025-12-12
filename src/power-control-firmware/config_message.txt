@@ -1,22 +1,30 @@
-MEGAphone power management System
 
+
+MEGAphone power management System
+---------------------------------
+https://github.com/MEGA65/megaphone-modular/tree/main/src/power-control-firmware
+Produced with the support of the NLnet Foundation (nlnet.nl)
+
+Commands:
         ? - Show this message
+	. - Report current status
 	P - Playback cellular modem event log
 	X - Clear cellular modem event log
       0-9 - Power circuit (drive enable pin high)
 shift 0-9 - De-power circuit (pull enable pin low)
 
 Playback ends with NUL (0x00) character.
-Power status indication at 0.5Hz:
-     bit 7 : 1
-     bit 6 : set if cellular modem events logged
-  bits 5-0 : status of first six power circuits 
+
+Status indication at 0.5Hz (or as requested via '.'):
+     bit 7 : Always set to 1 (i.e., status bytes are 0x80 -- 0xff)
+     bit 6 : Set if cellular modem events logged
+  bits 5-0 : Status of first six power circuits 
 
 VER:1
 MINOR:0
 CIRCUITS:4
-0:Main FPGA,LCD
-1:Auxilliary device 1
-2:Auxilliary device 2
-3:Auxilliary device 3
+0:30:20:Main FPGA,LCD
+1:31:21:Auxilliary device 1
+2:32:22:Auxilliary device 2
+3:33:23:Auxilliary device 3
 END
