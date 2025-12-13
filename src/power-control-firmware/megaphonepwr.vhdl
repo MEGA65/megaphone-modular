@@ -81,7 +81,7 @@ architecture rtl of megaphonepwr is
   signal cel_log_we : std_logic := '0';
   signal cel_log_waddr : unsigned((CEL_LOG_BITS-1) downto 0) := to_unsigned(0,CEL_LOG_BITS);
   signal cel_log_wdata : std_logic_vector(7 downto 0) := (others => '0');
-  signal cel_log_raddr : unsigned((CEL_LOG_BITS-1) downto 0) := to_unsigned(0,CEL_LOG_BITS);
+  signal cel_log_raddr : unsigned((CEL_LOG_BITS-1) downto 0) := to_unsigned(1,CEL_LOG_BITS);
   signal cel_log_rdata : std_logic_vector(7 downto 0);
 
   signal cfg_raddr : unsigned((CFG_BITS-1) downto 0) := to_unsigned(0,CFG_BITS);
@@ -203,10 +203,10 @@ begin
           pwr_tx_trigger <= '1';
           cel_log_raddr <= cel_log_raddr + 1;
           -- If we reached the end of the log, then stop playing back.
-          if cel_log_raddr = cel_log_waddr then
+          if cel_log_raddr >= cel_log_waddr then
             pwr_tx_data <= x"00";
             cel_log_playback <= '0';
-            cel_log_raddr <= to_unsigned(0,CEL_LOG_BITS);
+            cel_log_raddr <= to_unsigned(1,CEL_LOG_BITS);
           end if;
         else
           -- See if we need to send anything else
@@ -353,7 +353,7 @@ begin
           when x"50" => -- 'P' -- Play back logged cellular data.
             if cel_log_waddr /= to_unsigned(0,CEL_LOG_BITS) then              
               cel_log_playback <= '1';
-              cel_log_raddr <= to_unsigned(0,CEL_LOG_BITS);
+              cel_log_raddr <= to_unsigned(1,CEL_LOG_BITS);
             else
               -- Nothing in the log, so just indicate that with a NUL byte
               pwr_tx_data <= x"00";

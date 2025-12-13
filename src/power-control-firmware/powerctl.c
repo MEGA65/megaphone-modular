@@ -339,6 +339,28 @@ char powerctl_getconfig(char circuit_id,char field_id,unsigned char *out,uint8_t
   return 0xff;  
 }
 
+void powerctl_cellog_clear(void)
+{
+  do_serial_port_write((unsigned char *)"X",1);
+}
+
+uint16_t powerctl_cellog_retrieve(uint8_t *out, uint16_t buf_len)
+{
+  uint16_t ofs=0;
+  powerctl_sync();
+  do_serial_port_write((unsigned char *)"P",1);
+  uint8_t buf=1, nul_count=0;
+  while(1) {
+    if (do_serial_port_read(&buf,1)==1) {
+      //      if (!buf) { nul_count++; if (nul_count>1) break; }
+      if (!buf) break;
+      if (buf&&(!(buf&0x80))) if (ofs<buf_len) out[ofs++]=buf;
+    }
+  }
+  if (ofs<buf_len) out[ofs]=0;
+  return ofs;
+}
+
 int main(int argc,char **argv)
 {
   if (argc<3) {
@@ -384,18 +406,18 @@ int main(int argc,char **argv)
 	else fprintf(stderr,"INFO: Circuit %d OFF\n",i);
       }
     }
+    else if (!strcmp(argv[i],"celclear")) {
+      powerctl_cellog_clear();
+    }
     else if (!strcmp(argv[i],"celplay")) {
-      powerctl_sync();
-      do_serial_port_write((unsigned char *)"P",1);
-      uint8_t buf=1, nul_count=0;
-      while(1) {
-	if (do_serial_port_read(&buf,1)==1) {
-	  if (!buf) { nul_count++; if (nul_count>1) break; }
-	  if (buf&&(!(buf&0x80))) printf("%c",buf);
-	  if (buf==0x0d) printf("\n");
-	}
+      uint8_t buf[512];
+      uint16_t len = powerctl_cellog_retrieve(buf,sizeof(buf));
+      for(int i=0;i<len;i++) {
+	printf("%c",buf[i]);
+	if (buf[i]==0x0d) printf("\n");
       }
-      printf("\n");
+      fflush(stdout);
+      fprintf(stderr,"\r\nINFO: End of cellular event log\n");
     }
     else if (!strcmp(argv[i],"config")) {
       // Do a first pass to get circuit count
