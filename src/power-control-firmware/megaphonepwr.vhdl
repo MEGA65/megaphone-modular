@@ -56,18 +56,6 @@ architecture rtl of megaphonepwr is
   signal cel_rx_ready : std_logic;
   signal cel_rx_ready_last : std_logic;
 
-  -- Default to 2Mbps for cellular UART
-  signal bypass_uart_div : unsigned(23 downto 0) := to_unsigned(3,24);
-  
-  signal bypass_tx_data : unsigned(7 downto 0) := x"00";     
-  signal bypass_tx_trigger : std_logic := '0';
-  signal bypass_tx_ready : std_logic := '0';
-
-  signal bypass_rx_data : unsigned(7 downto 0);     
-  signal bypass_rx_ack : std_logic := '0';
-  signal bypass_rx_ready : std_logic;    
-  signal bypass_rx_ready_last : std_logic;    
-
   signal power_button_hold_counter : integer range 0 to (12_000_000 * 2) := 0;
   signal ring_rx_state : integer range 0 to 4 := 0;
   signal qind_rx_state : integer range 0 to 5 := 0;
@@ -75,8 +63,8 @@ architecture rtl of megaphonepwr is
   constant CEL_LOG_BITS : integer := 9;
   constant CEL_LOG_MAX_ADDR : unsigned((CEL_LOG_BITS-1) downto 0) := "111111110";
 
-  constant CFG_BITS : integer := 10;
-  constant CFG_MAX_ADDR : unsigned((CFG_BITS-1) downto 0) := "1111111110";
+  constant CFG_BITS : integer := 11;
+  constant CFG_MAX_ADDR : unsigned((CFG_BITS-1) downto 0) := "11111111110";
   
   signal log_cel : std_logic := '0';
   signal cel_log_notempty : std_logic;
@@ -167,11 +155,8 @@ begin
       end if;
       
       pwr_tx_trigger <= '0';
-      cel_tx_trigger <= '0';
-      bypass_tx_trigger <= '0';      
       
       pwr_rx_ack <= '0';
-      bypass_rx_ack <= '0';
       cel_rx_ack <= '0';
       
       report_power_status <= '0';
@@ -249,20 +234,9 @@ begin
       -- Connect the main FPGA and the cellular modem UARTs
       -- Assumes that the bypass and the cellular modem are at the same speed
       -- (which is enforced above)
-      bypass_rx_ready_last <= bypass_rx_ready;
-      if bypass_rx_ready = '1' and bypass_rx_ready_last='0' then
-        bypass_rx_ack <= '1';
-        cel_tx_trigger <= '1';
-        cel_tx_data <= bypass_rx_data;
-      else
-        cel_tx_trigger <= '0';
-      end if;
       cel_rx_ready_last <= cel_rx_ready;
       if cel_rx_ready = '1' and cel_rx_ready_last='0' then
         cel_rx_ack <= '1';
-
-        bypass_tx_trigger <= '1';
-        bypass_tx_data <= cel_rx_data;
 
         -- Log output from the modem if required.
         -- This continues until the end of a line is encountered
@@ -353,8 +327,6 @@ begin
           when others => null;
         end case;
         
-      else
-        bypass_tx_trigger <= '0';
       end if;
 
       ------------------------------------------------------------
@@ -402,6 +374,10 @@ begin
           when x"35" | x"25" =>  -- '5'/'%' = control power supply 5
             C2 <= pwr_rx_data(4);
             report_power_status <= '1';
+
+            -- Cellular modem tap UART speed set
+          when x"41" =>
+            
           when others =>
             null;
         end case;

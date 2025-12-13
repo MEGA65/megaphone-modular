@@ -7,7 +7,7 @@ use work.debugtools.all;
 entity ice_bram_cfg is
   generic (
     G_WIDTH : integer := 8;
-    G_DEPTH : integer := 1024
+    G_DEPTH : integer := 2048
   );
   port (
     -- Write port
