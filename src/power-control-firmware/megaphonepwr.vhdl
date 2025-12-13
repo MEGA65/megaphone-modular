@@ -176,6 +176,8 @@ begin
       
       report_power_status <= '0';
 
+      -- config dump takes priority over all else, so that it can't end up
+      -- with status bytes etc corrupting the messages
       if report_configuration='1' then
         if pwr_tx_ready = '1' and pwr_tx_trigger='0' then
           pwr_tx_data <= unsigned(cfg_rdata);

@@ -3,7 +3,10 @@ DEVICE = lp1k
 PACKAGE = cm36
 PCF = megaphonepwr.pcf
 
-all: $(TOP).bin
+all: $(TOP).bin powerctl
+
+powerctl:	powerctl.c
+	gcc -Wall -g -o powerctl powerctl.c
 
 $(TOP).json: $(TOP).vhdl
 	./inject.sh ice_bram_cfg_proto.vhdl config_message.txt ice_bram_cfg.vhdl
