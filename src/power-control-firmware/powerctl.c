@@ -37,7 +37,13 @@ void set_serial_speed(int fd, int serial_speed)
     log_error("set_serial_speed: invalid fd");
     return;
   }
-  if (serial_speed == 230400) {
+  if (serial_speed == 115200) {
+    if (cfsetospeed(&t, B115200))
+      log_error("failed to set output baud rate");
+    if (cfsetispeed(&t, B115200))
+      log_error("failed to set input baud rate");
+  }
+  else if (serial_speed == 230400) {
     if (cfsetospeed(&t, B230400))
       log_error("failed to set output baud rate");
     if (cfsetispeed(&t, B230400))
@@ -84,6 +90,8 @@ void set_serial_speed(int fd, int serial_speed)
   ioctl(fd, TIOCGSERIAL, &serial);
   serial.flags |= ASYNC_LOW_LATENCY;
   ioctl(fd, TIOCSSERIAL, &serial);
+  
+  fprintf(stderr,"DEBUG: Set serial speed and parameters\n");
 }
 
 
@@ -122,11 +130,41 @@ int do_serial_port_write(uint8_t *buffer, size_t size)
   return size;
 }
 
+void print_spaces(FILE *f, int col)
+{
+  for (int i = 0; i < col; i++)
+    fprintf(f, " ");
+}
+
+int dump_bytes(int col, char *msg, unsigned char *bytes, int length)
+{
+  print_spaces(stderr, col);
+  fprintf(stderr, "%s:\n", msg);
+  for (int i = 0; i < length; i += 16) {
+    print_spaces(stderr, col);
+    fprintf(stderr, "%04X: ", i);
+    for (int j = 0; j < 16; j++)
+      if (i + j < length)
+        fprintf(stderr, " %02X", bytes[i + j]);
+      else
+        fprintf(stderr, " | ");
+    fprintf(stderr, "  ");
+    for (int j = 0; j < 16; j++)
+      if (i + j < length)
+        fprintf(stderr, "%c", (bytes[i + j] >= ' ' && bytes[i + j] < 0x7c) ? bytes[i + j] : '.');
+
+    fprintf(stderr, "\n");
+  }
+  return 0;
+}
+
+
 size_t do_serial_port_read(uint8_t *buffer, size_t size)
 {
   int count;
 
   count = read(fd, buffer, size);
+
   return count;
 }
 
@@ -154,6 +192,7 @@ char powerctl_read_line(void)
       line_buffer[line_len++]=buf;
       if (buf==0x0d || buf==0x0a) {
 	line_buffer[line_len]=0;
+	//	dump_bytes(0,"Read line",line_buffer,line_len);
 	return line_len;
       }
     } else usleep(1000);
@@ -164,11 +203,12 @@ char powerctl_versioncheck(uint8_t *major, uint8_t *minor)
 {
   char saw_major=0;
   while(1) {
-    if (!powerctrl_read_line()) return 0xff;
+    if (!powerctl_read_line()) return 0xff;
     if (!strncmp(line_buffer,"VER:",4)) {
       if (major) *major = line_buffer[4]-'0';
       // Unsupported version
       if (line_buffer[4]!='1') return 0xff;
+      saw_major=1;
     }
     if (!strncmp(line_buffer,"MINOR:",6)) {
       if (minor) *minor = line_buffer[6]-'0';
@@ -185,18 +225,27 @@ char powerctl_start_read_config(void)
   // Clear any pending input
   do_serial_port_flush();
   // Send command to retrieve config
-  do_serial_port_write("?",1);
+  do_serial_port_write((unsigned char *)"?",1);
 
   if (powerctl_versioncheck(NULL,NULL)) return 0xff;
 
-  return 0xff;
+  return 0;
 }
-  
 
-char powerctl_getcircuitcount(void)
-{
-  powerctl_start_read_config();
+
   
+char powerctl_get_circuit_count(void)
+{
+  if (powerctl_start_read_config()) return 0;
+
+  while(1) {
+    if (!powerctl_read_line()) return 0;
+    if (!strncmp(line_buffer,"CIRCUITS:",9)) {
+      return line_buffer[9]-'0';
+    }
+  }
+  
+  return 0;
 }
 
 char powerctl_getconfig(char circuit_id,char field_id,unsigned char *out,uint8_t out_len)
@@ -204,13 +253,16 @@ char powerctl_getconfig(char circuit_id,char field_id,unsigned char *out,uint8_t
   powerctl_start_read_config();
 
   while(!powerctl_read_line()) {
+    if (line_buffer[1]==':' && line_buffer[0]==(circuit_id+'0')) {
+    }
   }
-  
+
+  return 0xff;  
 }
 
 int main(int argc,char **argv)
 {
-  if (argc!=3) {
+  if (argc<3) {
     fprintf(stderr,"usage: powerctl <serial port> <serial speed> [command [...]]\n");
     exit(-1);
   }
@@ -219,7 +271,17 @@ int main(int argc,char **argv)
 
   for(int i=3;i<argc;i++) {
     if (!strcmp(argv[i],"config")) {
-      powerctl_getconfig();
+      // Do a first pass to get circuit count
+      char circuit_count = powerctl_get_circuit_count();
+      if (!circuit_count) {
+	fprintf(stderr,"ERROR: Could not read count of controlled circuits\n");
+	exit(-1);
+      }
+      fprintf(stderr,"INFO: System controls %d circuits\n",circuit_count);
+      for(int circuit_id=0;circuit_id<circuit_count;circuit_id++) {
+	// Stop when we fail to read info for a circuit
+	if (powerctl_getconfig(circuit_id,1,NULL,0)) break;
+      }
     }
   }
   
