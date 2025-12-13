@@ -173,7 +173,8 @@ size_t do_serial_port_read(uint8_t *buffer, size_t size)
   return count;
 }
 
-void do_serial_port_flush(void)
+// Returns status
+uint8_t powerctl_sync(void)
 {
   uint8_t buf[16];
   // Flush any backlog
@@ -187,7 +188,7 @@ void do_serial_port_flush(void)
     if (do_serial_port_read(buf,1)) {
       // Prompt for status byte if we just saw the end of a text message
       if (!buf[0]) do_serial_port_write((unsigned char *)".",1);
-      if (buf[0]&0x80) return;
+      if (buf[0]&0x80) return buf[0];
     }
   }
 }
@@ -240,7 +241,7 @@ char powerctl_versioncheck(uint8_t *major, uint8_t *minor)
 char powerctl_start_read_config(void)
 { 
   // Clear any pending input
-  do_serial_port_flush();
+  powerctl_sync();
   // Send command to retrieve config
   do_serial_port_write((unsigned char *)"?",1);
 
@@ -301,7 +302,20 @@ int main(int argc,char **argv)
   open_the_serial_port(argv[1],atoi(argv[2]));
 
   for(int i=3;i<argc;i++) {
-    if (!strcmp(argv[i],"config")) {
+    if (!strcmp(argv[i],"status")) {
+      uint8_t st = powerctl_sync();
+      if (!(st&0x80)) {
+	fprintf(stderr,"ERROR: Failed to read status (received 0x%02x)\n",st);
+	exit(-1);
+      }
+      if (st&0x40) fprintf(stderr,"INFO: Cellular Event(s) Recorded\n");
+      else fprintf(stderr,"INFO: No Cellular Events Recorded\n");
+      for(int i=0;i<6;i++) {
+	if (st&(1<<i)) fprintf(stderr,"INFO: Circuit %d ON\n",i);
+	else fprintf(stderr,"INFO: Circuit %d OFF\n",i);
+      }
+    }
+    else if (!strcmp(argv[i],"config")) {
       // Do a first pass to get circuit count
       char circuit_count = powerctl_get_circuit_count();
       if (!circuit_count) {
