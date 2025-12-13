@@ -203,7 +203,7 @@ begin
           pwr_tx_trigger <= '1';
           cel_log_raddr <= cel_log_raddr + 1;
           -- If we reached the end of the log, then stop playing back.
-          if cel_log_raddr >= cel_log_waddr then
+          if cel_log_raddr > cel_log_waddr then
             pwr_tx_data <= x"00";
             cel_log_playback <= '0';
             cel_log_raddr <= to_unsigned(1,CEL_LOG_BITS);
@@ -290,6 +290,12 @@ begin
               -- Turn on power to main FPGA
               LED <= '1';
               report_power_status <= '1';
+
+              -- Insert that R into the log
+              cel_log_waddr <= cel_log_waddr + 1;
+              cel_log_we <= '1';
+              cel_log_wdata <= x"52"; -- ASCII 'R'
+              
             end if;
             ring_rx_state <= 0;
           when others => null;

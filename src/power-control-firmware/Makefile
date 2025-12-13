@@ -6,7 +6,7 @@ PCF = megaphonepwr.pcf
 all: $(TOP).bin powerctl
 
 powerctl:	powerctl.c
-	gcc -Wall -g -o powerctl powerctl.c
+	gcc -DSTANDALONE -Wall -g -o powerctl powerctl.c
 
 $(TOP).json: $(TOP).vhdl
 	./inject.sh ice_bram_cfg_proto.vhdl config_message.txt ice_bram_cfg.vhdl

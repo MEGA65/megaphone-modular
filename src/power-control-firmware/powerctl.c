@@ -183,7 +183,7 @@ uint8_t powerctl_sync(void)
   uint8_t buf[16],r;
   // Flush any backlog
   while((r=do_serial_port_read(buf,16))>0) {
-    dump_bytes(4,"sync(1)",buf,r);
+    // dump_bytes(4,"sync(1)",buf,r);
     continue;
   }
   // Then request a status byte
@@ -198,7 +198,7 @@ uint8_t powerctl_sync(void)
 	return buf[0];
       }
 
-      dump_bytes(4,"sync(2)",buf,1);
+      // dump_bytes(4,"sync(2)",buf,1);
       
     }
   }
@@ -349,7 +349,7 @@ uint16_t powerctl_cellog_retrieve(uint8_t *out, uint16_t buf_len)
   uint16_t ofs=0;
   powerctl_sync();
   do_serial_port_write((unsigned char *)"P",1);
-  uint8_t buf=1, nul_count=0;
+  uint8_t buf=1;
   while(1) {
     if (do_serial_port_read(&buf,1)==1) {
       //      if (!buf) { nul_count++; if (nul_count>1) break; }
@@ -379,6 +379,7 @@ char powerctl_cel_setbaud(uint32_t speed)
   return 0;
 }
 
+#ifdef STANDALONE
 int main(int argc,char **argv)
 {
   if (argc<3) {
@@ -435,6 +436,8 @@ int main(int argc,char **argv)
     else if (!strcmp(argv[i],"celplay")) {
       uint8_t buf[512];
       uint16_t len = powerctl_cellog_retrieve(buf,sizeof(buf));
+      fprintf(stderr,"INFO: Cellular event log:\n");
+      fflush(stderr);
       for(int i=0;i<len;i++) {
 	printf("%c",buf[i]);
 	if (buf[i]==0x0d) printf("\n");
@@ -470,3 +473,4 @@ int main(int argc,char **argv)
   }
   
 }
+#endif
