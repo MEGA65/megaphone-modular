@@ -361,6 +361,24 @@ uint16_t powerctl_cellog_retrieve(uint8_t *out, uint16_t buf_len)
   return ofs;
 }
 
+char powerctl_cel_setbaud(uint32_t speed)
+{
+  uint8_t c=0;
+  switch (speed) {
+  case 2000000:  c='A'; break;
+  case 1000000:  c='B'; break;
+  case 230400:   c='C'; break;
+  case 115200:   c='D'; break;
+  case 19200:    c='E'; break;
+  case 9600:     c='F'; break;
+  case 2400:     c='G'; break;
+  default:
+    return 0xff;
+  }
+  do_serial_port_write(&c,1);
+  return 0;
+}
+
 int main(int argc,char **argv)
 {
   if (argc<3) {
@@ -405,6 +423,11 @@ int main(int argc,char **argv)
 	if (st&(1<<i)) fprintf(stderr,"INFO: Circuit %d ON\n",i);
 	else fprintf(stderr,"INFO: Circuit %d OFF\n",i);
       }
+    }
+    else if (!strncmp(argv[i],"celspeed=",9)) {
+      int speed = atoi(&argv[i][9]);
+      if (powerctl_cel_setbaud(speed))
+	fprintf(stderr,"ERROR: Baud rate %d not supported\n",speed);
     }
     else if (!strcmp(argv[i],"celclear")) {
       powerctl_cellog_clear();
