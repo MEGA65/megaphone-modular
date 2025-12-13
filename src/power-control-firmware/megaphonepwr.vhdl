@@ -10,11 +10,9 @@ entity megaphonepwr is
     USB_TX : out std_logic;  -- B3
     USB_RX : in std_logic;
     -- Cellular modem UART interface
-    B5 : out std_logic;
     E3 : in std_logic;
     -- Pass-through of cellular modem UART interface
     E1 : out std_logic;
-    C2 : in std_logic;
     -- I2C interface for IO expanders
     B1 : inout std_logic := 'Z'; -- SDA
     A1 : out std_logic;   -- SCL
@@ -22,11 +20,14 @@ entity megaphonepwr is
     -- Power button to force-wake the main FPGA power
     B4 : in std_logic;    -- Power button wake pin
     
-    -- Power control pins for four subsystems
+    -- Power control pins for six subsystems
     LED : out std_logic := '1';  -- Also B6, used to control main FPGA power
     C6 : out std_logic := '0';   -- Sub-system C6 power enable
     C5 : out std_logic := '0';   -- Sub-system C5 power enable
-    E2 : out std_logic := '0'   -- Sub-system E2 power enable
+    E2 : out std_logic := '0';   -- Sub-system E2 power enable
+    B5 : out std_logic := '0';   -- Sub-system B5 power enable
+    C2 : out std_logic := '0'    -- Sub-system C2 power enable
+
     );
 end entity;
 
@@ -140,15 +141,7 @@ begin
       uart_rx => usb_rx
       );
 
-  -- UART that connects to the cellular modem
-  cellular_uart_tx: entity work.uart_tx_ctrl
-    port map (
-      send    => cel_tx_trigger,
-      BIT_TMR_MAX => cel_uart_div,
-      clk     => CLK,
-      data    => cel_tx_data,
-      ready   => cel_tx_ready,
-      uart_tx => B5);
+  -- UART that listens to the cellular modem
   cellular_uart_rx: entity work.uart_rx
     port map (
       clk => clk,
@@ -159,25 +152,9 @@ begin
       uart_rx => E3
       );
 
-  -- UART pass through for main FPGA to cellular modem
-  bypass_uart_tx: entity work.uart_tx_ctrl
-    port map (
-      send    => bypass_tx_trigger,
-      BIT_TMR_MAX => bypass_uart_div,
-      clk     => CLK,
-      data    => bypass_tx_data,
-      ready   => bypass_tx_ready,
-      uart_tx => E1);
-  bypass_uart_rx: entity work.uart_rx
-    port map (
-      clk => clk,
-      bit_rate_divisor => bypass_uart_div,
-      data => bypass_rx_data,
-      data_ready => bypass_rx_ready,
-      data_acknowledge => bypass_rx_ack,
-      uart_rx => C2
-      );
-
+  -- And simple connection of the rest of the main FPGA to cellular modem
+  -- route.
+  E1 <= E3;
   
   process(clk)
   begin
@@ -414,6 +391,12 @@ begin
             C5 <= pwr_rx_data(4);
             report_power_status <= '1';
           when x"33" | x"23" =>  -- '3'/'#' = control power supply 3
+            E2 <= pwr_rx_data(4);
+            report_power_status <= '1';
+          when x"34" | x"24" =>  -- '4'/'$' = control power supply 4
+            E2 <= pwr_rx_data(4);
+            report_power_status <= '1';
+          when x"35" | x"25" =>  -- '5'/'%' = control power supply 5
             E2 <= pwr_rx_data(4);
             report_power_status <= '1';
           when others =>
