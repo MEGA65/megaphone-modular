@@ -193,7 +193,8 @@ begin
           pwr_tx_data(1) <= C6;
           pwr_tx_data(2) <= C5;
           pwr_tx_data(3) <= E2;
-          pwr_tx_data(5 downto 4) <= (others => '0');
+          pwr_tx_data(3) <= B5;
+          pwr_tx_data(3) <= C2;
           pwr_tx_data(6) <= cel_log_notempty;
           pwr_tx_data(7) <= '1';
           pwr_tx_trigger <= '1';
@@ -394,10 +395,10 @@ begin
             E2 <= pwr_rx_data(4);
             report_power_status <= '1';
           when x"34" | x"24" =>  -- '4'/'$' = control power supply 4
-            E2 <= pwr_rx_data(4);
+            B5 <= pwr_rx_data(4);
             report_power_status <= '1';
           when x"35" | x"25" =>  -- '5'/'%' = control power supply 5
-            E2 <= pwr_rx_data(4);
+            C2 <= pwr_rx_data(4);
             report_power_status <= '1';
           when others =>
             null;
