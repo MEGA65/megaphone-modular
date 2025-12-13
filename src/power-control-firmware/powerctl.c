@@ -230,12 +230,19 @@ char powerctl_read_line(void)
 
 char powerctl_versioncheck(uint8_t *major, uint8_t *minor)
 {
+  char first_line=1;
   char saw_major=0;
   while(1) {
     if (!powerctl_read_line()) {
-      fprintf(stderr,"FAIL:%s:%d:%s()\n",__FILE__,__LINE__,__FUNCTION__);
-      return 0xff;
+      if (!first_line) {      
+	fprintf(stderr,"FAIL:%s:%d:%s()\n",__FILE__,__LINE__,__FUNCTION__);
+	return 0xff;
+      } else {
+	first_line=0;	
+	continue;
+      }	
     }
+    first_line=0;
     if (!strncmp(line_buffer,"VER:",4)) {
       if (major) *major = line_buffer[4]-'0';
       // Unsupported version
@@ -272,6 +279,21 @@ char powerctl_start_read_config(void)
   return 0;
 }
 
+char powerctl_switch_circuit(uint8_t circuit_id, char on_off)
+{
+  unsigned char c;
+  if (circuit_id>5) return 0xff;
+  
+  c=0x20 + circuit_id + (on_off?0x10:0x00);
+
+  powerctl_sync();
+  do_serial_port_write(&c,1);
+  c=powerctl_sync();
+  if (!on_off)  c^=0x7f;
+  c&=(0x01 << circuit_id);
+  if (!c) return 0xff;
+  else return 0x00;
+}
 
   
 char powerctl_get_circuit_count(void)
@@ -327,7 +349,29 @@ int main(int argc,char **argv)
   open_the_serial_port(argv[1],atoi(argv[2]));
 
   for(int i=3;i<argc;i++) {
-    if (!strcmp(argv[i],"status")) {
+    if (argv[i][0]=='+') {
+      int circuit_id = argv[i][1]-'0';
+      if ((strlen(argv[i])!=2)||(circuit_id<0)||(circuit_id>5)) {
+	fprintf(stderr,"ERROR: Invalid circuit specification.\n");
+	exit(-1);
+      }
+      if (powerctl_switch_circuit(circuit_id,1)) {
+	fprintf(stderr,"ERROR: Failed to switch circuit on\n");
+	exit(-1);
+      }
+    }
+    else if (argv[i][0]=='-') {
+      int circuit_id = argv[i][1]-'0';
+      if ((strlen(argv[i])!=2)||(circuit_id<0)||(circuit_id>5)) {
+	fprintf(stderr,"ERROR: Invalid circuit specification.\n");
+	exit(-1);
+      }
+      if (powerctl_switch_circuit(circuit_id,0)) {
+	fprintf(stderr,"ERROR: Failed to switch circuit off\n");
+	exit(-1);
+      }	
+    }
+    else if (!strcmp(argv[i],"status")) {
       uint8_t st = powerctl_sync();
       if (!(st&0x80)) {
 	fprintf(stderr,"ERROR: Failed to read status (received 0x%02x)\n",st);
