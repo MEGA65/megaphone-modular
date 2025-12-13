@@ -91,6 +91,9 @@ architecture rtl of megaphonepwr is
 
   signal report_power_status : std_logic := '0';   
   signal report_configuration : std_logic := '1';   
+
+  signal power_button_edge_seen : std_logic := '0';
+  signal B4_last : std_logic := '0';
   
 begin
 
@@ -225,15 +228,21 @@ begin
       cel_log_we <= '0';
 
       -- Check for soft power button
+      B4_last <= B4;
+      if B4 = '0' and B4_last='1' then
+        power_button_edge_seen <= '1';
+      end if;
       if B4 = '0' then
         if power_button_hold_counter /= (12_000_000 * 2) then
           power_button_hold_counter <= power_button_hold_counter + 1;
-          if power_button_hold_counter = 1 then
+          if power_button_hold_counter = 1 and power_button_edge_seen='1' then
             LED <= '1';
             report_power_status <= '1';
-          elsif power_button_hold_counter = (12_000_000 * 2 - 2) then
+            power_button_edge_seen <= '0';
+          elsif power_button_hold_counter = (12_000_000 * 2 - 2) and power_button_edge_seen='1' then
             LED <= '0';
             report_power_status <= '1';
+            power_button_edge_seen <= '0';
           end if;
         end if;
       else
