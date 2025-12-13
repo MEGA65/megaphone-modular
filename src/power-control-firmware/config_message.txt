@@ -12,6 +12,7 @@ Commands:
 	X - Clear cellular modem event log
       0-9 - Power circuit (drive enable pin high)
 shift 0-9 - De-power circuit (pull enable pin low)
+      A-Z - Select UART speed for cellular modem
 
 Playback ends with NUL (0x00) character.
 
@@ -23,10 +24,12 @@ Status indication at 0.5Hz (or as requested via '.'):
 VER:1
 MINOR:0
 CIRCUITS:6
-0:30:20:Main FPGA,LCD,LED,B6
-1:31:21:Auxilliary device 1,C6
-2:32:22:Auxilliary device 2,C5
-3:33:23:Auxilliary device 3,E2
-4:34:24:Auxilliary device 4,B5
-5:35:25:Auxilliary device 5,C2
+0:30:20:01:Main FPGA,LCD,LED,B6
+1:31:21:02:Auxilliary device 1,C6
+2:32:22:04:Auxilliary device 2,C5
+3:33:23:08:Auxilliary device 3,E2
+4:34:24:10:Auxilliary device 4,B5
+5:35:25:20:Auxilliary device 5,C2
+6:50:58:40:Cellular modem event flag
+7:2e:2e:80:Status byte indicate
 END
