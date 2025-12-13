@@ -177,12 +177,18 @@ void do_serial_port_flush(void)
 {
   uint8_t buf[16];
   // Flush any backlog
-  while(do_serial_port_read(buf,16)>0) continue;
+  while(do_serial_port_read(buf,16)>0) {
+    continue;
+  }
   // Then request a status byte
   do_serial_port_write((unsigned char *)".",1);
   // And finally read until we see that status byte.
   while(1) {
-    if (do_serial_port_read(buf,1)) if (buf[0]&0x80) return;
+    if (do_serial_port_read(buf,1)) {
+      // Prompt for status byte if we just saw the end of a text message
+      if (!buf[0]) do_serial_port_write((unsigned char *)".",1);
+      if (buf[0]&0x80) return;
+    }
   }
 }
 
@@ -261,20 +267,17 @@ char powerctl_get_circuit_count(void)
 
 char powerctl_getconfig(char circuit_id,char field_id,unsigned char *out,uint8_t out_len)
 {
-  fprintf(stderr,"DEBUG: Reading config\n");
   if (powerctl_start_read_config()) {
     fprintf(stderr,"ERROR: Failed to read config\n");
     return 0xff;
   }
-  fprintf(stderr,"DEBUG: Read config ok\n");
 
   while(powerctl_read_line()) {
-    dump_bytes(0,"next line",line_buffer,64);
     if (line_buffer[1]==':' && line_buffer[0]==(circuit_id+'0')) {
       char colon_count=0;
       uint8_t out_ofs=0;
       for(int i=0;line_buffer[i];i++) {
-	if (colon_count==field_id && out) {
+	if (colon_count==field_id && out && line_buffer[i]>=' ') {
 	  if (out_ofs<out_len) out[out_ofs++]=line_buffer[i];
 	}	
 	if (out && out_ofs<out_len) out[out_ofs]=0;
