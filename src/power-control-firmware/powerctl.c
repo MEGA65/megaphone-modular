@@ -384,6 +384,19 @@ int main(int argc,char **argv)
 	else fprintf(stderr,"INFO: Circuit %d OFF\n",i);
       }
     }
+    else if (!strcmp(argv[i],"celplay")) {
+      powerctl_sync();
+      do_serial_port_write((unsigned char *)"P",1);
+      uint8_t buf=1, nul_count=0;
+      while(1) {
+	if (do_serial_port_read(&buf,1)==1) {
+	  if (!buf) { nul_count++; if (nul_count>1) break; }
+	  if (buf&&(!(buf&0x80))) printf("%c",buf);
+	  if (buf==0x0d) printf("\n");
+	}
+      }
+      printf("\n");
+    }
     else if (!strcmp(argv[i],"config")) {
       // Do a first pass to get circuit count
       char circuit_count = powerctl_get_circuit_count();
