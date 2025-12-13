@@ -171,7 +171,14 @@ size_t do_serial_port_read(uint8_t *buffer, size_t size)
 void do_serial_port_flush(void)
 {
   uint8_t buf[16];
+  // Flush any backlog
   while(do_serial_port_read(buf,16)>0) continue;
+  // Then request a status byte
+  do_serial_port_write((unsigned char *)".",1);
+  // And finally read until we see that status byte.
+  while(1) {
+    if (do_serial_port_read(buf,1)) if (buf[0]&0x80) return;
+  }
 }
 
 #endif
