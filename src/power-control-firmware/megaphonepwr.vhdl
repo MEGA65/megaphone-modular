@@ -53,13 +53,14 @@ architecture rtl of megaphonepwr is
   signal pwr_rx_ready_last : std_logic := '0';
 
   -- Default to 2Mbps for cellular UART
-  signal cel_uart_div : unsigned(23 downto 0) := to_unsigned(3,24);
+  signal cel_uart_div : unsigned(23 downto 0) := to_unsigned(UART_DIV_115K,24);
   
   signal cel_tx_data : unsigned(7 downto 0) := x"00";     
   signal cel_tx_trigger : std_logic := '0';
   signal cel_tx_ready : std_logic := '0';
 
   signal cel_rx_data : unsigned(7 downto 0);     
+  signal cel_rx_data_last : unsigned(7 downto 0);     
   signal cel_rx_ack : std_logic := '0';
   signal cel_rx_ready : std_logic;
   signal cel_rx_ready_last : std_logic;
@@ -246,6 +247,8 @@ begin
       if cel_rx_ready = '1' and cel_rx_ready_last='0' then
         cel_rx_ack <= '1';
 
+        cel_rx_data_last <= cel_rx_data;
+        
         -- Log output from the modem if required.
         -- This continues until the end of a line is encountered
         if log_cel = '1' then
@@ -293,9 +296,9 @@ begin
         end case;
         -- And the +QIND detector
         case cel_rx_data is
-          when x"51" => -- 'Q'
-            qind_rx_state <= 1;
           when x"2b" => -- '+'
+            qind_rx_state <= 1;
+          when x"51" => -- 'Q'
             if qind_rx_state = 1 then
               qind_rx_state <= 2;
             else
@@ -391,6 +394,31 @@ begin
           when x"45" => cel_uart_div <= to_unsigned(UART_DIV_19200,24);
           when x"46" => cel_uart_div <= to_unsigned(UART_DIV_9600,24);
           when x"47" => cel_uart_div <= to_unsigned(UART_DIV_2400,24);
+
+            -- Debug tool to see last char received from cellular UART
+          when x"6e" =>
+            pwr_tx_trigger <= '1';
+            if cel_rx_data_last(7 downto 4) >= x"a" then
+              pwr_tx_data(7 downto 4) <= x"4";
+              pwr_tx_data(3 downto 0) <= cel_rx_data_last(7 downto 4) - 9;
+            else
+              pwr_tx_data(7 downto 4) <= x"3";
+              pwr_tx_data(3 downto 0) <= cel_rx_data_last(7 downto 4);
+            end if;
+          when x"6d" =>
+            pwr_tx_trigger <= '1';
+            if cel_rx_data_last(3 downto 0) >= x"a" then
+              pwr_tx_data(7 downto 4) <= x"4";
+              pwr_tx_data(3 downto 0) <= cel_rx_data_last(3 downto 0) - 9;
+            else
+              pwr_tx_data(7 downto 4) <= x"3";
+              pwr_tx_data(3 downto 0) <= cel_rx_data_last(3 downto 0);
+            end if;
+          when x"6c" =>
+            pwr_tx_trigger <= '1';
+            pwr_tx_data(7 downto 4) <= x"3";
+            pwr_tx_data(3 downto 0) <= to_unsigned(qind_rx_state,4);
+                        
           when others =>
             null;
         end case;
