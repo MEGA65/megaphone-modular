@@ -180,9 +180,10 @@ size_t do_serial_port_read(uint8_t *buffer, size_t size)
 // Returns status
 uint8_t powerctl_sync(void)
 {
-  uint8_t buf[16];
+  uint8_t buf[16],r;
   // Flush any backlog
-  while(do_serial_port_read(buf,16)>0) {
+  while((r=do_serial_port_read(buf,16))>0) {
+    dump_bytes(4,"sync(1)",buf,r);
     continue;
   }
   // Then request a status byte
@@ -192,7 +193,13 @@ uint8_t powerctl_sync(void)
     if (do_serial_port_read(buf,1)) {
       // Prompt for status byte if we just saw the end of a text message
       if (!buf[0]) do_serial_port_write((unsigned char *)".",1);
-      if (buf[0]&0x80) return buf[0];
+      if (buf[0]&0x80) {
+	fprintf(stderr,"DEBUG: powerctl_sync returning 0x%02x\n",buf[0]);
+	return buf[0];
+      }
+
+      dump_bytes(4,"sync(2)",buf,1);
+      
     }
   }
 }
@@ -225,20 +232,31 @@ char powerctl_versioncheck(uint8_t *major, uint8_t *minor)
 {
   char saw_major=0;
   while(1) {
-    if (!powerctl_read_line()) return 0xff;
+    if (!powerctl_read_line()) {
+      fprintf(stderr,"FAIL:%s:%d:%s()\n",__FILE__,__LINE__,__FUNCTION__);
+      return 0xff;
+    }
     if (!strncmp(line_buffer,"VER:",4)) {
       if (major) *major = line_buffer[4]-'0';
       // Unsupported version
-      if (line_buffer[4]!='1') return 0xff;
+      if (line_buffer[4]!='1') {
+	fprintf(stderr,"FAIL:%s:%d:%s()\n",__FILE__,__LINE__,__FUNCTION__);
+	return 0xff;
+      }
       saw_major=1;
     }
     if (!strncmp(line_buffer,"MINOR:",6)) {
       if (minor) *minor = line_buffer[6]-'0';
       // Success (assuming we saw the major version number already)
-      if (saw_major) return 0; else return 0xff;
+      if (saw_major) return 0;
+      else {
+	fprintf(stderr,"FAIL:%s:%d:%s()\n",__FILE__,__LINE__,__FUNCTION__);
+	return 0xff;
+      }
     }
   }
   // Could not find major or minor version
+  fprintf(stderr,"FAIL:%s:%d:%s()\n",__FILE__,__LINE__,__FUNCTION__);
   return 0xff;
 }
 
@@ -342,6 +360,10 @@ int main(int argc,char **argv)
 	fprintf(stderr,"INFO: Circuit %d : %s\n",
 		circuit_id,field);
       }
+    }
+    else {
+      fprintf(stderr,"ERROR: Could not parse command '%s'\n",argv[i]);
+      exit(-1);
     }
   }
   
