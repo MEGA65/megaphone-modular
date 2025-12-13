@@ -197,9 +197,8 @@ char powerctl_read_line(void)
       // if we see one, it's because we're not dumping config anymore = return failure
       if (buf&0x80) return 0;
       line_buffer[line_len++]=buf;
-      if (buf==0x0d || buf==0x0a) {
+      if (buf==0x0a) {
 	line_buffer[line_len]=0;
-	//	dump_bytes(0,"Read line",line_buffer,line_len);
 	return line_len;
       }
     } else usleep(1000);
@@ -257,9 +256,15 @@ char powerctl_get_circuit_count(void)
 
 char powerctl_getconfig(char circuit_id,char field_id,unsigned char *out,uint8_t out_len)
 {
-  powerctl_start_read_config();
+  fprintf(stderr,"DEBUG: Reading config\n");
+  if (powerctl_start_read_config()) {
+    fprintf(stderr,"ERROR: Failed to read config\n");
+    return 0xff;
+  }
+  fprintf(stderr,"DEBUG: Read config ok\n");
 
-  while(!powerctl_read_line()) {
+  while(powerctl_read_line()) {
+    dump_bytes(0,"next line",line_buffer,64);
     if (line_buffer[1]==':' && line_buffer[0]==(circuit_id+'0')) {
       char colon_count=0;
       uint8_t out_ofs=0;
