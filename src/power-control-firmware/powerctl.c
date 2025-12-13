@@ -261,6 +261,17 @@ char powerctl_getconfig(char circuit_id,char field_id,unsigned char *out,uint8_t
 
   while(!powerctl_read_line()) {
     if (line_buffer[1]==':' && line_buffer[0]==(circuit_id+'0')) {
+      char colon_count=0;
+      uint8_t out_ofs=0;
+      for(int i=0;line_buffer[i];i++) {
+	if (colon_count==field_id && out) {
+	  if (out_ofs<out_len) out[out_ofs++]=line_buffer[i];
+	}	
+	if (out && out_ofs<out_len) out[out_ofs]=0;
+	if (line_buffer[i]==':') colon_count++;
+	if (colon_count>field_id) return 0;
+      }
+      if (colon_count==field_id) return 0;
     }
   }
 
@@ -287,7 +298,14 @@ int main(int argc,char **argv)
       fprintf(stderr,"INFO: System controls %d circuits\n",circuit_count);
       for(int circuit_id=0;circuit_id<circuit_count;circuit_id++) {
 	// Stop when we fail to read info for a circuit
-	if (powerctl_getconfig(circuit_id,1,NULL,0)) break;
+	unsigned char field[128];
+	field[0]=0;
+	if (powerctl_getconfig(circuit_id,1,field,sizeof(field))) {
+	  fprintf(stderr,"ERROR: Failed to read information for circuit %d\n",circuit_id);
+	  exit(-1);
+	}
+	fprintf(stderr,"INFO: Circuit %d : %s\n",
+		circuit_id,field);
       }
     }
   }
