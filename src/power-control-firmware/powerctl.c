@@ -1,11 +1,5 @@
 
-#define FIELD_ONCHAR 1
-#define FIELD_OFFCHAR 2
-#define FIELD_STATUSBITMASK 3
-#define FIELD_CIRCUITNAME 4
-
-#define GETCONFIG_CONTINUE 1
-#define GETCONFIG_RESTART 2
+#include "powerctl.h"
 
 #ifdef MEGA65
 #else
@@ -124,10 +118,10 @@ int open_the_serial_port(char *serial_port,int serial_speed)
   return 0;
 }
 
-int do_serial_port_write(uint8_t *buffer, size_t size)
+int powerctl_uart_write(uint8_t *buffer, uint16_t size)
 {
 
-  size_t offset = 0;
+  uint16_t offset = 0;
   while (offset < size) {
     int written = write(fd, &buffer[offset], size - offset);
     if (written > 0)
@@ -168,7 +162,7 @@ int dump_bytes(int col, char *msg, unsigned char *bytes, int length)
 }
 
 
-size_t do_serial_port_read(uint8_t *buffer, size_t size)
+uint16_t powerctl_uart_read(uint8_t *buffer, uint16_t size)
 {
   int count;
 
@@ -177,22 +171,24 @@ size_t do_serial_port_read(uint8_t *buffer, size_t size)
   return count;
 }
 
+#endif
+
 // Returns status
 uint8_t powerctl_sync(void)
 {
   uint8_t buf[16],r;
   // Flush any backlog
-  while((r=do_serial_port_read(buf,16))>0) {
+  while((r=powerctl_uart_read(buf,16))>0) {
     // dump_bytes(4,"sync(1)",buf,r);
     continue;
   }
   // Then request a status byte
-  do_serial_port_write((unsigned char *)".",1);
+  powerctl_uart_write((unsigned char *)".",1);
   // And finally read until we see that status byte.
   while(1) {
-    if (do_serial_port_read(buf,1)) {
+    if (powerctl_uart_read(buf,1)) {
       // Prompt for status byte if we just saw the end of a text message
-      if (!buf[0]) do_serial_port_write((unsigned char *)".",1);
+      if (!buf[0]) powerctl_uart_write((unsigned char *)".",1);
       if (buf[0]&0x80) {
 	fprintf(stderr,"DEBUG: powerctl_sync returning 0x%02x\n",buf[0]);
 	return buf[0];
@@ -204,7 +200,6 @@ uint8_t powerctl_sync(void)
   }
 }
 
-#endif
 
 char line_buffer[128];
 uint8_t line_len=0;
@@ -214,7 +209,7 @@ char powerctl_read_line(void)
   line_len=0;
   uint8_t buf=1;
   while(1) {
-    if (do_serial_port_read(&buf,1)==1) {
+    if (powerctl_uart_read(&buf,1)==1) {
       if (!buf) return 0xff;
       // 0x80 -- 0xff status bytes should not occur.
       // if we see one, it's because we're not dumping config anymore = return failure
@@ -272,7 +267,7 @@ char powerctl_start_read_config(void)
   // Clear any pending input
   powerctl_sync();
   // Send command to retrieve config
-  do_serial_port_write((unsigned char *)"?",1);
+  powerctl_uart_write((unsigned char *)"?",1);
 
   if (powerctl_versioncheck(NULL,NULL)) return 0xff;
 
@@ -287,7 +282,7 @@ char powerctl_switch_circuit(uint8_t circuit_id, char on_off)
   c=0x20 + circuit_id + (on_off?0x10:0x00);
 
   powerctl_sync();
-  do_serial_port_write(&c,1);
+  powerctl_uart_write(&c,1);
   c=powerctl_sync();
   if (!on_off)  c^=0x7f;
   c&=(0x01 << circuit_id);
@@ -339,19 +334,47 @@ char powerctl_getconfig(char circuit_id,char field_id,unsigned char *out,uint8_t
   return 0xff;  
 }
 
+char powerctl_find_circuit_by_name(char *string)
+{
+  // Do a first pass to get circuit count
+  char circuit_count = powerctl_get_circuit_count();
+  if (!circuit_count) {
+    return 0xff;
+  }
+
+  // Allow specifying circuit by number as well
+  if (string[0]&&(!string[1])) {
+    int circuit_id = string[1]-'0';
+    if (circuit_id>=0&&circuit_id<circuit_count) return circuit_id;
+  }
+  
+  for(int circuit_id=0;circuit_id<circuit_count;circuit_id++) {
+    // Stop when we fail to read info for a circuit
+    unsigned char field[128];
+    field[0]=0;
+    if (powerctl_getconfig(circuit_id,FIELD_CIRCUITNAME,field,sizeof(field),
+			   (circuit_id?GETCONFIG_CONTINUE:GETCONFIG_RESTART))) {
+      // Failed to read info for this circuit
+      return 0xff;
+    }
+    if (strstr((char *)field,string)) return circuit_id;
+  }
+  return 0xff;
+}
+
 void powerctl_cellog_clear(void)
 {
-  do_serial_port_write((unsigned char *)"X",1);
+  powerctl_uart_write((unsigned char *)"X",1);
 }
 
 uint16_t powerctl_cellog_retrieve(uint8_t *out, uint16_t buf_len)
 {
   uint16_t ofs=0;
   powerctl_sync();
-  do_serial_port_write((unsigned char *)"P",1);
+  powerctl_uart_write((unsigned char *)"P",1);
   uint8_t buf=1;
   while(1) {
-    if (do_serial_port_read(&buf,1)==1) {
+    if (powerctl_uart_read(&buf,1)==1) {
       //      if (!buf) { nul_count++; if (nul_count>1) break; }
       if (!buf) break;
       if (buf&&(!(buf&0x80))) if (ofs<buf_len) out[ofs++]=buf;
@@ -375,7 +398,7 @@ char powerctl_cel_setbaud(uint32_t speed)
   default:
     return 0xff;
   }
-  do_serial_port_write(&c,1);
+  powerctl_uart_write(&c,1);
   return 0;
 }
 
@@ -391,9 +414,9 @@ int main(int argc,char **argv)
 
   for(int i=3;i<argc;i++) {
     if (argv[i][0]=='+') {
-      int circuit_id = argv[i][1]-'0';
-      if ((strlen(argv[i])!=2)||(circuit_id<0)||(circuit_id>5)) {
-	fprintf(stderr,"ERROR: Invalid circuit specification.\n");
+      int circuit_id = powerctl_find_circuit_by_name(&argv[i][1]);      
+      if ((circuit_id<0)||(circuit_id>5)) {
+	fprintf(stderr,"ERROR: Could not find requested circuit.\n");
 	exit(-1);
       }
       if (powerctl_switch_circuit(circuit_id,1)) {
@@ -402,9 +425,9 @@ int main(int argc,char **argv)
       }
     }
     else if (argv[i][0]=='-') {
-      int circuit_id = argv[i][1]-'0';
-      if ((strlen(argv[i])!=2)||(circuit_id<0)||(circuit_id>5)) {
-	fprintf(stderr,"ERROR: Invalid circuit specification.\n");
+      int circuit_id = powerctl_find_circuit_by_name(&argv[i][1]);      
+      if ((circuit_id<0)||(circuit_id>5)) {
+	fprintf(stderr,"ERROR: Could not find requested circuit.\n");
 	exit(-1);
       }
       if (powerctl_switch_circuit(circuit_id,0)) {
