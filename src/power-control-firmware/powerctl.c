@@ -40,6 +40,9 @@ void set_serial_speed(int fd, int serial_speed)
     log_error("set_serial_speed: invalid fd");
     return;
   }
+
+  if (tcgetattr(fd, &t) != 0) { log_error("tcgetattr failed"); return; }  
+
   if (serial_speed == 115200) {
     if (cfsetospeed(&t, B115200))
       log_error("failed to set output baud rate");
@@ -106,7 +109,7 @@ int open_the_serial_port(char *serial_port,int serial_speed)
   }
 
   errno = 0;
-  fd = open(serial_port, O_RDWR);
+  fd = open(serial_port, O_RDWR | O_NOCTTY);
   if (fd == -1) {
     log_error("could not open serial port");
     return -1;
@@ -167,7 +170,8 @@ uint16_t powerctl_uart_read(uint8_t *buffer, uint16_t size)
   int count;
 
   count = read(fd, buffer, size);
-
+  if (count <= 0) return 0;
+ 
   return count;
 }
 
@@ -176,12 +180,11 @@ uint16_t powerctl_uart_read(uint8_t *buffer, uint16_t size)
 // Returns status
 uint8_t powerctl_sync(void)
 {
-  uint8_t buf[16],r;
+  uint8_t buf[16];
+
   // Flush any backlog
-  while((r=powerctl_uart_read(buf,16))>0) {
-    // dump_bytes(4,"sync(1)",buf,r);
-    continue;
-  }
+  while (powerctl_uart_read(buf,16) > 0) continue;
+	
   // Then request a status byte
   powerctl_uart_write((unsigned char *)".",1);
   // And finally read until we see that status byte.
@@ -344,7 +347,7 @@ char powerctl_find_circuit_by_name(char *string)
 
   // Allow specifying circuit by number as well
   if (string[0]&&(!string[1])) {
-    int circuit_id = string[1]-'0';
+    int circuit_id = string[0]-'0';
     if (circuit_id>=0&&circuit_id<circuit_count) return circuit_id;
   }
   

@@ -189,8 +189,8 @@ begin
           pwr_tx_data(1) <= C6;
           pwr_tx_data(2) <= C5;
           pwr_tx_data(3) <= E2;
-          pwr_tx_data(3) <= B5;
-          pwr_tx_data(3) <= C2;
+          pwr_tx_data(4) <= B5;
+          pwr_tx_data(5) <= C2;
           pwr_tx_data(6) <= cel_log_notempty;
           pwr_tx_data(7) <= '1';
           pwr_tx_trigger <= '1';
