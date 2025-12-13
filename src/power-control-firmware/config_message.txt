@@ -12,7 +12,8 @@ Commands:
 	X - Clear cellular modem event log
       0-9 - Power circuit (drive enable pin high)
 shift 0-9 - De-power circuit (pull enable pin low)
-      A-Z - Select UART speed for cellular modem
+      A-G - Select UART speed for cellular modem tap
+            (2MBPS,1MBPS,230K4,115K2,19K2,9600,2400)
 
 Playback ends with NUL (0x00) character.
 

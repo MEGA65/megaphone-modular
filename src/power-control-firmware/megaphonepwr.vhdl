@@ -34,6 +34,14 @@ end entity;
 architecture rtl of megaphonepwr is
 
   constant UART_SPEED_TIMER : integer := (12_000_000 / 1) / 115_200;
+
+  constant UART_DIV_2MBPS : integer :=  (12_000_000 / 1) / 2_000_000;
+  constant UART_DIV_1MBPS : integer :=  (12_000_000 / 1) / 1_000_000;
+  constant UART_DIV_230K : integer :=  (12_000_000 / 1) / 230_400;
+  constant UART_DIV_115K : integer :=  (12_000_000 / 1) / 115_200;
+  constant UART_DIV_19200 : integer :=  (12_000_000 / 1) / 19_200;
+  constant UART_DIV_9600 : integer :=  (12_000_000 / 1) / 9_600;
+  constant UART_DIV_2400 : integer :=  (12_000_000 / 1) / 2_400;
   
   signal pwr_tx_data : unsigned(7 downto 0) := x"00";     
   signal pwr_tx_trigger : std_logic := '0';
@@ -376,8 +384,13 @@ begin
             report_power_status <= '1';
 
             -- Cellular modem tap UART speed set
-          when x"41" =>
-            
+          when x"41" => cel_uart_div <= to_unsigned(UART_DIV_2MBPS,24);
+          when x"42" => cel_uart_div <= to_unsigned(UART_DIV_1MBPS,24);
+          when x"43" => cel_uart_div <= to_unsigned(UART_DIV_230K,24);
+          when x"44" => cel_uart_div <= to_unsigned(UART_DIV_115K,24);
+          when x"45" => cel_uart_div <= to_unsigned(UART_DIV_19200,24);
+          when x"46" => cel_uart_div <= to_unsigned(UART_DIV_9600,24);
+          when x"47" => cel_uart_div <= to_unsigned(UART_DIV_2400,24);
           when others =>
             null;
         end case;
