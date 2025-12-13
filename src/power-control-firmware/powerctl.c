@@ -1,3 +1,8 @@
+
+#define FIELD_ONCHAR 1
+#define FIELD_OFFCHAR 2
+#define FIELD_CIRCUITNAME 3
+
 #ifdef MEGA65
 #else
 
@@ -305,7 +310,7 @@ int main(int argc,char **argv)
 	// Stop when we fail to read info for a circuit
 	unsigned char field[128];
 	field[0]=0;
-	if (powerctl_getconfig(circuit_id,1,field,sizeof(field))) {
+	if (powerctl_getconfig(circuit_id,FIELD_CIRCUITNAME,field,sizeof(field))) {
 	  fprintf(stderr,"ERROR: Failed to read information for circuit %d\n",circuit_id);
 	  exit(-1);
 	}
