@@ -8,6 +8,8 @@
 #define GETCONFIG_CONTINUE 1
 #define GETCONFIG_RESTART 2
 
+#define IGNORE_REPORTS 1
+
 // User must supply these functions
 int powerctl_uart_write(uint8_t *buffer, uint16_t size);
 uint16_t powerctl_uart_read(uint8_t *buffer, uint16_t size);

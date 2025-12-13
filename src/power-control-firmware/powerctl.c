@@ -97,7 +97,9 @@ void set_serial_speed(int fd, int serial_speed)
   serial.flags |= ASYNC_LOW_LATENCY;
   ioctl(fd, TIOCSSERIAL, &serial);
   
+#ifdef DEBUG
   fprintf(stderr,"DEBUG: Set serial speed and parameters\n");
+#endif
 }
 
 
@@ -193,7 +195,9 @@ uint8_t powerctl_sync(void)
       // Prompt for status byte if we just saw the end of a text message
       if (!buf[0]) powerctl_uart_write((unsigned char *)".",1);
       if (buf[0]&0x80) {
+#ifdef DEBUG
 	fprintf(stderr,"DEBUG: powerctl_sync returning 0x%02x\n",buf[0]);
+#endif
 	return buf[0];
       }
 
@@ -207,7 +211,7 @@ uint8_t powerctl_sync(void)
 char line_buffer[128];
 uint8_t line_len=0;
 
-char powerctl_read_line(void)
+char powerctl_read_line(char ignore_reports)
 {
   line_len=0;
   uint8_t buf=1;
@@ -216,7 +220,7 @@ char powerctl_read_line(void)
       if (!buf) return 0xff;
       // 0x80 -- 0xff status bytes should not occur.
       // if we see one, it's because we're not dumping config anymore = return failure
-      if (buf&0x80) return 0;
+      if (!ignore_reports) { if (buf&0x80) return 0; }
       line_buffer[line_len++]=buf;
       if (buf==0x0a) {
 	line_buffer[line_len]=0;
@@ -228,15 +232,20 @@ char powerctl_read_line(void)
 
 char powerctl_versioncheck(uint8_t *major, uint8_t *minor)
 {
-  char first_line=1;
+  char first_line=10;
   char saw_major=0;
   while(1) {
-    if (!powerctl_read_line()) {
-      if (!first_line) {      
+    if (!powerctl_read_line(IGNORE_REPORTS)) {
+      if (!first_line) {
+#ifndef MEGA65
 	fprintf(stderr,"FAIL:%s:%d:%s()\n",__FILE__,__LINE__,__FUNCTION__);
+#endif
 	return 0xff;
       } else {
-	first_line=0;	
+	if (first_line) first_line--;
+#ifndef MEGA65
+	fprintf(stderr,"WARN: Retrying version check.\n");
+#endif
 	continue;
       }	
     }
@@ -245,8 +254,10 @@ char powerctl_versioncheck(uint8_t *major, uint8_t *minor)
       if (major) *major = line_buffer[4]-'0';
       // Unsupported version
       if (line_buffer[4]!='1') {
+#ifndef MEGA65
 	fprintf(stderr,"FAIL:%s:%d:%s()\n",__FILE__,__LINE__,__FUNCTION__);
-	return 0xff;
+#endif
+	return 0xfe;
       }
       saw_major=1;
     }
@@ -255,14 +266,18 @@ char powerctl_versioncheck(uint8_t *major, uint8_t *minor)
       // Success (assuming we saw the major version number already)
       if (saw_major) return 0;
       else {
+#ifndef MEGA65
 	fprintf(stderr,"FAIL:%s:%d:%s()\n",__FILE__,__LINE__,__FUNCTION__);
-	return 0xff;
+#endif
+	return 0xfd;
       }
     }
   }
   // Could not find major or minor version
+#ifndef MEGA65
   fprintf(stderr,"FAIL:%s:%d:%s()\n",__FILE__,__LINE__,__FUNCTION__);
-  return 0xff;
+#endif
+  return 0xfc;
 }
 
 char powerctl_start_read_config(void)
@@ -299,7 +314,7 @@ char powerctl_get_circuit_count(void)
   if (powerctl_start_read_config()) return 0;
 
   while(1) {
-    if (!powerctl_read_line()) return 0;
+    if (!powerctl_read_line(0)) return 0;
     if (!strncmp(line_buffer,"CIRCUITS:",9)) {
       return line_buffer[9]-'0';
     }
@@ -318,7 +333,7 @@ char powerctl_getconfig(char circuit_id,char field_id,unsigned char *out,uint8_t
     }
   }
 
-  while(powerctl_read_line()) {
+  while(powerctl_read_line(0)) {
     if (line_buffer[1]==':' && line_buffer[0]==(circuit_id+'0')) {
       char colon_count=0;
       uint8_t out_ofs=0;
