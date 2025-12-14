@@ -204,6 +204,11 @@ int main(int argc,char **argv)
       uint16_t sms_count = modem_get_sms_count();
       fprintf(stderr,"INFO: %d SMS messages on SIM card.\n",sms_count);      
     }
+    else if (!strncmp(argv[i],"smssend=",8)) {
+      // Extract sender number to first comma.
+      // Then message body follows
+      // Call sms_send_utf8()
+    }
     else if (!strncmp(argv[i],"smsget=",7)) {
       uint16_t sms_number = atoi(&argv[i][7]);
       char result = modem_get_sms(sms_number);

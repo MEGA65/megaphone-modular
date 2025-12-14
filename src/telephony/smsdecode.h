@@ -42,3 +42,4 @@ typedef struct {
 } sms_decoded_t;
 
 int decode_sms_deliver_pdu(const char *pdu_hex, sms_decoded_t *s);
+void sms_send_utf8(const char *receiver, const char *utf8_msg, uint8_t ref_num);
