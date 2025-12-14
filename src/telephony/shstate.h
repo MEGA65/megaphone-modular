@@ -13,10 +13,13 @@
 #define SHARED_VERSION 0x01
 #define SHARED_MAGIC 0xfade
 
+#ifdef MEGA65
 #define SHARED_ADDR 0xC000
 #define SHARED_TOP 0xCFFF
 #define SHARED_SIZE (SHARED_TOP + 1 - SHARED_ADDR)
-
+#else
+#define SHARED_SIZE (sizeof(struct shared_state_t))
+#endif
 
 typedef struct shared_state_t {
   // Gets updated byt irq_wait_animation in hal_asm_llvm.s
@@ -74,7 +77,11 @@ typedef struct shared_state_t {
 
 //extern struct shared_state_t shared;
 
+#ifdef MEGA65
 #define shared (*(Shared *)SHARED_ADDR)
+#else
+extern Shared shared;
+#endif
 
 #define PAGE_UNKNOWN 0
 #define PAGE_SMS_THREAD 1

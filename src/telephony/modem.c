@@ -192,13 +192,18 @@ int main(int argc,char **argv)
   }
 
   open_the_serial_port(argv[1],atoi(argv[2]));
+
+  fprintf(stderr,"DEBUG: shared=%p\n",&shared);
+  fflush(stderr);
   
   for(int i=3;i<argc;i++) {
     if (!strcmp(argv[i],"init")) {
       modem_init();
     }
-    else if (!strcmp(argv[i],"smscheck")) {
+    else if (!strcmp(argv[i],"smscount")) {
       modem_init();
+      uint16_t sms_count = modem_get_sms_count();
+      fprintf(stderr,"INFO: %d SMS messages on SIM card.\n",sms_count);      
     }
   }
 }
@@ -392,5 +397,16 @@ void modem_unmute_call(void)
   dialpad_draw_call_state(shared.active_field);    
 }
 
-
-
+uint16_t modem_get_sms_count(void)
+{
+  shared.modem_cgml_counter=0;
+  modem_uart_write((unsigned char *)"AT+CMGL=4\r\n",strlen("AT+CMGL=4\r\n"));
+  while(!(shared.modem_saw_ok|shared.modem_saw_error)) {
+    modem_poll();
+#ifndef MEGA65
+    // Don't eat all CPU on Linux. Doesn't matter on MEGA65.
+    usleep(10);
+#endif
+  }
+  return shared.modem_cgml_counter;
+}

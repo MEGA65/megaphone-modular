@@ -3,7 +3,9 @@
 #include "dialer.h"
 #include "shstate.h"
 
-// struct shared_state_t shared;
+#ifndef MEGA65
+Shared shared;
+#endif
 
 void shared_init(void)
 {  

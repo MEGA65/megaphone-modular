@@ -7,5 +7,6 @@ void modem_hangup_call(void);
 void modem_mute_call(void);
 void modem_unmute_call(void);
 void modem_toggle_mute(void);
+uint16_t modem_get_sms_count(void);
 
 #define MODEM_CALL_ESTABLISHMENT_TIMEOUT_SECONDS 10
