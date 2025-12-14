@@ -193,9 +193,6 @@ int main(int argc,char **argv)
 
   open_the_serial_port(argv[1],atoi(argv[2]));
 
-  fprintf(stderr,"DEBUG: shared=%p\n",&shared);
-  fflush(stderr);
-  
   for(int i=3;i<argc;i++) {
     if (!strcmp(argv[i],"init")) {
       modem_init();
@@ -224,7 +221,7 @@ char *modem_init_strings[]={
   "AT+QINDCFG=\"smsincoming\",1,1", // Enable SMS RX indication (+CMTI, +CMT, +CDS)
   "AT+CTZR=2", // Enable network time and timezone indication
   "AT+CREG=2", // Enable network registration and status indication
-  "at+qcfg=\"ims\",1" // Enable VoLTE?  
+  "at+qcfg=\"ims\",1", // Enable VoLTE?  
   "AT+CSQ", // Show signal strength
   "AT+QSPN", // Show network name
   NULL
@@ -330,6 +327,17 @@ void modem_parse_line(void)
   // Call mute status
 
   // What else?
+
+  if (shared.modem_line_len>= MODEM_LINE_SIZE)
+    shared.modem_line_len = MODEM_LINE_SIZE - 1;
+  shared.modem_line[shared.modem_line_len]=0;
+
+  if (!strncmp(shared.modem_line,"+CMGL",5)) {
+    shared.modem_cmgl_counter++;
+  }
+  if (!strcmp(shared.modem_line,"OK")) shared.modem_saw_ok=1;
+  if (!strcmp(shared.modem_line,"ERROR")) shared.modem_saw_error=1;
+  
 }
 
 void modem_place_call(void)
@@ -399,7 +407,7 @@ void modem_unmute_call(void)
 
 uint16_t modem_get_sms_count(void)
 {
-  shared.modem_cgml_counter=0;
+  shared.modem_cmgl_counter=0;
   modem_uart_write((unsigned char *)"AT+CMGL=4\r\n",strlen("AT+CMGL=4\r\n"));
   while(!(shared.modem_saw_ok|shared.modem_saw_error)) {
     modem_poll();
@@ -408,5 +416,5 @@ uint16_t modem_get_sms_count(void)
     usleep(10);
 #endif
   }
-  return shared.modem_cgml_counter;
+  return shared.modem_cmgl_counter;
 }

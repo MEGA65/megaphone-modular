@@ -69,7 +69,7 @@ typedef struct shared_state_t {
 #define MODEM_LINE_SIZE 256
   unsigned char modem_line[MODEM_LINE_SIZE];
   uint16_t modem_line_len;
-  uint16_t modem_cgml_counter;
+  uint16_t modem_cmgl_counter;
   uint8_t modem_saw_ok;
   uint8_t modem_saw_error;
   
