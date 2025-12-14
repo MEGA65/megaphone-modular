@@ -38,8 +38,6 @@ char send_at_command(const char *cmd, const char *pdu_payload)
   shared.modem_line[0]=0;
   while(!(shared.modem_saw_ok|shared.modem_saw_error)) {
     modem_poll();
-    if (shared.modem_line_len)
-      dump_bytes("modem_line",(unsigned long)shared.modem_line,shared.modem_line_len);
     if (!strncmp((char *)shared.modem_line,"+CMS ERROR",10)) return 0xfe;
     if (shared.modem_line[0]=='>') {
       fprintf(stderr,"DEBUG: Saw > prompt\n");

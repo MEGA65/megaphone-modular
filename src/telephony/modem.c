@@ -148,7 +148,6 @@ int open_the_serial_port(char *serial_port,int serial_speed)
   }
 
   set_serial_speed(fd, serial_speed);
-  fprintf(stderr,"DEBUG: Opened serial port.\n");
 
   return 0;
 }
@@ -294,10 +293,11 @@ char modem_init(void)
   // Cancel any multi-line input in progress (eg SMS sending)
   unsigned char escape=0x1b;
   modem_uart_write(&escape,1);
+  usleep(20000);
   
   // Clear any backlog from the modem
   while (modem_uart_read(&c,1)) continue;
-  
+
   for(int i=0;modem_init_strings[i];i++) {
     modem_uart_write((unsigned char *)modem_init_strings[i],strlen(modem_init_strings[i]));
     modem_uart_write((unsigned char *)"\r\n",2);
@@ -308,6 +308,7 @@ char modem_init(void)
       if (modem_uart_read(&c,1)) {
 	for(j=0;j<(6-1);j++) recent[j]=recent[j+1];
 	recent[5]=c;
+	// dump_bytes("recent",(unsigned long)recent,6);
       }
       // Check for OK
       for(j=0;j<6;j++) {
