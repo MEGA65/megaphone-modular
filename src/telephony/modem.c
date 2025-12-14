@@ -150,7 +150,7 @@ int open_the_serial_port(char *serial_port,int serial_speed)
   return 0;
 }
 
-int celmodem_uart_write(uint8_t *buffer, uint16_t size)
+int modem_uart_write(uint8_t *buffer, uint16_t size)
 {
 
   uint16_t offset = 0;
@@ -171,7 +171,7 @@ void print_spaces(FILE *f, int col)
     fprintf(f, " ");
 }
 
-uint16_t celmodem_uart_read(uint8_t *buffer, uint16_t size)
+uint16_t modem_uart_read(uint8_t *buffer, uint16_t size)
 {
   int count;
 
@@ -190,8 +190,94 @@ int main(int argc,char **argv)
     fprintf(stderr,"usage: powerctl <serial port> <serial speed> [command [...]]\n");
     exit(-1);
   }
+
+  open_the_serial_port(argv[1],atoi(argv[2]));
+  
+  for(int i=3;i<argc;i++) {
+    if (!strcmp(argv[i],"init")) {
+      modem_init();
+    }
+    else if (!strcmp(argv[i],"smscheck")) {
+      modem_init();
+    }
+  }
 }
 #endif
+
+char *modem_init_strings[]={
+  "ATI", // Make sure modem is alive
+  "ATE0", // No local echo
+  "ATS0=0", // Don't auto-answer
+  "ATX4", // More detailed call status indications
+  "AT+CMGF=0", // PDU mode for SMS
+  // Not supported on the firmware version on this board
+  //  "AT+CRC=0", // Say "RING", not "+CRING: ..."
+  //  "AT^DCSI=1", // Provide detailed call progression status messages
+  //  "AT+CLIP=1", // Present caller ID
+  "AT+QINDCFG=\"ring\",1,1", // Enable RING indication
+  "AT+QINDCFG=\"ccinfo\",1,1", // Enable RING indication
+  "AT+QINDCFG=\"smsincoming\",1,1", // Enable SMS RX indication (+CMTI, +CMT, +CDS)
+  "AT+CTZR=2", // Enable network time and timezone indication
+  "AT+CREG=2", // Enable network registration and status indication
+  "at+qcfg=\"ims\",1" // Enable VoLTE?  
+  "AT+CSQ", // Show signal strength
+  "AT+QSPN", // Show network name
+  NULL
+};
+
+unsigned char modem_happy[6]={'\r','\n','O','K','\r','\n'};
+unsigned char modem_sad[6]={'R','R','O','R','\r','\n'};
+
+char modem_init(void)
+{
+  unsigned char c;
+  unsigned char recent[6];
+  unsigned char errors=0;
+
+  // Clear any backlog from the modem
+  while (modem_uart_read(&c,1)) continue;
+  
+  for(int i=0;modem_init_strings[i];i++) {
+    modem_uart_write((unsigned char *)modem_init_strings[i],strlen(modem_init_strings[i]));
+    modem_uart_write((unsigned char *)"\r\n",2);
+
+    lfill((unsigned long)recent,0x00,6);
+    while(1) {
+      unsigned char j;
+      if (modem_uart_read(&c,1)) {
+	for(j=0;j<(6-1);j++) recent[j]=recent[j+1];
+	recent[5]=c;
+      }
+      // Check for OK
+      for(j=0;j<6;j++) {
+	if (recent[j]!=modem_happy[j]) {
+	  break;
+	}
+      }
+      if (j==6) {
+#ifdef STANDALONE
+	fprintf(stderr,"DEBUG: AT command '%s' succeeded.\n",modem_init_strings[i]);
+#endif
+	break;
+      }
+      // Check for ERROR
+      for(j=0;j<6;j++) {
+	if (recent[j]!=modem_sad[j]) {
+	  break;
+	}
+      }
+      if (j==6) {
+#ifdef STANDALONE
+	fprintf(stderr,"DEBUG: AT command '%s' failed.\n",modem_init_strings[i]);
+#endif
+	errors++;
+	break; }
+      
+    }
+    
+  }
+  return errors;
+}
 
 
 void modem_poll(void)
@@ -207,6 +293,26 @@ void modem_poll(void)
       break;      
     }
   }
+  
+  unsigned char c;
+  
+  // Process upto 255 bytes from the modem
+  // (so that we balance efficiency with max run time in modem_poll())
+  unsigned char counter=255;
+  while (counter&&modem_uart_read(&c,1)) {
+    if (c=='\r'||c=='\n') {
+      // End of line
+      if (modem_line_len) modem_parse_line();
+      modem_line_len=0;
+    } else {
+      if (modem_lin_len < MODEM_LINE_SIZE) modem_line[modem_line_len++]=c;
+    }
+    if (counter) counter--;
+  }
+}
+
+void modem_parse_line(void)
+{
 
   // Check for messages from the modem, and process them accordingly
   // RING

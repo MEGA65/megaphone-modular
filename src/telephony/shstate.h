@@ -61,6 +61,14 @@ typedef struct shared_state_t {
   unsigned long cached_codepoints[GLYPH_CACHE_SIZE];
   unsigned char cached_fontnums[GLYPH_CACHE_SIZE];
   unsigned char cached_glyph_flags[GLYPH_CACHE_SIZE];
+
+  // Modem status
+#define MODEM_LINE_SIZE 256
+  unsigned char modem_line[MODEM_LINE_SIZE];
+  uint16_t modem_line_len;
+  uint16_t modem_cgml_counter;
+  uint8_t modem_saw_ok;
+  uint8_t modem_saw_error;
   
 } Shared;
 
