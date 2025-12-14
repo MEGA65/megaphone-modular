@@ -212,6 +212,10 @@ int main(int argc,char **argv)
       if (!result) {
 	fprintf(stderr,"DEBUG: Decoded SMS message:\n");
 	fprintf(stderr,"       Sender: %s\n",sms.sender);
+	fprintf(stderr,"    Send time: %04d/%02d/%02d %02d:%02d.%02d (TZ%+dmin)\n",
+		sms.year, sms.month, sms.day,
+		sms.hour, sms.minute, sms.second,
+		sms.tz_minutes);
 	fprintf(stderr,"       text: %s\n",sms.text);
 	fprintf(stderr,"       concat: %d\n",sms.concat);
 	fprintf(stderr,"       concat_ref: %d\n",sms.concat_ref);
@@ -489,8 +493,11 @@ char modem_get_sms(uint16_t sms_number)
 
   char saw_cmgr=0;
   char got_message=0;
-  
-  // XXX - Poll and read response
+
+fprintf(stderr, "DEBUG: caller sizeof(sms_decoded_t)=%zu\n", sizeof(sms_decoded_t));
+fprintf(stderr, "DEBUG: &s=%p\n", (void*)&sms);
+
+// XXX - Poll and read response
   shared.modem_saw_error = 0;
   shared.modem_saw_ok = 0;
   while(!(shared.modem_saw_ok|shared.modem_saw_error)) {
@@ -523,5 +530,13 @@ char modem_delete_sms(uint16_t sms_number)
   u16_to_ascii(sms_number);
   modem_uart_write((unsigned char*)u16_str,strlen(u16_str));
   modem_uart_write((unsigned char *)"\r\n",2);
+
+  shared.modem_saw_error = 0;
+  shared.modem_saw_ok = 0;
+  while(!(shared.modem_saw_ok|shared.modem_saw_error)) {
+    modem_poll();
+  }
+  
+  return shared.modem_saw_error;
 }
 

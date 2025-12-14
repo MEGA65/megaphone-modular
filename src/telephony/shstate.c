@@ -7,7 +7,7 @@
 Shared shared;
 #endif
 
-void shared_init(void)
+char shared_init(void)
 {  
   if (shared.magic != SHARED_MAGIC) {
     lfill((unsigned long)&shared,0x00,SHARED_SIZE);
@@ -21,4 +21,5 @@ void shared_init(void)
   if (shared.version != SHARED_VERSION) {
     fail(1);
   }
+  return 0;
 }

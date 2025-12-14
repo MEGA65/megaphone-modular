@@ -66,7 +66,7 @@ typedef struct shared_state_t {
   unsigned char cached_glyph_flags[GLYPH_CACHE_SIZE];
 
   // Modem status
-#define MODEM_LINE_SIZE 256
+#define MODEM_LINE_SIZE 512
   unsigned char modem_line[MODEM_LINE_SIZE];
   char modem_poll_reset_line;
   uint16_t modem_line_len;
@@ -90,6 +90,6 @@ extern Shared shared;
 uint8_t fonemain_sms_thread_controller(void);
 uint8_t fonemain_contact_list_controller(void);
 
-void shared_init(void);
+char shared_init(void);
 
 #endif
