@@ -239,6 +239,12 @@ begin
             LED <= '1';
             report_power_status <= '1';
             power_button_edge_seen <= '0';
+
+            -- Insert that P into the log
+            cel_log_waddr <= cel_log_waddr + 1;
+            cel_log_we <= '1';
+            cel_log_wdata <= x"50"; -- ASCII 'P'
+            
           elsif power_button_hold_counter = (12_000_000 * 2 - 2) and power_button_edge_seen='1' then
             LED <= '0';
             report_power_status <= '1';
