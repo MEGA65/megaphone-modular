@@ -53,5 +53,12 @@ void mega65_uart_printhex(uint8_t v);
 void mega65_uart_printhex16(uint16_t v);
 #define CHECKPOINT(X)
 
+// Dummy structure declaration for cross-compiled test programs
+struct shared_resource {
+  uint32_t dummy;
+};
+// Likewise, we have to have a dummy delcaration of this
+#define FRAMES_PER_SECOND 50
+
 #endif
 

@@ -1,7 +1,7 @@
 #include "includes.h"
 #include <string.h>
 
-#include "features.h"
+#include "feature_select.h"
 #include "buffers.h"
 #include "contacts.h"
 #include "records.h"
