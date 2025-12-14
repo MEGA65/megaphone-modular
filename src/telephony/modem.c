@@ -201,12 +201,10 @@ int main(int argc,char **argv)
       modem_init();
     }
     else if (!strcmp(argv[i],"smscount")) {
-      modem_init();
       uint16_t sms_count = modem_get_sms_count();
       fprintf(stderr,"INFO: %d SMS messages on SIM card.\n",sms_count);      
     }
     else if (!strncmp(argv[i],"smsget=",7)) {
-      modem_init();
       uint16_t sms_number = atoi(&argv[i][7]);
       char result = modem_get_sms(sms_number);
       fprintf(stderr,"INFO: Result = %d reading SMS message #%d.\n",
