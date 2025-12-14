@@ -294,10 +294,20 @@ char sms_send_utf8(const char *receiver, const char *utf8_msg, uint8_t ref_num) 
             uint8_t chars_this_part = 0;
 
 	    while (chars_this_part < max_chars_per_msg && *u_ptr) {
-                unsigned long cp = utf8_next_codepoint(&u_ptr);
+                // 1. Peek at the next code point size
+                unsigned char *peek_ptr = u_ptr;
+                unsigned long next_cp = utf8_next_codepoint(&peek_ptr);
+                uint8_t char_cost = (next_cp > 0xFFFF) ? 2 : 1;
+
+                // 2. Check if it fits
+                if (chars_this_part + char_cost > max_chars_per_msg) {
+                    break; // Doesn't fit, push to next SMS part
+                }
+
+                // 3. Process normally
+                unsigned long cp = utf8_next_codepoint(&u_ptr); // Actually advance now
                 
                 if (cp > 0xFFFF) {
-                    // NEW: Handle Emojis (Surrogate Pairs)
                     cp -= 0x10000;
                     uint16_t high = 0xD800 + (cp >> 10);
                     uint16_t low  = 0xDC00 + (cp & 0x3FF);
@@ -307,9 +317,8 @@ char sms_send_utf8(const char *receiver, const char *utf8_msg, uint8_t ref_num) 
                     ud[ud_len++] = (low >> 8) & 0xFF;
                     ud[ud_len++] = low & 0xFF;
                     
-                    chars_this_part += 2; // Takes 2 slots
+                    chars_this_part += 2;
                 } else {
-                    // Standard BMP Character
                     ud[ud_len++] = (cp >> 8) & 0xFF;
                     ud[ud_len++] = cp & 0xFF;
                     chars_this_part++;
