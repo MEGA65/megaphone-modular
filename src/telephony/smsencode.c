@@ -220,14 +220,21 @@ char sms_send_utf8(const char *receiver, const char *utf8_msg, uint8_t ref_num) 
         unsigned long cp = utf8_next_codepoint(&u_ptr);
         uint16_t gsm = unicode_to_gsm(cp);
         
-        if (gsm == 0xFFFF) {
-            force_ucs2 = true;
-        } else if (gsm > 0xFF) {
-            gsm_septet_count += 2;
-        } else {
-            gsm_septet_count++;
-        }
-        char_count++;
+	if (gsm == 0xFFFF) {
+	  force_ucs2 = true;
+	} else if (gsm > 0xFF) {
+	  gsm_septet_count += 2;
+	} else {
+	  gsm_septet_count++;
+	}
+	
+	// NEW: Count Astral Plane chars (Emojis) as 2 UCS-2 words
+	if (cp > 0xFFFF) {
+	  char_count += 2;
+	} else {
+	  char_count++;
+	}
+
     }
 
     /* 2. Determine Splits */
@@ -285,13 +292,30 @@ char sms_send_utf8(const char *receiver, const char *utf8_msg, uint8_t ref_num) 
         /* --- TEXT PACKING --- */
         if (force_ucs2) {
             uint8_t chars_this_part = 0;
-            
-            while (chars_this_part < max_chars_per_msg && *u_ptr) {
+
+	    while (chars_this_part < max_chars_per_msg && *u_ptr) {
                 unsigned long cp = utf8_next_codepoint(&u_ptr);
-                ud[ud_len++] = (cp >> 8) & 0xFF;
-                ud[ud_len++] = cp & 0xFF;
-                chars_this_part++;
+                
+                if (cp > 0xFFFF) {
+                    // NEW: Handle Emojis (Surrogate Pairs)
+                    cp -= 0x10000;
+                    uint16_t high = 0xD800 + (cp >> 10);
+                    uint16_t low  = 0xDC00 + (cp & 0x3FF);
+                    
+                    ud[ud_len++] = (high >> 8) & 0xFF;
+                    ud[ud_len++] = high & 0xFF;
+                    ud[ud_len++] = (low >> 8) & 0xFF;
+                    ud[ud_len++] = low & 0xFF;
+                    
+                    chars_this_part += 2; // Takes 2 slots
+                } else {
+                    // Standard BMP Character
+                    ud[ud_len++] = (cp >> 8) & 0xFF;
+                    ud[ud_len++] = cp & 0xFF;
+                    chars_this_part++;
+                }
             }
+	    
             g_pdu[udl_idx] = ud_len; /* UDL is octets for UCS2 */
         } 
         else {
