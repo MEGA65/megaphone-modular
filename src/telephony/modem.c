@@ -207,10 +207,8 @@ int main(int argc,char **argv)
     else if (!strncmp(argv[i],"smsget=",7)) {
       uint16_t sms_number = atoi(&argv[i][7]);
       char result = modem_get_sms(sms_number);
-      fprintf(stderr,"INFO: Result = %d reading SMS message #%d.\n",
-	      result,sms_number);
       if (!result) {
-	fprintf(stderr,"DEBUG: Decoded SMS message:\n");
+	fprintf(stderr,"INFO: Decoded SMS message:\n");
 	fprintf(stderr,"       Sender: %s\n",sms.sender);
 	fprintf(stderr,"    Send time: %04d/%02d/%02d %02d:%02d.%02d (TZ%+dmin)\n",
 		sms.year, sms.month, sms.day,
@@ -222,7 +220,8 @@ int main(int argc,char **argv)
 	fprintf(stderr,"       concat_total: %d\n",sms.concat_total);
 	fprintf(stderr,"       concat_seq: %d\n",sms.concat_seq);
 
-      }
+      } else
+	fprintf(stderr,"ERROR: Could not retreive or decode SMS message.\n");
     }
   }
 }
@@ -494,17 +493,12 @@ char modem_get_sms(uint16_t sms_number)
   char saw_cmgr=0;
   char got_message=0;
 
-fprintf(stderr, "DEBUG: caller sizeof(sms_decoded_t)=%zu\n", sizeof(sms_decoded_t));
-fprintf(stderr, "DEBUG: &s=%p\n", (void*)&sms);
-
 // XXX - Poll and read response
   shared.modem_saw_error = 0;
   shared.modem_saw_ok = 0;
   while(!(shared.modem_saw_ok|shared.modem_saw_error)) {
     if (modem_poll()) {
       if (saw_cmgr) {
-	fprintf(stderr,"DEBUG: Parsing SMS message: %s\n",
-		shared.modem_line);
 	char r = decode_sms_deliver_pdu((char *)shared.modem_line, &sms);
 	if (!r)
 	  got_message=1;

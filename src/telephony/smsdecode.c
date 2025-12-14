@@ -1,6 +1,10 @@
 /* ---------------------------------------------------------------------
    SMS PDU decoding routines (Embedded Optimized)
-   Generated using ChatGPT and Gemini
+   Developed using ChatGPT and Gemini LLMs
+   Features: 
+   - GSM 03.38 Default Alphabet -> UTF-8 mapping
+   - Support for Extension Table (Euro symbol € etc.)
+   - Infrastructure for National Language Shift Tables (UDH 0x24/0x25)
    ---------------------------------------------------------------------
 */
 
@@ -11,9 +15,51 @@
 
 #include "smsdecode.h"
 
-/* ----------------------------- constants ----------------------------- */
+/* ----------------------------- Mapping Tables ----------------------------- */
 
-/* Return codes */
+/* GSM 03.38 Default Alphabet (Basic 7-bit) to Unicode 
+   Mappings differ from ASCII at: 0x00-0x0F, 0x10-0x1F, 0x24, 0x40, 0x5B-0x60, 0x7B-0x7E
+*/
+static const uint16_t gsm_default_map[128] = {
+    0x0040, 0x00A3, 0x0024, 0x00A5, 0x00E8, 0x00E9, 0x00F9, 0x00EC, /* 00-07: @ £ $ ¥ è é ù ì */
+    0x00F2, 0x00C7, 0x000A, 0x00D8, 0x00F8, 0x000D, 0x00C5, 0x00E5, /* 08-0F: ò Ç \n Ø ø \r Å å */
+    0x0394, 0x005F, 0x03A6, 0x0393, 0x039B, 0x03A9, 0x03A0, 0x03A8, /* 10-17: Δ _ Φ Γ Λ Ω Π Ψ */
+    0x03A3, 0x0398, 0x039E, 0x001B, 0x00C6, 0x00E6, 0x00DF, 0x00C9, /* 18-1F: Σ Θ Ξ ESC Æ æ ß É */
+    0x0020, 0x0021, 0x0022, 0x0023, 0x00A4, 0x0025, 0x0026, 0x0027, /* 20-27:   ! " # ¤ % & ' */
+    0x0028, 0x0029, 0x002A, 0x002B, 0x002C, 0x002D, 0x002E, 0x002F, /* 28-2F: ( ) * + , - . / */
+    0x0030, 0x0031, 0x0032, 0x0033, 0x0034, 0x0035, 0x0036, 0x0037, /* 30-37: 0 1 2 3 4 5 6 7 */
+    0x0038, 0x0039, 0x003A, 0x003B, 0x003C, 0x003D, 0x003E, 0x003F, /* 38-3F: 8 9 : ; < = > ? */
+    0x00A1, 0x0041, 0x0042, 0x0043, 0x0044, 0x0045, 0x0046, 0x0047, /* 40-47: ¡ A B C D E F G */
+    0x0048, 0x0049, 0x004A, 0x004B, 0x004C, 0x004D, 0x004E, 0x004F, /* 48-4F: H I J K L M N O */
+    0x0050, 0x0051, 0x0052, 0x0053, 0x0054, 0x0055, 0x0056, 0x0057, /* 50-57: P Q R S T U V W */
+    0x0058, 0x0059, 0x005A, 0x00C4, 0x00D6, 0x00D1, 0x00DC, 0x00A7, /* 58-5F: X Y Z Ä Ö Ñ Ü § */
+    0x00BF, 0x0061, 0x0062, 0x0063, 0x0064, 0x0065, 0x0066, 0x0067, /* 60-67: ¿ a b c d e f g */
+    0x0068, 0x0069, 0x006A, 0x006B, 0x006C, 0x006D, 0x006E, 0x006F, /* 68-6F: h i j k l m n o */
+    0x0070, 0x0071, 0x0072, 0x0073, 0x0074, 0x0075, 0x0076, 0x0077, /* 70-77: p q r s t u v w */
+    0x0078, 0x0079, 0x007A, 0x00E4, 0x00F6, 0x00F1, 0x00FC, 0x00E0  /* 78-7F: x y z ä ö ñ ü à */
+};
+
+/* GSM 03.38 Default Extension Table (Accessed via ESC 0x1B)
+   Includes the Euro symbol, brackets, etc.
+*/
+static uint16_t map_gsm_extension(uint8_t c) {
+    switch(c) {
+        case 0x0A: return 0x000C; /* Form Feed */
+        case 0x14: return 0x005E; /* ^ */
+        case 0x28: return 0x007B; /* { */
+        case 0x29: return 0x007D; /* } */
+        case 0x2F: return 0x005C; /* \ */
+        case 0x3C: return 0x005B; /* [ */
+        case 0x3D: return 0x007E; /* ~ */
+        case 0x3E: return 0x005D; /* ] */
+        case 0x40: return 0x007C; /* | */
+        case 0x65: return 0x20AC; /* € (Euro) */
+        default: return 0; /* Invalid extension char, ignore or fallback */
+    }
+}
+
+/* ----------------------------- Return Codes ----------------------------- */
+
 enum {
     RC_OK = 0,
     RC_HEX_BADCHAR      = -1001,
@@ -51,7 +97,7 @@ enum {
     RC_ADDR_BODY_OOB      = -4002,
 };
 
-/* ----------------------------- utilities ----------------------------- */
+/* ----------------------------- Utilities ----------------------------- */
 
 static int hexval(char c)
 {
@@ -78,34 +124,12 @@ static int hex_to_bytes(const char *hex, uint8_t *out, int out_max)
 
 static inline int ceil_div(int a, int b) { return (a + b - 1) / b; }
 
-/* ------------------------ GSM 7-bit unpack ------------------------ */
-
-static int gsm7_unpack(const uint8_t *in, int in_len,
-                       int septet_len, int bit_offset,
-                       char *out, int out_max)
-{
-    int oi = 0;
-    for (int s = 0; s < septet_len; s++) {
-        int bitpos  = bit_offset + s * 7;
-        int bytepos = bitpos >> 3;
-        int shift   = bitpos & 7;
-
-        if (bytepos >= in_len) break;
-
-        uint16_t w = in[bytepos];
-        if (bytepos + 1 < in_len) w |= (uint16_t)in[bytepos + 1] << 8;
-
-        uint8_t septet = (uint8_t)((w >> shift) & 0x7F);
-        if (oi < out_max - 1) out[oi++] = (char)septet;
-    }
-    if (oi < out_max) out[oi] = '\0';
-    return oi;
-}
-
-/* ------------------------ UCS2 to UTF-8 ------------------------ */
+/* ------------------------ Encoding Logic ------------------------ */
 
 static void utf8_append(uint32_t cp, char *out, int out_max, int *oi)
 {
+    if (cp == 0) return; /* Ignore invalid chars */
+
     if (cp <= 0x7F) {
         if (*oi + 1 <= out_max) out[(*oi)++] = (char)cp;
     } else if (cp <= 0x7FF) {
@@ -127,6 +151,57 @@ static void utf8_append(uint32_t cp, char *out, int out_max, int *oi)
             out[(*oi)++] = (char)(0x80 | (cp & 0x3F));
         }
     }
+}
+
+/* Unpacks 7-bit GSM data and converts to UTF-8 on the fly.
+   Handles: Default Table, Extension Table (ESC), and hooks for National Shifts.
+*/
+static int gsm7_decode_stream(const uint8_t *in, int in_len,
+                              int septet_len, int bit_offset,
+                              char *out, int out_max,
+                              uint8_t lang_lock, uint8_t lang_single)
+{
+    int oi = 0;
+    bool escape_mode = false;
+
+    for (int s = 0; s < septet_len; s++) {
+        /* 1. Unpack Septet */
+        int bitpos  = bit_offset + s * 7;
+        int bytepos = bitpos >> 3;
+        int shift   = bitpos & 7;
+
+        if (bytepos >= in_len) break;
+
+        uint16_t w = in[bytepos];
+        if (bytepos + 1 < in_len) w |= (uint16_t)in[bytepos + 1] << 8;
+        uint8_t val = (uint8_t)((w >> shift) & 0x7F);
+
+        /* 2. Decode GSM Value to Unicode */
+        uint16_t cp = 0;
+
+        if (escape_mode) {
+            /* Handled Extended Characters (Euro, etc.) */
+            /* If you implement National Single Shifts, switch(lang_single) here */
+            cp = map_gsm_extension(val); 
+            
+            /* Fallback: if extension not found, print standard char (per spec) */
+            if (cp == 0) cp = gsm_default_map[val];
+            
+            escape_mode = false;
+        } else {
+            if (val == 0x1B) {
+                escape_mode = true;
+                continue; /* Do not print anything yet */
+            }
+            /* If you implement National Locking Shifts, switch(lang_lock) here */
+            cp = gsm_default_map[val];
+        }
+
+        /* 3. Output to UTF-8 buffer */
+        utf8_append(cp, out, out_max - 1, &oi);
+    }
+    if (oi < out_max) out[oi] = '\0';
+    return oi;
 }
 
 static void ucs2_to_utf8(const uint8_t *in, int in_len,
@@ -152,7 +227,7 @@ static void ucs2_to_utf8(const uint8_t *in, int in_len,
     *out_len = oi;
 }
 
-/* ------------------------ Helpers ------------------------ */
+/* ------------------------ Logic ------------------------ */
 
 static int dcs_alphabet(uint8_t dcs)
 {
@@ -208,9 +283,9 @@ static int decode_address_field(const uint8_t *pdu, int pdu_len, int idx,
         if (septets <= 0) septets = (bytes * 8) / 7;
         
         if (idx + bytes > pdu_len) return RC_ADDR_BODY_OOB;
-        gsm7_unpack(&pdu[idx], bytes, septets, 0, out, out_max);
+        /* Using standard decoding for Alphanumeric sender ID */
+        gsm7_decode_stream(&pdu[idx], bytes, septets, 0, out, out_max, 0, 0);
         
-        /* Trim padding */
         for (int i = 0; i < out_max; i++) {
             if (out[i] == '\0') break;
             if ((unsigned char)out[i] < 0x20 && out[i] != '\t') { out[i] = '\0'; break; }
@@ -225,7 +300,7 @@ static int decode_address_field(const uint8_t *pdu, int pdu_len, int idx,
     }
 }
 
-static void parse_udh_concat(const uint8_t *udh, int udh_len, sms_decoded_t *s)
+static void parse_udh(const uint8_t *udh, int udh_len, sms_decoded_t *s)
 {
     int i = 0;
     while (i + 2 <= udh_len) {
@@ -233,6 +308,7 @@ static void parse_udh_concat(const uint8_t *udh, int udh_len, sms_decoded_t *s)
         uint8_t iel = udh[i++];
         if (i + iel > udh_len) break;
 
+        /* Concat info */
         if (iei == 0x00 && iel == 0x03) {
             s->concat = 1;
             s->concat_ref   = udh[i];
@@ -244,11 +320,17 @@ static void parse_udh_concat(const uint8_t *udh, int udh_len, sms_decoded_t *s)
             s->concat_total = udh[i + 2];
             s->concat_seq   = udh[i + 3];
         }
+        /* Language Shifts */
+        else if (iei == 0x24 && iel == 0x01) {
+             s->lang_single = udh[i]; /* National Language Single Shift */
+        }
+        else if (iei == 0x25 && iel == 0x01) {
+             s->lang_lock = udh[i];   /* National Language Locking Shift */
+        }
+
         i += iel;
     }
 }
-
-/* ------------------------ UD decode ------------------------ */
 
 static int decode_user_data(const uint8_t *pdu, int pdu_len, int idx_udl,
                             uint8_t fo, uint8_t dcs,
@@ -266,16 +348,19 @@ static int decode_user_data(const uint8_t *pdu, int pdu_len, int idx_udl,
 
     const uint8_t *ud = &pdu[idx_udl];
     int text_off_bytes = 0;
-    int bit_offset = 0;
 
     s->udhi = (uint8_t)((fo & 0x40) ? 1 : 0);
+
+    /* Reset language settings */
+    s->lang_lock = 0;
+    s->lang_single = 0;
 
     if (s->udhi) {
         if (ud_bytes < 1) return RC_UD_UDHI_NO_UDHL;
         uint8_t udhl = ud[0];
         if (1 + (int)udhl > ud_bytes) return RC_UD_UDHL_TOO_BIG;
 
-        parse_udh_concat(&ud[1], (int)udhl, s);
+        parse_udh(&ud[1], (int)udhl, s);
         text_off_bytes = 1 + (int)udhl;
     }
 
@@ -291,7 +376,7 @@ static int decode_user_data(const uint8_t *pdu, int pdu_len, int idx_udl,
     /* GSM 7-bit */
     if (alpha == 0) {
         int septets_to_decode = (int)udl;
-        bit_offset = 0;
+        int bit_offset = 0;
 
         if (s->udhi) {
             int header_bits = text_off_bytes * 8;
@@ -302,8 +387,10 @@ static int decode_user_data(const uint8_t *pdu, int pdu_len, int idx_udl,
             if (septets_to_decode < 0) septets_to_decode = 0;
         }
 
-        s->text_len = gsm7_unpack(ud, ud_bytes, septets_to_decode, bit_offset,
-                                  s->text, (int)sizeof(s->text));
+        /* NEW: Unpack AND decode to UTF-8 in one pass */
+        s->text_len = gsm7_decode_stream(ud, ud_bytes, septets_to_decode, bit_offset,
+                                         s->text, (int)sizeof(s->text),
+                                         s->lang_lock, s->lang_single);
         return RC_OK;
     }
 
@@ -317,8 +404,6 @@ static int decode_user_data(const uint8_t *pdu, int pdu_len, int idx_udl,
     return RC_OK;
 }
 
-/* ------------------------ TPDU decoders ------------------------ */
-
 static int decode_deliver_tpdu(const uint8_t *pdu, int pdu_len, int idx, uint8_t fo, sms_decoded_t *s)
 {
     if (idx + 2 > pdu_len) return RC_DELIVER_OA_HDR_OOB;
@@ -330,12 +415,12 @@ static int decode_deliver_tpdu(const uint8_t *pdu, int pdu_len, int idx, uint8_t
     idx += consumed;
 
     if (idx + 2 > pdu_len) return RC_DELIVER_PID_DCS_OOB;
-    uint8_t pid = pdu[idx++]; /* PID unused */
+    uint8_t pid = pdu[idx++];
     (void)pid;
     s->dcs = pdu[idx++];
 
     if (idx + 7 > pdu_len) return RC_DELIVER_SCTS_OOB;
-    idx += 7; /* Skip SCTS validation for tight embedded size */
+    idx += 7; 
 
     if (idx >= pdu_len) return RC_DELIVER_UDL_OOB;
     return decode_user_data(pdu, pdu_len, idx, fo, s->dcs, s);
@@ -344,7 +429,7 @@ static int decode_deliver_tpdu(const uint8_t *pdu, int pdu_len, int idx, uint8_t
 static int decode_submit_tpdu(const uint8_t *pdu, int pdu_len, int idx, uint8_t fo, sms_decoded_t *s)
 {
     if (idx >= pdu_len) return RC_SUBMIT_MR_OOB;
-    idx++; /* MR */
+    idx++; 
 
     if (idx + 2 > pdu_len) return RC_SUBMIT_DA_HDR_OOB;
     uint8_t da_len = pdu[idx++];
@@ -355,7 +440,7 @@ static int decode_submit_tpdu(const uint8_t *pdu, int pdu_len, int idx, uint8_t 
     idx += consumed;
 
     if (idx + 2 > pdu_len) return RC_SUBMIT_PID_DCS_OOB;
-    idx++; /* PID */
+    idx++; 
     s->dcs = pdu[idx++];
 
     uint8_t vpf = (fo >> 3) & 0x03;
@@ -375,7 +460,7 @@ static int decode_status_report_tpdu(const uint8_t *pdu, int pdu_len, int idx, u
 {
     (void)fo;
     if (idx >= pdu_len) return RC_SR_MR_OOB;
-    idx++; /* MR */
+    idx++; 
 
     if (idx + 2 > pdu_len) return RC_SR_RA_HDR_OOB;
     uint8_t ra_len = pdu[idx++];
@@ -384,12 +469,6 @@ static int decode_status_report_tpdu(const uint8_t *pdu, int pdu_len, int idx, u
     int consumed = decode_address_field(pdu, pdu_len, idx, ra_len, ra_toa, s->sender, (int)sizeof(s->sender));
     if (consumed < 0) return RC_SR_RA_BODY_OOB;
     idx += consumed;
-
-    if (idx + 14 > pdu_len) return RC_SR_SCTS_OOB;
-    idx += 14; /* Skip SCTS + DT */
-
-    if (idx >= pdu_len) return RC_SR_ST_OOB;
-    /* uint8_t st = pdu[idx++]; */
     
     return RC_OK;
 }
@@ -422,27 +501,20 @@ static int decode_command_tpdu(const uint8_t *pdu, int pdu_len, int idx, uint8_t
     return RC_OK;
 }
 
-/* ------------------------ main entry point ------------------------ */
-
 int decode_sms_deliver_pdu(const char *pdu_hex, sms_decoded_t *s)
 {
-    /* Reduced buffer from 512 to 256 for 8-bit MCU stack safety */
     uint8_t pdu[256]; 
-
     int pdu_len = hex_to_bytes(pdu_hex, pdu, (int)sizeof(pdu));
     if (pdu_len < 0) return pdu_len;
 
     *s = (sms_decoded_t){0};
 
     int idx = 0;
-
-    /* SMSC */
     if (idx >= pdu_len) return RC_SMSC_OOB;
     uint8_t smsc_len = pdu[idx++];
     if (idx + smsc_len > pdu_len) return RC_SMSC_LEN_OOB;
     idx += smsc_len;
 
-    /* First octet of TPDU */
     if (idx >= pdu_len) return RC_FO_OOB;
     uint8_t fo = pdu[idx++];
     uint8_t mti = (uint8_t)(fo & 0x03);

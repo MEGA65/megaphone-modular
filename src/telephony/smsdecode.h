@@ -14,6 +14,9 @@ typedef struct {
   uint8_t mti;          // 0=DELIVER, 1=SUBMIT, 2=STATUS-REPORT, 3=COMMAND
   uint8_t alphabet;     // 0=7bit,1=8bit,2=UCS2,3=reserved
 
+  uint8_t lang_lock;
+  uint8_t lang_single;
+  
   // Concatenation (if UDH has it)
   uint8_t  concat;
   uint16_t concat_ref;
