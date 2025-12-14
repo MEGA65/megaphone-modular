@@ -38,23 +38,34 @@ char send_at_command(const char *cmd, const char *pdu_payload)
   shared.modem_line[0]=0;
   while(!(shared.modem_saw_ok|shared.modem_saw_error)) {
     modem_poll();
-    if (!strncmp((char *)shared.modem_line,"+CMS ERROR",10)) return 0xfe;
+    if (!strncmp((char *)shared.modem_line,"+CMS ERROR",10)) {
+      fprintf(stderr,"DEBUG: CMS Error: '%s'\n",(char *)shared.modem_line);
+      return 0xfe;
+    }
+    
     if (shared.modem_line[0]=='>') {
       fprintf(stderr,"DEBUG: Saw > prompt\n");
       modem_uart_write((unsigned char *)pdu_payload,strlen(pdu_payload));
-      fprintf(stderr,"DEBUG: CP\n");
-      modem_uart_write((unsigned char *)"\r\n",2);
       unsigned char terminator = 0x1a;
       modem_uart_write(&terminator,1);
       // Wait for OK or error
       fprintf(stderr,"DEBUG: Waiting for OK/ERROR after send\n");
       while(!(shared.modem_saw_ok|shared.modem_saw_error)) {
 	modem_poll();
-	return shared.modem_saw_error;
+	if (!strncmp((char *)shared.modem_line,"+CMS ERROR",10)) {
+	  fprintf(stderr,"DEBUG: CMS Error: '%s'\n",(char *)shared.modem_line);
+	  return 0xfe;
+	}
       }
+      fprintf(stderr,"DEBUG: Saw %s %s\n",
+	      shared.modem_saw_ok?"OK":"",
+	      shared.modem_saw_error?"ERROR":"");
+      return shared.modem_saw_error;
     }
   }
+
   // If we saw OK or ERROR, then something bad happened
+  fprintf(stderr,"DEBUG: Sending failed\n");
   return 0xff;
 }
 
@@ -192,7 +203,7 @@ uint8_t encode_address(const char *number, uint8_t *out) {
    utf8_msg: Input string
    ref_num:  0-255 incrementing ID for multipart tracking
 */
-void sms_send_utf8(const char *receiver, const char *utf8_msg, uint8_t ref_num) {
+char sms_send_utf8(const char *receiver, const char *utf8_msg, uint8_t ref_num) {
     bool force_ucs2 = false;
     uint16_t char_count = 0;
     uint16_t gsm_septet_count = 0;
@@ -354,7 +365,7 @@ void sms_send_utf8(const char *receiver, const char *utf8_msg, uint8_t ref_num) 
         sprintf(g_cmd_buf, "AT+CMGS=%d", total_len - 1);
         
         /* 3. Call Hardware Stub */
-        send_at_command(g_cmd_buf, g_pdu_hex);
+        if (send_at_command(g_cmd_buf, g_pdu_hex)) return 0xff;
         
         /* Prepare next loop */
         /* Zero out buffers for safety? Not strictly needed if logic is tight, 
@@ -362,5 +373,10 @@ void sms_send_utf8(const char *receiver, const char *utf8_msg, uint8_t ref_num) 
         if (!force_ucs2) memset(g_pdu, 0, MAX_PDU_SIZE); 
         
         current_part++;
+
+	// Be nice to the modem if sending multiple parts
+	if (current_part < total_parts) sleep(1);
     }
+
+    return 0;
 }

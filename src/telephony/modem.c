@@ -214,8 +214,10 @@ else if (!strncmp(argv[i], "smssend=", 8)) {
         if (comma) {
             /* Static allocation to keep stack frame small on 6502 */
             static char recipient[32]; 
-            static uint8_t msg_ref = 0; /* Persists across calls */
-            
+            static uint8_t msg_ref = 1; /* Persists across calls */
+
+	    if (!msg_ref) msg_ref++;
+	    
             /* calculate length of number part */
             size_t num_len = comma - p;
             
@@ -262,6 +264,7 @@ else if (!strncmp(argv[i], "smssend=", 8)) {
 
 char *modem_init_strings[]={
   "ATI", // Make sure modem is alive
+  "at+qcfg=\"ims\",1", // Enable VoLTE?  (must be done first in case it reboots the modem)
   "ATE0", // No local echo
   "ATS0=0", // Don't auto-answer
   "ATX4", // More detailed call status indications
@@ -274,10 +277,10 @@ char *modem_init_strings[]={
   "AT+QINDCFG=\"ccinfo\",1,1", // Enable RING indication
   "AT+QINDCFG=\"smsincoming\",1,1", // Enable SMS RX indication (+CMTI, +CMT, +CDS)
   "AT+CTZR=2", // Enable network time and timezone indication
+  "AT+CSCS=\"GSM\"", // Needed for SMS PDU mode sending?
   "AT+CREG=2", // Enable network registration and status indication
-  "at+qcfg=\"ims\",1", // Enable VoLTE?  
   "AT+CSQ", // Show signal strength
-  "AT+QSPN", // Show network name
+  //  "AT+QSPN", // Show network name  
   NULL
 };
 
