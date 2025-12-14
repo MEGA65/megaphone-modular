@@ -8,6 +8,7 @@
 #include "buffers.h"
 #include "af.h"
 #include "modem.h"
+#include "smsdecode.h"
 
 #ifdef MEGA65
 #else
@@ -282,7 +283,7 @@ char modem_init(void)
 }
 
 
-void modem_poll(void)
+char modem_poll(void)
 {
   // Check for timeout in state machine
   if ((shared.call_state_timeout != 0)
@@ -301,16 +302,31 @@ void modem_poll(void)
   // Process upto 255 bytes from the modem
   // (so that we balance efficiency with max run time in modem_poll())
   unsigned char counter=255;
+
+  if (shared.modem_poll_reset_line) {
+    shared.modem_line_len=0;
+  }
+  shared.modem_poll_reset_line = 0;
+  
   while (counter&&modem_uart_read(&c,1)) {
     if (c=='\r'||c=='\n') {
       // End of line
-      if (shared.modem_line_len) modem_parse_line();
+      if (shared.modem_line_len) {
+	modem_parse_line();
+	// Always return immediately after reading a line, and before
+	// we clear the line, so that the caller has an easy way to parse each line
+	// of response
+	shared.modem_poll_reset_line=1;
+	return 1;
+      }
       shared.modem_line_len=0;
     } else {
       if (shared.modem_line_len < MODEM_LINE_SIZE) shared.modem_line[shared.modem_line_len++]=c;
     }
     if (counter) counter--;
   }
+
+  return 0;
 }
 
 void modem_parse_line(void)
@@ -332,11 +348,11 @@ void modem_parse_line(void)
     shared.modem_line_len = MODEM_LINE_SIZE - 1;
   shared.modem_line[shared.modem_line_len]=0;
 
-  if (!strncmp(shared.modem_line,"+CMGL",5)) {
+  if (!strncmp((char *)shared.modem_line,"+CMGL",5)) {
     shared.modem_cmgl_counter++;
   }
-  if (!strcmp(shared.modem_line,"OK")) shared.modem_saw_ok=1;
-  if (!strcmp(shared.modem_line,"ERROR")) shared.modem_saw_error=1;
+  if (!strcmp((char *)shared.modem_line,"OK")) shared.modem_saw_ok=1;
+  if (!strcmp((char *)shared.modem_line,"ERROR")) shared.modem_saw_error=1;
   
 }
 
@@ -418,3 +434,71 @@ uint16_t modem_get_sms_count(void)
   }
   return shared.modem_cmgl_counter;
 }
+
+char u16_str[6];
+char *u16_to_ascii(uint16_t n)
+{
+    static const uint16_t divs[5] = { 10000, 1000, 100, 10, 1 };
+    int i = 0;
+    int started = 0;
+
+    u16_str[0]=0;
+    
+    if (n == 0) { u16_str[0] = '0'; u16_str[1]=0; return u16_str; }
+
+    for (int k = 0; k < 5; k++) {
+        uint16_t d = 0;
+        uint16_t base = divs[k];
+
+        while (n >= base) { n -= base; d++; }
+
+        if (started || d || base == 1) {
+            u16_str[i++] = (char)('0' + d);
+            u16_str[i] = 0;
+            started = 1;
+        }
+    }
+
+    return u16_str;
+}
+
+char modem_get_sms(uint16_t sms_number)
+{
+  // Read the specified SMS message
+  modem_uart_write((unsigned char *)"AT+CMGR=",strlen("AT+CMGR="));
+  u16_to_ascii(sms_number);
+  modem_uart_write((unsigned char*)u16_str,strlen(u16_str));
+  modem_uart_write((unsigned char *)"\r\n",2);
+
+  char saw_cmgr=0;
+  char got_message=0;
+  
+  // XXX - Poll and read response
+  shared.modem_saw_error = 0;
+  shared.modem_saw_ok = 0;
+  while(!(shared.modem_saw_ok|shared.modem_saw_error)) {
+    if (modem_poll()) {
+      if (saw_cmgr) {
+	fprintf(stderr,"DEBUG: Parsing SMS message: %s\n",
+		shared.modem_line);
+	got_message=1;
+      }
+      else if (!strncmp((char *)shared.modem_line,"+CMGR:",6)) {
+	saw_cmgr=1;
+      } else saw_cmgr=0;
+    }
+  }
+
+  if (got_message) return 0; else return 1;
+  
+}
+
+char modem_delete_sms(uint16_t sms_number)
+{
+  // Delete the specified SMS number
+  modem_uart_write((unsigned char *)"AT+CMGD=",strlen("AT+CMGD="));
+  u16_to_ascii(sms_number);
+  modem_uart_write((unsigned char*)u16_str,strlen(u16_str));
+  modem_uart_write((unsigned char *)"\r\n",2);
+}
+
