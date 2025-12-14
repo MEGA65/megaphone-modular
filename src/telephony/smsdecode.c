@@ -4,7 +4,7 @@
    ---------------------------------------------------------------------
 */
 
-
+#include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -22,12 +22,16 @@ static int hexval(char c) {
 static int hex_to_bytes(const char *hex, uint8_t *out, int out_max) {
     int n = 0;
     while (hex[0] && hex[1]) {
-        int hi = hexval(hex[0]);
-        int lo = hexval(hex[1]);
-        if (hi < 0 || lo < 0) return -1;
-        if (n >= out_max) return -2;
-        out[n++] = (uint8_t)((hi << 4) | lo);
-        hex += 2;
+      int hi = hexval(hex[0]);
+      int lo = hexval(hex[1]);
+      if (hi < 0 || lo < 0) {
+	return -1;
+      }
+      if (n >= out_max) {
+	return -2;
+      }
+      out[n++] = (uint8_t)((hi << 4) | lo);
+      hex += 2;
     }
     return n;
 }

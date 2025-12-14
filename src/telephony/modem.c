@@ -10,6 +10,8 @@
 #include "modem.h"
 #include "smsdecode.h"
 
+sms_decoded_t sms;
+
 #ifdef MEGA65
 #else
 
@@ -202,6 +204,23 @@ int main(int argc,char **argv)
       modem_init();
       uint16_t sms_count = modem_get_sms_count();
       fprintf(stderr,"INFO: %d SMS messages on SIM card.\n",sms_count);      
+    }
+    else if (!strncmp(argv[i],"smsget=",7)) {
+      modem_init();
+      uint16_t sms_number = atoi(&argv[i][7]);
+      char result = modem_get_sms(sms_number);
+      fprintf(stderr,"INFO: Result = %d reading SMS message #%d.\n",
+	      result,sms_number);
+      if (!result) {
+	fprintf(stderr,"DEBUG: Decoded SMS message:\n");
+	fprintf(stderr,"       Sender: %s\n",sms.sender);
+	fprintf(stderr,"       text: %s\n",sms.text);
+	fprintf(stderr,"       concat: %d\n",sms.concat);
+	fprintf(stderr,"       concat_ref: %d\n",sms.concat_ref);
+	fprintf(stderr,"       concat_total: %d\n",sms.concat_total);
+	fprintf(stderr,"       concat_seq: %d\n",sms.concat_seq);
+
+      }
     }
   }
 }
@@ -481,7 +500,13 @@ char modem_get_sms(uint16_t sms_number)
       if (saw_cmgr) {
 	fprintf(stderr,"DEBUG: Parsing SMS message: %s\n",
 		shared.modem_line);
-	got_message=1;
+	char r = decode_sms_deliver_pdu((char *)shared.modem_line, &sms);
+	if (!r)
+	  got_message=1;
+	else
+	  // Found the PDU, but it failed to decode
+	  return 100+r;
+	saw_cmgr=0;
       }
       else if (!strncmp((char *)shared.modem_line,"+CMGR:",6)) {
 	saw_cmgr=1;
