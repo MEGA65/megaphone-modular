@@ -302,10 +302,10 @@ void modem_poll(void)
   while (counter&&modem_uart_read(&c,1)) {
     if (c=='\r'||c=='\n') {
       // End of line
-      if (modem_line_len) modem_parse_line();
-      modem_line_len=0;
+      if (shared.modem_line_len) modem_parse_line();
+      shared.modem_line_len=0;
     } else {
-      if (modem_lin_len < MODEM_LINE_SIZE) modem_line[modem_line_len++]=c;
+      if (shared.modem_line_len < MODEM_LINE_SIZE) shared.modem_line[shared.modem_line_len++]=c;
     }
     if (counter) counter--;
   }
