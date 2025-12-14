@@ -79,6 +79,9 @@ SRC_TELEPHONY_COMMON=	src/telephony/d81.c \
 			src/telephony/buffers.c \
 			src/telephony/search.c \
 			src/telephony/sms.c \
+			src/telephony/smsdecode.c \
+			src/telephony/smsencode.c \
+			src/telephony/utf.c \
 			src/telephony/loader.c \
 			src/telephony/shstate.c \
 			src/telephony/mountstate.c \

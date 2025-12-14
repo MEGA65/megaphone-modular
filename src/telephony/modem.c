@@ -148,7 +148,7 @@ int open_the_serial_port(char *serial_port,int serial_speed)
   }
 
   set_serial_speed(fd, serial_speed);
-
+  fprintf(stderr,"DEBUG: Opened serial port.\n");
 
   return 0;
 }
@@ -163,6 +163,9 @@ int modem_uart_write(uint8_t *buffer, uint16_t size)
       offset += written;
     if (offset < size) {
       usleep(1000);
+      fprintf(stderr,"WARN: Wrote %d of %d bytes\n",offset,size);
+      perror("write()");
+      if (errno!=EAGAIN) exit(-1);
     }
   }
   return size;
@@ -204,10 +207,36 @@ int main(int argc,char **argv)
       uint16_t sms_count = modem_get_sms_count();
       fprintf(stderr,"INFO: %d SMS messages on SIM card.\n",sms_count);      
     }
-    else if (!strncmp(argv[i],"smssend=",8)) {
-      // Extract sender number to first comma.
-      // Then message body follows
-      // Call sms_send_utf8()
+else if (!strncmp(argv[i], "smssend=", 8)) {
+        /* Format: smssend=NUMBER,MESSAGE */
+        char *p = argv[i] + 8;
+        char *comma = strchr(p, ',');
+        
+        if (comma) {
+            /* Static allocation to keep stack frame small on 6502 */
+            static char recipient[32]; 
+            static uint8_t msg_ref = 0; /* Persists across calls */
+            
+            /* calculate length of number part */
+            size_t num_len = comma - p;
+            
+            if (num_len < sizeof(recipient)) {
+                memcpy(recipient, p, num_len);
+                recipient[num_len] = '\0'; /* Null-terminate the number */
+                
+                char *msg_body = comma + 1; /* Message starts after comma */
+                
+                printf("Sending SMS to %s (%d chars)...\n", recipient, (int)strlen(msg_body));
+                
+                /* Call the encoder */
+                sms_send_utf8(recipient, msg_body, msg_ref++);
+                
+            } else {
+                fprintf(stderr, "Error: Recipient number too long.\n");
+            }
+        } else {
+            fprintf(stderr, "Usage: smssend=NUMBER,MESSAGE\n");
+        }
     }
     else if (!strncmp(argv[i],"smsget=",7)) {
       uint16_t sms_number = atoi(&argv[i][7]);
@@ -262,6 +291,10 @@ char modem_init(void)
   unsigned char recent[6];
   unsigned char errors=0;
 
+  // Cancel any multi-line input in progress (eg SMS sending)
+  unsigned char escape=0x1b;
+  modem_uart_write(&escape,1);
+  
   // Clear any backlog from the modem
   while (modem_uart_read(&c,1)) continue;
   

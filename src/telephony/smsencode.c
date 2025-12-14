@@ -11,19 +11,54 @@
 #include <stdbool.h>
 #include <string.h>
 
+#include "includes.h"
+
+#include "shstate.h"
+#include "dialer.h"
 #include "screen.h"
+#include "records.h"
+#include "contacts.h"
+#include "buffers.h"
+#include "af.h"
+#include "modem.h"
+#include "smsdecode.h"
 
 /* --- Configuration --- */
 #define MAX_PDU_SIZE    180  /* Max valid SMS PDU is ~176 bytes */
 #define MAX_HEX_SIZE    (MAX_PDU_SIZE * 2 + 1)
 
-void send_at_command(const char *cmd, const char *pdu_payload)
+char send_at_command(const char *cmd, const char *pdu_payload)
 {
   fprintf(stderr,"DEBUG: Would send '%s','%s'\n",cmd,pdu_payload);
+  modem_uart_write((unsigned char *)cmd,strlen(cmd));
+  modem_uart_write((unsigned char *)"\r\n",2);
+  shared.modem_saw_error = 0;
+  shared.modem_saw_ok = 0;
+  fprintf(stderr,"DEBUG: Waiting for >\n");
+  shared.modem_line[0]=0;
+  while(!(shared.modem_saw_ok|shared.modem_saw_error)) {
+    modem_poll();
+    if (shared.modem_line_len)
+      dump_bytes("modem_line",(unsigned long)shared.modem_line,shared.modem_line_len);
+    if (!strncmp((char *)shared.modem_line,"+CMS ERROR",10)) return 0xfe;
+    if (shared.modem_line[0]=='>') {
+      fprintf(stderr,"DEBUG: Saw > prompt\n");
+      modem_uart_write((unsigned char *)pdu_payload,strlen(pdu_payload));
+      fprintf(stderr,"DEBUG: CP\n");
+      modem_uart_write((unsigned char *)"\r\n",2);
+      unsigned char terminator = 0x1a;
+      modem_uart_write(&terminator,1);
+      // Wait for OK or error
+      fprintf(stderr,"DEBUG: Waiting for OK/ERROR after send\n");
+      while(!(shared.modem_saw_ok|shared.modem_saw_error)) {
+	modem_poll();
+	return shared.modem_saw_error;
+      }
+    }
+  }
+  // If we saw OK or ERROR, then something bad happened
+  return 0xff;
 }
-
-/* User must implement this hardware stub */
-extern void send_at_command(const char *cmd, const char *pdu_payload);
 
 /* --- Static Allocation (Save Stack) --- */
 /* These persist between calls. Not thread-safe, but fine for single-threaded MCU */
@@ -34,11 +69,11 @@ static char     g_cmd_buf[16];        /* Buffer for "AT+CMGS=..." */
 
 /* ----------------------------- Helpers ----------------------------- */
 
-static char hex_digit(uint8_t v) {
+char hex_digit(uint8_t v) {
     return (v < 10) ? '0' + v : 'A' + (v - 10);
 }
 
-static void bytes_to_hex(const uint8_t *in, uint8_t len, char *out) {
+void bytes_to_hex(const uint8_t *in, uint8_t len, char *out) {
     uint8_t i;
     for (i = 0; i < len; i++) {
         uint8_t val = in[i];
@@ -51,7 +86,7 @@ static void bytes_to_hex(const uint8_t *in, uint8_t len, char *out) {
 /* ----------------------------- GSM 03.38 Mapping ----------------------------- */
 
 /* Returns 0xFFFF if not supported in 7-bit alphabet */
-static uint16_t unicode_to_gsm(unsigned long cp) {
+uint16_t unicode_to_gsm(unsigned long cp) {
     /* Fast path for standard ASCII overlap */
     if (cp >= 'A' && cp <= 'Z') return (uint16_t)cp;
     if (cp >= 'a' && cp <= 'z') return (uint16_t)cp;
@@ -123,7 +158,7 @@ static uint16_t unicode_to_gsm(unsigned long cp) {
 }
 
 /* Encodes Destination Address (DA) in BCD semi-octets */
-static uint8_t encode_address(const char *number, uint8_t *out) {
+uint8_t encode_address(const char *number, uint8_t *out) {
     uint8_t len = 0;
     uint8_t i = 0;
     uint8_t out_idx = 2;

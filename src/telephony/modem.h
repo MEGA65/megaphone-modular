@@ -10,4 +10,7 @@ void modem_toggle_mute(void);
 uint16_t modem_get_sms_count(void);
 char modem_get_sms(uint16_t sms_number);
 
+int modem_uart_write(uint8_t *buffer, uint16_t size);
+uint16_t modem_uart_read(uint8_t *buffer, uint16_t size);
+
 #define MODEM_CALL_ESTABLISHMENT_TIMEOUT_SECONDS 10
