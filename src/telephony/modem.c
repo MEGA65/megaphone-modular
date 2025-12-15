@@ -239,6 +239,10 @@ else if (!strncmp(argv[i], "smssend=", 8)) {
             fprintf(stderr, "Usage: smssend=NUMBER,MESSAGE\n");
         }
     }
+    else if (!strncmp(argv[i],"smsdel=",7)) {
+      uint16_t sms_number = atoi(&argv[i][7]);      
+      char result = modem_delete_sms(sms_number);
+    }
     else if (!strncmp(argv[i],"smsget=",7)) {
       uint16_t sms_number = atoi(&argv[i][7]);
       char result = modem_get_sms(sms_number);
@@ -487,12 +491,30 @@ uint16_t modem_get_sms_count(void)
 {
   shared.modem_cmgl_counter=0;
   modem_uart_write((unsigned char *)"AT+CMGL=4\r\n",strlen("AT+CMGL=4\r\n"));
+  shared.modem_line_len=0;
+
+  // The EC25 truncates output if more than ~12KB is returned via this command.
+  // So we should have a timeout so that it can't hard lock.  
+
+  shared.frame_counter=0;
+  
   while(!(shared.modem_saw_ok|shared.modem_saw_error)) {
-    modem_poll();
+    if (modem_poll()) {
+      fprintf(stderr,"DEBUG: Saw line '%s'\n",shared.modem_line);
+    }
 #ifndef MEGA65
-    // Don't eat all CPU on Linux. Doesn't matter on MEGA65.
-    usleep(10);
+    else {
+      // Don't eat all CPU on Linux. Doesn't matter on MEGA65.
+      usleep(10000);
+      shared.frame_counter++;
+    }
 #endif
+      
+    shared.modem_line_len=0;
+    // Never wait more than ~3 seconds
+    // (Returning too few messages just means a later call after deleting them will
+    //  read the rest).
+    if (shared.frame_counter > 150 ) break;
   }
   return shared.modem_cmgl_counter;
 }
@@ -569,8 +591,10 @@ char modem_delete_sms(uint16_t sms_number)
 
   shared.modem_saw_error = 0;
   shared.modem_saw_ok = 0;
+  shared.modem_line_len=0;
   while(!(shared.modem_saw_ok|shared.modem_saw_error)) {
     modem_poll();
+    shared.modem_line_len=0;
   }
   
   return shared.modem_saw_error;
