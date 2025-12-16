@@ -262,6 +262,25 @@ else if (!strncmp(argv[i], "smssend=", 8)) {
       } else
 	fprintf(stderr,"ERROR: Could not retreive or decode SMS message.\n");
     }
+    else if (!strcmp(argv[i],"smsnext")) {
+      uint16_t result = modem_get_oldest_sms();
+      if (result!=0xffff) {
+	fprintf(stderr,"INFO: Decoded SMS message #%d:\n", result);
+	fprintf(stderr,"       Sender: %s\n",sms.sender);
+	fprintf(stderr,"    Send time: %04d/%02d/%02d %02d:%02d.%02d (TZ%+dmin)\n",
+		sms.year, sms.month, sms.day,
+		sms.hour, sms.minute, sms.second,
+		sms.tz_minutes);
+	fprintf(stderr,"       text: %s\n",sms.text);
+	fprintf(stderr,"       concat: %d\n",sms.concat);
+	fprintf(stderr,"       concat_ref: %d\n",sms.concat_ref);
+	fprintf(stderr,"       concat_total: %d\n",sms.concat_total);
+	fprintf(stderr,"       concat_seq: %d\n",sms.concat_seq);
+
+      } else
+	fprintf(stderr,"ERROR: Could not retreive or decode SMS message.\n");
+    }
+
   }
 }
 #endif
@@ -580,6 +599,66 @@ char modem_get_sms(uint16_t sms_number)
   if (got_message) return 0; else return 1;
   
 }
+
+uint16_t parse_u16_dec(const char *s)
+{
+    uint16_t v = 0;
+
+    
+    while (*s >= '0' && *s <= '9') {
+      v = (uint16_t)((v << 3) + (v << 1) + (uint16_t)(*s - '0'));
+      s++;
+    }
+    return v;
+}
+
+
+uint16_t modem_get_oldest_sms(void)
+{
+  char got_message=0;
+  uint16_t sms_number;
+  
+  shared.modem_cmgl_counter=0;
+  modem_uart_write((unsigned char *)"AT+CMGL=4\r\n",strlen("AT+CMGL=4\r\n"));
+  shared.modem_line_len=0;
+  
+  // The EC25 truncates output if more than ~12KB is returned via this command.
+  // So we should have a timeout so that it can't hard lock.  
+  
+  shared.frame_counter=0;
+  
+  while(!(shared.modem_saw_ok|shared.modem_saw_error)) {
+    if (modem_poll()) {
+      // Crude way to find the correct lines to decode
+      if (shared.modem_cmgl_counter==2) {
+	shared.modem_cmgl_counter=3;
+	char r = decode_sms_deliver_pdu((char *)shared.modem_line, &sms);
+	if (!r)
+	  got_message=1;
+      }
+      if (shared.modem_cmgl_counter==1) {
+	shared.modem_cmgl_counter=2;
+	sms_number = parse_u16_dec((char *)&shared.modem_line[7]);
+      }
+    }
+#ifndef MEGA65
+    else {
+    // Don't eat all CPU on Linux. Doesn't matter on MEGA65.
+    usleep(10000);
+    shared.frame_counter++;
+    }
+#endif
+      
+    shared.modem_line_len=0;
+    // Never wait more than ~3 seconds
+    // (Returning too few messages just means a later call after deleting them will
+    //  read the rest).
+    if (shared.frame_counter > 150 ) break;
+  }
+  if (got_message) return sms_number;
+  else return 0xffff;
+}
+
 
 char modem_delete_sms(uint16_t sms_number)
 {

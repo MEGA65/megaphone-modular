@@ -10,6 +10,8 @@ void modem_toggle_mute(void);
 uint16_t modem_get_sms_count(void);
 char modem_get_sms(uint16_t sms_number);
 char modem_delete_sms(uint16_t sms_number);
+uint16_t modem_get_oldest_sms(void);
+
 
 int modem_uart_write(uint8_t *buffer, uint16_t size);
 uint16_t modem_uart_read(uint8_t *buffer, uint16_t size);
