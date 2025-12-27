@@ -91,6 +91,7 @@ NATIVE_TELEPHONY_COMMON=	$(SRC_TELEPHONY_COMMON) \
 			src/telephony/screen.c \
 			src/telephony/dialer.c \
 			src/telephony/modem.c \
+			src/telephony/format.c \
 			src/telephony/status.c \
 			src/telephony/smsscreens.c \
 			src/telephony/af.c \
@@ -156,9 +157,9 @@ bin65/%.llvm.prg:	src/telephony/%.c $(NATIVE_TELEPHONY_COMMON)
 	$(CC) -o bin65/$*.llvm.prg -Iinclude -Isrc/mega65-libc/include $< $(HELPER_SRCS) $(NATIVE_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS) -Wl,-Map,bin65/$*.map
 	llvm-objdump -drS --print-imm-hex bin65/$*.llvm.prg.elf >bin65/$*.llvm.dump
 
-bin/modem:	src/telephony/modem.c src/telephony/linux/hal.c src/telephony/buffers.c src/telephony/shstate.c src/telephony/smsdecode.c src/telephony/smsencode.c src/telephony/utf.c
+bin/modem:	src/telephony/modem.c src/telephony/format.c src/telephony/linux/hal.c src/telephony/buffers.c src/telephony/shstate.c src/telephony/smsdecode.c src/telephony/smsencode.c src/telephony/utf.c
 	mkdir -p bin
-	gcc -DSTANDALONE -Wall -Isrc/telephony -Isrc/telephony/linux -g -o bin/modem $< src/telephony/linux/hal.c src/telephony/buffers.c src/telephony/shstate.c src/telephony/smsdecode.c src/telephony/smsencode.c src/telephony/utf.c
+	gcc -DSTANDALONE -Wall -Isrc/telephony -Isrc/telephony/linux -g -o bin/modem $< src/telephony/linux/hal.c src/telephony/buffers.c src/telephony/shstate.c src/telephony/smsdecode.c src/telephony/smsencode.c src/telephony/utf.c src/telephony/format.c
 
 test:	$(LINUX_BINARIES)
 	src/telephony/linux/provision 
