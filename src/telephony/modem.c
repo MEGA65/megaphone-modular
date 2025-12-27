@@ -189,106 +189,6 @@ uint16_t modem_uart_read(uint8_t *buffer, uint16_t size)
 
 #endif
 
-#ifdef STANDALONE
-int main(int argc,char **argv)
-{
-  if (argc<3) {
-    fprintf(stderr,"usage: powerctl <serial port> <serial speed> [command [...]]\n");
-    exit(-1);
-  }
-
-  open_the_serial_port(argv[1],atoi(argv[2]));
-
-  for(int i=3;i<argc;i++) {
-    if (!strcmp(argv[i],"init")) {
-      modem_init();
-    }
-    else if (!strcmp(argv[i],"smscount")) {
-      uint16_t sms_count = modem_get_sms_count();
-      fprintf(stderr,"INFO: %d SMS messages on SIM card.\n",sms_count);      
-    }
-else if (!strncmp(argv[i], "smssend=", 8)) {
-        /* Format: smssend=NUMBER,MESSAGE */
-        char *p = argv[i] + 8;
-        char *comma = strchr(p, ',');
-        
-        if (comma) {
-            /* Static allocation to keep stack frame small on 6502 */
-            static char recipient[32]; 
-            static uint8_t msg_ref = 1; /* Persists across calls */
-
-	    if (!msg_ref) msg_ref++;
-	    
-            /* calculate length of number part */
-            size_t num_len = comma - p;
-            
-            if (num_len < sizeof(recipient)) {
-                memcpy(recipient, p, num_len);
-                recipient[num_len] = '\0'; /* Null-terminate the number */
-                
-                char *msg_body = comma + 1; /* Message starts after comma */
-                
-                printf("Sending SMS to %s (%d chars)...\n", recipient, (int)strlen(msg_body));
-                
-                /* Call the encoder */
-                sms_send_utf8(recipient, msg_body, msg_ref++);
-                
-            } else {
-                fprintf(stderr, "Error: Recipient number too long.\n");
-            }
-        } else {
-            fprintf(stderr, "Usage: smssend=NUMBER,MESSAGE\n");
-        }
-    }
-    else if (!strncmp(argv[i],"smsdel=",7)) {
-      uint16_t sms_number = atoi(&argv[i][7]);      
-      char result = modem_delete_sms(sms_number);
-      if (result) {
-	fprintf(stderr,"ERROR: modem_delete_sms() returned %d\n",result);
-      }
-    }
-    else if (!strncmp(argv[i],"smsget=",7)) {
-      uint16_t sms_number = atoi(&argv[i][7]);
-      char result = modem_get_sms(sms_number);
-      if (!result) {
-	fprintf(stderr,"INFO: Decoded SMS message:\n");
-	fprintf(stderr,"       Sender: %s\n",sms.sender);
-	fprintf(stderr,"    Send time: %04d/%02d/%02d %02d:%02d.%02d (TZ%+dmin)\n",
-		sms.year, sms.month, sms.day,
-		sms.hour, sms.minute, sms.second,
-		sms.tz_minutes);
-	fprintf(stderr,"       text: %s\n",sms.text);
-	fprintf(stderr,"       concat: %d\n",sms.concat);
-	fprintf(stderr,"       concat_ref: %d\n",sms.concat_ref);
-	fprintf(stderr,"       concat_total: %d\n",sms.concat_total);
-	fprintf(stderr,"       concat_seq: %d\n",sms.concat_seq);
-
-      } else
-	fprintf(stderr,"ERROR: Could not retreive or decode SMS message.\n");
-    }
-    else if (!strcmp(argv[i],"smsnext")) {
-      uint16_t result = modem_get_oldest_sms();
-      if (result!=0xffff) {
-	fprintf(stderr,"INFO: Decoded SMS message #%d:\n", result);
-	fprintf(stderr,"       Sender: %s\n",sms.sender);
-	fprintf(stderr,"    Send time: %04d/%02d/%02d %02d:%02d.%02d (TZ%+dmin)\n",
-		sms.year, sms.month, sms.day,
-		sms.hour, sms.minute, sms.second,
-		sms.tz_minutes);
-	fprintf(stderr,"       text: %s\n",sms.text);
-	fprintf(stderr,"       concat: %d\n",sms.concat);
-	fprintf(stderr,"       concat_ref: %d\n",sms.concat_ref);
-	fprintf(stderr,"       concat_total: %d\n",sms.concat_total);
-	fprintf(stderr,"       concat_seq: %d\n",sms.concat_seq);
-
-      } else
-	fprintf(stderr,"ERROR: Could not retreive or decode SMS message.\n");
-    }
-
-  }
-}
-#endif
-
 char *modem_init_strings[]={
   "ATI", // Make sure modem is alive
   "at+qcfg=\"ims\",1", // Enable VoLTE?  (must be done first in case it reboots the modem)
@@ -779,3 +679,104 @@ char modem_delete_sms(uint16_t sms_number)
   return shared.modem_saw_error;
 }
 
+
+
+#ifdef STANDALONE
+int main(int argc,char **argv)
+{
+  if (argc<3) {
+    fprintf(stderr,"usage: powerctl <serial port> <serial speed> [command [...]]\n");
+    exit(-1);
+  }
+
+  open_the_serial_port(argv[1],atoi(argv[2]));
+
+  for(int i=3;i<argc;i++) {
+    if (!strcmp(argv[i],"init")) {
+      modem_init();
+    }
+    else if (!strcmp(argv[i],"smscount")) {
+      uint16_t sms_count = modem_get_sms_count();
+      fprintf(stderr,"INFO: %d SMS messages on SIM card.\n",sms_count);      
+    }
+else if (!strncmp(argv[i], "smssend=", 8)) {
+        /* Format: smssend=NUMBER,MESSAGE */
+        char *p = argv[i] + 8;
+        char *comma = strchr(p, ',');
+        
+        if (comma) {
+            /* Static allocation to keep stack frame small on 6502 */
+            static char recipient[32]; 
+            static uint8_t msg_ref = 1; /* Persists across calls */
+
+	    if (!msg_ref) msg_ref++;
+	    
+            /* calculate length of number part */
+            size_t num_len = comma - p;
+            
+            if (num_len < sizeof(recipient)) {
+                memcpy(recipient, p, num_len);
+                recipient[num_len] = '\0'; /* Null-terminate the number */
+                
+                char *msg_body = comma + 1; /* Message starts after comma */
+                
+                printf("Sending SMS to %s (%d chars)...\n", recipient, (int)strlen(msg_body));
+                
+                /* Call the encoder */
+                sms_send_utf8(recipient, msg_body, msg_ref++);
+                
+            } else {
+                fprintf(stderr, "Error: Recipient number too long.\n");
+            }
+        } else {
+            fprintf(stderr, "Usage: smssend=NUMBER,MESSAGE\n");
+        }
+    }
+    else if (!strncmp(argv[i],"smsdel=",7)) {
+      uint16_t sms_number = atoi(&argv[i][7]);      
+      char result = modem_delete_sms(sms_number);
+      if (result) {
+	fprintf(stderr,"ERROR: modem_delete_sms() returned %d\n",result);
+      }
+    }
+    else if (!strncmp(argv[i],"smsget=",7)) {
+      uint16_t sms_number = atoi(&argv[i][7]);
+      char result = modem_get_sms(sms_number);
+      if (!result) {
+	fprintf(stderr,"INFO: Decoded SMS message:\n");
+	fprintf(stderr,"       Sender: %s\n",sms.sender);
+	fprintf(stderr,"    Send time: %04d/%02d/%02d %02d:%02d.%02d (TZ%+dmin)\n",
+		sms.year, sms.month, sms.day,
+		sms.hour, sms.minute, sms.second,
+		sms.tz_minutes);
+	fprintf(stderr,"       text: %s\n",sms.text);
+	fprintf(stderr,"       concat: %d\n",sms.concat);
+	fprintf(stderr,"       concat_ref: %d\n",sms.concat_ref);
+	fprintf(stderr,"       concat_total: %d\n",sms.concat_total);
+	fprintf(stderr,"       concat_seq: %d\n",sms.concat_seq);
+
+      } else
+	fprintf(stderr,"ERROR: Could not retreive or decode SMS message.\n");
+    }
+    else if (!strcmp(argv[i],"smsnext")) {
+      uint16_t result = modem_get_oldest_sms();
+      if (result!=0xffff) {
+	fprintf(stderr,"INFO: Decoded SMS message #%d:\n", result);
+	fprintf(stderr,"       Sender: %s\n",sms.sender);
+	fprintf(stderr,"    Send time: %04d/%02d/%02d %02d:%02d.%02d (TZ%+dmin)\n",
+		sms.year, sms.month, sms.day,
+		sms.hour, sms.minute, sms.second,
+		sms.tz_minutes);
+	fprintf(stderr,"       text: %s\n",sms.text);
+	fprintf(stderr,"       concat: %d\n",sms.concat);
+	fprintf(stderr,"       concat_ref: %d\n",sms.concat_ref);
+	fprintf(stderr,"       concat_total: %d\n",sms.concat_total);
+	fprintf(stderr,"       concat_seq: %d\n",sms.concat_seq);
+
+      } else
+	fprintf(stderr,"ERROR: Could not retreive or decode SMS message.\n");
+    }
+
+  }
+}
+#endif
