@@ -11,7 +11,9 @@ uint16_t modem_get_sms_count(void);
 char modem_get_sms(uint16_t sms_number);
 char modem_delete_sms(uint16_t sms_number);
 uint16_t modem_get_oldest_sms(void);
-
+char modem_set_mic_gain(uint8_t gain);
+char modem_set_headset_gain(uint8_t gain);
+char modem_set_sidetone_gain(uint8_t gain);
 
 int modem_uart_write(uint8_t *buffer, uint16_t size);
 uint16_t modem_uart_read(uint8_t *buffer, uint16_t size);

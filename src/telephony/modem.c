@@ -9,6 +9,7 @@
 #include "af.h"
 #include "modem.h"
 #include "smsdecode.h"
+#include "format.h"
 
 sms_decoded_t sms;
 
@@ -242,6 +243,9 @@ else if (!strncmp(argv[i], "smssend=", 8)) {
     else if (!strncmp(argv[i],"smsdel=",7)) {
       uint16_t sms_number = atoi(&argv[i][7]);      
       char result = modem_delete_sms(sms_number);
+      if (result) {
+	fprintf(stderr,"ERROR: modem_delete_sms() returned %d\n",result);
+      }
     }
     else if (!strncmp(argv[i],"smsget=",7)) {
       uint16_t sms_number = atoi(&argv[i][7]);
@@ -414,6 +418,40 @@ char modem_poll(void)
   return 0;
 }
 
+char modem_parser_comma(char **s)
+{
+  if ((**s)!=',') return 1;
+  (*s)++;
+  return 0;
+}
+
+char modem_parser_int16(char **s, uint16_t *out)
+{
+  char negative=0;
+  if ((**s)=='-') { negative=1; (*s)++; }
+  uint16_t v = parse_u16_dec(*s);
+  while (isdigit(**s)) (*s)++;
+  if (negative) *out=-v; else *out=v;
+  return 0;
+}
+
+char modem_parser_quotedstr(char **s, char *out, uint8_t max_len)
+{
+  uint8_t len=0;
+  if ((**s)!='\"') return 1;
+  (*s)++;
+  while((**s)&&(**s)!='\"') {
+    if (len>=(max_len-1)) return -1;
+    out[len++]=**s;
+    (*s)++;
+  }
+  out[len]=0;
+  if ((**s)!='\"') return 1;
+
+  return 0;
+}
+
+
 void modem_parse_line(void)
 {
 
@@ -433,6 +471,28 @@ void modem_parse_line(void)
     shared.modem_line_len = MODEM_LINE_SIZE - 1;
   shared.modem_line[shared.modem_line_len]=0;
 
+  if (!strncmp((char *)shared.modem_line,"+QIND: \"ccinfo\",",16)) {
+    char *s = (char *)&shared.modem_line[16];
+    uint16_t id,dir,call_state,mode,mpty,number_type;
+    char number[33];
+    do {
+      if (modem_parser_int16(&s,&id)) break;
+      if (modem_parser_comma(&s)) break;
+      if (modem_parser_int16(&s,&dir)) break;
+      if (modem_parser_comma(&s)) break;
+      if (modem_parser_int16(&s,&call_state)) break;
+      if (modem_parser_comma(&s)) break;
+      if (modem_parser_int16(&s,&mode)) break;
+      if (modem_parser_comma(&s)) break;
+      if (modem_parser_int16(&s,&mpty)) break;
+      if (modem_parser_comma(&s)) break;
+      if (modem_parser_quotedstr(&s,number,sizeof(number))) break;
+      if (modem_parser_comma(&s)) break;
+      if (modem_parser_int16(&s,&number_type)) break;
+    } while(0);
+    
+  }
+  
   if (!strncmp((char *)shared.modem_line,"+CMGL",5)) {
     shared.modem_cmgl_counter++;
   }
@@ -447,8 +507,14 @@ void modem_place_call(void)
   shared.frame_counter = 0;
   shared.call_state_timeout = MODEM_CALL_ESTABLISHMENT_TIMEOUT_SECONDS * FRAMES_PER_SECOND;
 
-  // XXX - Send ATDT to modem
-
+  // Send ATDT to modem
+  // The EC25 requires a ; at the end of a number to indicate it's a voice rather
+  // than a data call.
+  modem_uart_write((unsigned char *)"ATDT",4);
+  modem_uart_write((unsigned char *)shared.call_state_number,
+		   strlen((char *)shared.call_state_number));
+  modem_uart_write((unsigned char *)";\r\n",3); 
+  
   dialpad_draw(shared.active_field, DIALPAD_ALL);
   dialpad_draw_call_state(shared.active_field);
   
@@ -460,7 +526,8 @@ void modem_answer_call(void)
   case CALLSTATE_RINGING:
     shared.call_state = CALLSTATE_CONNECTED;
 
-    // XXX - Send ATA to modem
+    // Send ATA to modem
+    modem_uart_write((unsigned char *)"ATA\r\n",5); 
 
     shared.call_state_timeout = 0;
 
@@ -478,13 +545,53 @@ void modem_hangup_call(void)
     shared.call_state = CALLSTATE_DISCONNECTED;
     shared.call_state_timeout = 0;
 
-    // XXX - Send ATH0 to modem
+    // Send ATH0 to modem
+    modem_uart_write((unsigned char *)"ATH0\r\n",6); 
 
     // Clear mute flag when ending a call
     // This call also does the dialpad redraw for us
     modem_unmute_call();
   }
 }
+
+char modem_set_mic_gain(uint8_t gain)
+{
+  char num[6];
+  num_to_str(gain<<8, num);
+
+  modem_uart_write((unsigned char *)"AT+QMIC=",8);
+  modem_uart_write((unsigned char *)num,strlen(num));
+  modem_uart_write((unsigned char *)",",1);
+  modem_uart_write((unsigned char *)num,strlen(num));
+  modem_uart_write((unsigned char *)"\r\n",2);
+
+  return 0;  
+}
+
+char modem_set_headset_gain(uint8_t gain)
+{
+  char num[6];
+  num_to_str(gain<<8, num);
+
+  modem_uart_write((unsigned char *)"AT+QRXGAIN=",11);
+  modem_uart_write((unsigned char *)num,strlen(num));
+  modem_uart_write((unsigned char *)"\r\n",2);
+
+  return 0;    
+}
+
+char modem_set_sidetone_gain(uint8_t gain)
+{
+  char num[6];
+  num_to_str(gain<<8, num);
+
+  modem_uart_write((unsigned char *)"AT+QSIDET=",10);
+  modem_uart_write((unsigned char *)num,strlen(num));
+  modem_uart_write((unsigned char *)"\r\n",2);
+
+  return 0;    
+}
+
 
 void modem_toggle_mute(void)
 {
@@ -495,6 +602,9 @@ void modem_toggle_mute(void)
 void modem_mute_call(void)
 {
   shared.call_state_muted = 1;
+
+  modem_uart_write((unsigned char *)"AT+CMUT=1\r\n",11); 
+  
   dialpad_draw(shared.active_field, DIALPAD_ALL);
   dialpad_draw_call_state(shared.active_field);    
 }
@@ -502,6 +612,8 @@ void modem_mute_call(void)
 void modem_unmute_call(void)
 {
   shared.call_state_muted = 0;
+  modem_uart_write((unsigned char *)"AT+CMUT=0\r\n",11); 
+
   dialpad_draw(shared.active_field, DIALPAD_ALL);
   dialpad_draw_call_state(shared.active_field);    
 }
@@ -598,18 +710,6 @@ char modem_get_sms(uint16_t sms_number)
 
   if (got_message) return 0; else return 1;
   
-}
-
-uint16_t parse_u16_dec(const char *s)
-{
-    uint16_t v = 0;
-
-    
-    while (*s >= '0' && *s <= '9') {
-      v = (uint16_t)((v << 3) + (v << 1) + (uint16_t)(*s - '0'));
-      s++;
-    }
-    return v;
 }
 
 
