@@ -171,8 +171,6 @@ void modem_getready_to_issue_command(void)
 int modem_uart_write(uint8_t *buffer, uint16_t size)
 {
 
-  dump_bytes("modem write",buffer,size);
-  
   uint16_t offset = 0;
   while (offset < size) {
     int written = write(fd, &buffer[offset], size - offset);
@@ -389,9 +387,19 @@ void modem_parse_line(void)
     shared.modem_line_len = MODEM_LINE_SIZE - 1;
   shared.modem_line[shared.modem_line_len]=0;
 
-  fprintf(stderr,"DEBUG: Modem line: '%s'\n",(char *)shared.modem_line);
-  
-  if (!strncmp((char *)shared.modem_line,"+QIND: \"ccinfo\",",16)) {
+  if (!strncmp((char *)shared.modem_line,"+QCFG: \"ims\",",13)) {
+    char *s = (char *)&shared.modem_line[13];
+    uint16_t first,second;
+    char good=0;
+    do {
+      if (modem_parser_int16(&s,&first)) break;
+      if (modem_parser_comma(&s)) break;
+      if (modem_parser_int16(&s,&second)) break;
+      good=1;
+    } while(0);
+    if (good) shared.volte_enabled=second;
+  }  
+  else if (!strncmp((char *)shared.modem_line,"+QIND: \"ccinfo\",",16)) {
     char *s = (char *)&shared.modem_line[16];
     uint16_t id,dir,call_state,mode,mpty,number_type;
     char good=0;
@@ -412,9 +420,6 @@ void modem_parse_line(void)
       if (modem_parser_int16(&s,&number_type)) break;
 
       good=1;
-      
-      fprintf(stderr,"DEBUG: Parsed QIND ccinfo line: %d,%d,%d,%d,%d,\"%s\",%d\n",
-	      id,dir,call_state,mode,mpty,number,number_type);
 
       uint8_t qltone_mode=0;
       
@@ -435,7 +440,7 @@ void modem_parse_line(void)
 	break;
       case 4: // RINGING (inbound)
 	shared.call_state = CALLSTATE_RINGING;
-	strncpy(shared.call_state_number,number,NUMBER_FIELD_LEN);
+	strncpy((char *)shared.call_state_number,number,NUMBER_FIELD_LEN);
 	shared.call_state_number[NUMBER_FIELD_LEN]=0;
 	break;
       case 5: // WAITING (inbound)
@@ -443,8 +448,7 @@ void modem_parse_line(void)
 	break;
       }
 
-      usleep(200000);
-      fprintf(stderr,"DEBUG: Sending AT+QLTONE\n");
+      modem_getready_to_issue_command();
       if (qltone_mode)
 	modem_uart_write((unsigned char *)qltone_string_calling,strlen(qltone_string_calling));
       else
@@ -474,8 +478,16 @@ void modem_parse_line(void)
   
 }
 
-void modem_place_call(void)
+char modem_place_call(void)
 {
+  switch(shared.call_state) {
+  case CALLSTATE_DISCONNECTED:
+  case CALLSTATE_NUMBER_ENTRY:
+    break;
+  default:
+    return 1;
+  }
+  
   shared.call_state = CALLSTATE_CONNECTING;
   shared.frame_counter = 0;
   shared.call_state_timeout = MODEM_CALL_ESTABLISHMENT_TIMEOUT_SECONDS * FRAMES_PER_SECOND;
@@ -491,12 +503,13 @@ void modem_place_call(void)
 
   // TTS audio to tell the user that we're dialing
   modem_getready_to_issue_command();
-  modem_uart_write("AT+QTTS=2,\"dialing\"\r\n",
+  modem_uart_write((unsigned char *)"AT+QTTS=2,\"dialing\"\r\n",
 		   strlen("AT+QTTS=2,\"dialing\"\r\n"));
   
   dialpad_draw(shared.active_field, DIALPAD_ALL);
   dialpad_draw_call_state(shared.active_field);
-  
+
+  return 0;
 }
 
 void modem_answer_call(void)
@@ -567,7 +580,8 @@ char modem_set_sidetone_gain(uint8_t gain)
 {
   char num[6];
   num_to_str(gain<<8, num);
-
+  fprintf(stderr,"DEBUG: Sidetone gain = %s\n",num);
+  
   modem_getready_to_issue_command();
   modem_uart_write((unsigned char *)"AT+QSIDET=",10);
   modem_uart_write((unsigned char *)num,strlen(num));
@@ -771,6 +785,11 @@ char modem_delete_sms(uint16_t sms_number)
   return shared.modem_saw_error;
 }
 
+void modem_query_volte(void)
+{
+  modem_getready_to_issue_command();
+  modem_uart_write((unsigned char *)"at+qcfg=\"ims\"\r\n",15);
+}
 
 
 #ifdef STANDALONE
@@ -889,6 +908,14 @@ else if (!strncmp(argv[i], "smssend=", 8)) {
 	  modem_answer_call();
 	}
       }
+    }
+    else if (!strncmp(argv[i],"volte",5)) {
+      shared.volte_enabled=99;
+      modem_query_volte();
+      while(shared.volte_enabled==99) modem_poll();
+      fprintf(stderr,"INFO: VoLTE is%s enabled.\n",
+	      shared.volte_enabled?"":" not");
+      
     }
     else if (!strncmp(argv[i],"call=",5)) {
       fprintf(stderr,"INFO: Dialing '%s'\n",&argv[i][5]);

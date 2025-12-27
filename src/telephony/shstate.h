@@ -36,6 +36,10 @@ typedef struct shared_state_t {
   unsigned char call_state_dtmf_history[NUMBER_FIELD_LEN+2];
   uint16_t call_state_timeout;
   char call_state_muted;
+
+  // Modem status information
+  uint8_t volte_enabled;
+  
   
   struct shared_resource fonts[NUM_FONTS];
 
@@ -55,6 +59,7 @@ typedef struct shared_state_t {
 
   uint8_t current_page;
   uint8_t last_page;
+
   
   unsigned int first_message_displayed;
 

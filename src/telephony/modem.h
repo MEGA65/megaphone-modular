@@ -1,7 +1,7 @@
 char modem_init(void);
 char modem_poll(void);
 void modem_parse_line(void);
-void modem_place_call(void);
+char modem_place_call(void);
 void modem_answer_call(void);
 void modem_hangup_call(void);
 void modem_mute_call(void);
@@ -14,6 +14,7 @@ uint16_t modem_get_oldest_sms(void);
 char modem_set_mic_gain(uint8_t gain);
 char modem_set_headset_gain(uint8_t gain);
 char modem_set_sidetone_gain(uint8_t gain);
+void modem_query_volte(void);
 
 int modem_uart_write(uint8_t *buffer, uint16_t size);
 uint16_t modem_uart_read(uint8_t *buffer, uint16_t size);
