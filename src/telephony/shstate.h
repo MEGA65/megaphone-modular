@@ -72,7 +72,8 @@ typedef struct shared_state_t {
   uint16_t modem_line_len;
   uint16_t modem_cmgl_counter;
   uint8_t modem_saw_ok;
-  uint8_t modem_saw_error;  
+  uint8_t modem_saw_error;
+  uint16_t modem_response_pending;
   
 } Shared;
 

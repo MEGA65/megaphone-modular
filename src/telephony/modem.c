@@ -39,6 +39,9 @@ sms_decoded_t sms;
 
 int fd=-1;
 
+char qltone_string_calling[]="AT+QLTONE=1,400,1500,500,30000\r\n";      
+char qltone_string_off[]="AT+QLTONE=0,0,0,0,0\r\n";      
+
 // Dummy declarations for drawing the dial pad or updating the call state display
 void dialpad_draw(char active_field,uint8_t button_restrict)
 {
@@ -153,9 +156,22 @@ int open_the_serial_port(char *serial_port,int serial_speed)
   return 0;
 }
 
+void modem_getready_to_issue_command(void)
+{
+  while (shared.modem_response_pending) {
+    usleep(1000);
+    shared.modem_response_pending--;
+    modem_poll();
+  }
+  shared.modem_response_pending=1000;
+}
+
+
 int modem_uart_write(uint8_t *buffer, uint16_t size)
 {
 
+  dump_bytes("modem write",buffer,size);
+  
   uint16_t offset = 0;
   while (offset < size) {
     int written = write(fd, &buffer[offset], size - offset);
@@ -347,7 +363,8 @@ char modem_parser_quotedstr(char **s, char *out, uint8_t max_len)
   }
   out[len]=0;
   if ((**s)!='\"') return 1;
-
+  (*s)++; // skip closing quote
+  
   return 0;
 }
 
@@ -371,9 +388,12 @@ void modem_parse_line(void)
     shared.modem_line_len = MODEM_LINE_SIZE - 1;
   shared.modem_line[shared.modem_line_len]=0;
 
+  fprintf(stderr,"DEBUG: Modem line: '%s'\n",(char *)shared.modem_line);
+  
   if (!strncmp((char *)shared.modem_line,"+QIND: \"ccinfo\",",16)) {
     char *s = (char *)&shared.modem_line[16];
     uint16_t id,dir,call_state,mode,mpty,number_type;
+    char good=0;
     char number[33];
     do {
       if (modem_parser_int16(&s,&id)) break;
@@ -389,15 +409,65 @@ void modem_parse_line(void)
       if (modem_parser_quotedstr(&s,number,sizeof(number))) break;
       if (modem_parser_comma(&s)) break;
       if (modem_parser_int16(&s,&number_type)) break;
+
+      good=1;
+      
+      fprintf(stderr,"DEBUG: Parsed QIND ccinfo line: %d,%d,%d,%d,%d,\"%s\",%d\n",
+	      id,dir,call_state,mode,mpty,number,number_type);
+
+      uint8_t qltone_mode=0;
+      
+      switch(call_state) {
+      case 65535: // i.e., -1 : Call terminated
+	shared.call_state = CALLSTATE_DISCONNECTED;
+	break;
+      case 0: // CALL ACTIVE
+	shared.call_state = CALLSTATE_CONNECTED;
+	break;
+      case 1: // CALL HELD
+	break;
+      case 2: // CALLING (outbound)
+	// FALL THROUGH
+      case 3: // ALERTING (ringing in handset to indicate call being established) 
+	shared.call_state = CALLSTATE_CONNECTING;
+	qltone_mode='1';
+	break;
+      case 4: // RINGING (inbound)
+	shared.call_state = CALLSTATE_RINGING;
+	break;
+      case 5: // WAITING (inbound)
+	// Indicate call waiting? No idea
+	break;
+      }
+
+      usleep(200000);
+      fprintf(stderr,"DEBUG: Sending AT+QLTONE\n");
+      if (qltone_mode)
+	modem_uart_write((unsigned char *)qltone_string_calling,strlen(qltone_string_calling));
+      else
+	modem_uart_write((unsigned char *)qltone_string_off,strlen(qltone_string_off));
+      usleep(200000);
+      
+      
     } while(0);
-    
+    if (!good) {
+      fprintf(stderr,"DEBUG: Failed to parse QIND ccinfo line:\n       '%s'\n",
+	      (char *)shared.modem_line);
+    }
   }
+  
   
   if (!strncmp((char *)shared.modem_line,"+CMGL",5)) {
     shared.modem_cmgl_counter++;
   }
-  if (!strcmp((char *)shared.modem_line,"OK")) shared.modem_saw_ok=1;
-  if (!strcmp((char *)shared.modem_line,"ERROR")) shared.modem_saw_error=1;
+  if (!strcmp((char *)shared.modem_line,"OK")) {
+    shared.modem_saw_ok=1;
+    shared.modem_response_pending=0;
+  }
+  if (!strcmp((char *)shared.modem_line,"ERROR")) {
+    shared.modem_saw_error=1;
+    shared.modem_response_pending=0;
+  }
   
 }
 
@@ -410,6 +480,7 @@ void modem_place_call(void)
   // Send ATDT to modem
   // The EC25 requires a ; at the end of a number to indicate it's a voice rather
   // than a data call.
+  modem_getready_to_issue_command();
   modem_uart_write((unsigned char *)"ATDT",4);
   modem_uart_write((unsigned char *)shared.call_state_number,
 		   strlen((char *)shared.call_state_number));
@@ -438,6 +509,14 @@ void modem_answer_call(void)
 
 void modem_hangup_call(void)
 {
+  // Send ATH0 to modem even if we don't think we're in a call
+  modem_getready_to_issue_command();
+  modem_uart_write((unsigned char *)"ATH0\r\n",6);
+  
+  // Clear mute flag when ending a call
+  // This call also does the dialpad redraw for us
+  modem_unmute_call();
+
   switch (shared.call_state) {
   case CALLSTATE_CONNECTING:
   case CALLSTATE_RINGING:
@@ -445,12 +524,6 @@ void modem_hangup_call(void)
     shared.call_state = CALLSTATE_DISCONNECTED;
     shared.call_state_timeout = 0;
 
-    // Send ATH0 to modem
-    modem_uart_write((unsigned char *)"ATH0\r\n",6); 
-
-    // Clear mute flag when ending a call
-    // This call also does the dialpad redraw for us
-    modem_unmute_call();
   }
 }
 
@@ -459,6 +532,7 @@ char modem_set_mic_gain(uint8_t gain)
   char num[6];
   num_to_str(gain<<8, num);
 
+  modem_getready_to_issue_command();
   modem_uart_write((unsigned char *)"AT+QMIC=",8);
   modem_uart_write((unsigned char *)num,strlen(num));
   modem_uart_write((unsigned char *)",",1);
@@ -473,6 +547,7 @@ char modem_set_headset_gain(uint8_t gain)
   char num[6];
   num_to_str(gain<<8, num);
 
+  modem_getready_to_issue_command();
   modem_uart_write((unsigned char *)"AT+QRXGAIN=",11);
   modem_uart_write((unsigned char *)num,strlen(num));
   modem_uart_write((unsigned char *)"\r\n",2);
@@ -485,6 +560,7 @@ char modem_set_sidetone_gain(uint8_t gain)
   char num[6];
   num_to_str(gain<<8, num);
 
+  modem_getready_to_issue_command();
   modem_uart_write((unsigned char *)"AT+QSIDET=",10);
   modem_uart_write((unsigned char *)num,strlen(num));
   modem_uart_write((unsigned char *)"\r\n",2);
@@ -503,6 +579,7 @@ void modem_mute_call(void)
 {
   shared.call_state_muted = 1;
 
+  modem_getready_to_issue_command();
   modem_uart_write((unsigned char *)"AT+CMUT=1\r\n",11); 
   
   dialpad_draw(shared.active_field, DIALPAD_ALL);
@@ -512,6 +589,8 @@ void modem_mute_call(void)
 void modem_unmute_call(void)
 {
   shared.call_state_muted = 0;
+
+  modem_getready_to_issue_command();
   modem_uart_write((unsigned char *)"AT+CMUT=0\r\n",11); 
 
   dialpad_draw(shared.active_field, DIALPAD_ALL);
@@ -521,6 +600,8 @@ void modem_unmute_call(void)
 uint16_t modem_get_sms_count(void)
 {
   shared.modem_cmgl_counter=0;
+
+  modem_getready_to_issue_command();
   modem_uart_write((unsigned char *)"AT+CMGL=4\r\n",strlen("AT+CMGL=4\r\n"));
   shared.modem_line_len=0;
 
@@ -580,6 +661,7 @@ char *u16_to_ascii(uint16_t n)
 char modem_get_sms(uint16_t sms_number)
 {
   // Read the specified SMS message
+  modem_getready_to_issue_command();
   modem_uart_write((unsigned char *)"AT+CMGR=",strlen("AT+CMGR="));
   u16_to_ascii(sms_number);
   modem_uart_write((unsigned char*)u16_str,strlen(u16_str));
@@ -619,6 +701,7 @@ uint16_t modem_get_oldest_sms(void)
   uint16_t sms_number;
   
   shared.modem_cmgl_counter=0;
+  modem_getready_to_issue_command();
   modem_uart_write((unsigned char *)"AT+CMGL=4\r\n",strlen("AT+CMGL=4\r\n"));
   shared.modem_line_len=0;
   
@@ -663,6 +746,7 @@ uint16_t modem_get_oldest_sms(void)
 char modem_delete_sms(uint16_t sms_number)
 {
   // Delete the specified SMS number
+  modem_getready_to_issue_command();
   modem_uart_write((unsigned char *)"AT+CMGD=",strlen("AT+CMGD="));
   u16_to_ascii(sms_number);
   modem_uart_write((unsigned char*)u16_str,strlen(u16_str));
@@ -776,7 +860,27 @@ else if (!strncmp(argv[i], "smssend=", 8)) {
       } else
 	fprintf(stderr,"ERROR: Could not retreive or decode SMS message.\n");
     }
+    else if (!strncmp(argv[i],"call=",5)) {
+      fprintf(stderr,"INFO: Dialing '%s'\n",&argv[i][5]);
+      if (strlen(&argv[i][5])>=NUMBER_FIELD_LEN) {
+	fprintf(stderr,"ERROR: Requested number is too long.\n");
+	exit(-1);
+      }
+      strcpy((char *)shared.call_state_number,&argv[i][5]);
+      modem_place_call();
 
+      fprintf(stderr,"INFO: Monitoring modem until call concludes.\n");
+      while(shared.call_state != CALLSTATE_DISCONNECTED
+	    && shared.call_state != CALLSTATE_NUMBER_ENTRY) {
+	modem_poll();
+      }
+      fprintf(stderr,"INFO: Call ended in state %s\n",
+	      shared.call_state==CALLSTATE_DISCONNECTED?"DISCONNECTED":"NUMBER ENTRY");
+      
+    }
+    else if (!strcmp(argv[i],"hangup"))
+      modem_hangup_call();
+    
   }
 }
 #endif
