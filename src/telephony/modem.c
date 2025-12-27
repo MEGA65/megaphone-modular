@@ -435,6 +435,8 @@ void modem_parse_line(void)
 	break;
       case 4: // RINGING (inbound)
 	shared.call_state = CALLSTATE_RINGING;
+	strncpy(shared.call_state_number,number,NUMBER_FIELD_LEN);
+	shared.call_state_number[NUMBER_FIELD_LEN]=0;
 	break;
       case 5: // WAITING (inbound)
 	// Indicate call waiting? No idea
@@ -877,6 +879,16 @@ else if (!strncmp(argv[i], "smssend=", 8)) {
     else if (!strncmp(argv[i],"sidetone=",9)) {
       fprintf(stderr,"INFO: Setting side-tone level to '%s'\n",&argv[i][9]);
       modem_set_sidetone_gain(atoi(&argv[i][9])*2.55);
+    }
+    else if (!strncmp(argv[i],"callrx",6)) {
+      while(shared.call_state != CALLSTATE_DISCONNECTED) {
+	modem_poll();
+	if (shared.call_state == CALLSTATE_RINGING) {
+	  fprintf(stderr,"Answer incoming call from '%s'\n",
+		  shared.call_state_number);
+	  modem_answer_call();
+	}
+      }
     }
     else if (!strncmp(argv[i],"call=",5)) {
       fprintf(stderr,"INFO: Dialing '%s'\n",&argv[i][5]);
