@@ -39,8 +39,9 @@ sms_decoded_t sms;
 
 int fd=-1;
 
-char qltone_string_calling[]="AT+QLTONE=1,400,1500,500,30000\r\n";      
-char qltone_string_off[]="AT+QLTONE=0,0,0,0,0\r\n";      
+//char qltone_string_calling[]="AT+QLTONE=1,400,500,800,30000\r\n";      
+char qltone_string_calling[]="AT+QTTS=2,\"ring ring\"\r\n";      
+char qltone_string_off[]="AT+QLTONE=0\r\n";      
 
 // Dummy declarations for drawing the dial pad or updating the call state display
 void dialpad_draw(char active_field,uint8_t button_restrict)
@@ -485,6 +486,11 @@ void modem_place_call(void)
   modem_uart_write((unsigned char *)shared.call_state_number,
 		   strlen((char *)shared.call_state_number));
   modem_uart_write((unsigned char *)";\r\n",3); 
+
+  // TTS audio to tell the user that we're dialing
+  modem_getready_to_issue_command();
+  modem_uart_write("AT+QTTS=2,\"dialing\"\r\n",
+		   strlen("AT+QTTS=2,\"dialing\"\r\n"));
   
   dialpad_draw(shared.active_field, DIALPAD_ALL);
   dialpad_draw_call_state(shared.active_field);
@@ -859,6 +865,18 @@ else if (!strncmp(argv[i], "smssend=", 8)) {
 
       } else
 	fprintf(stderr,"ERROR: Could not retreive or decode SMS message.\n");
+    }
+    else if (!strncmp(argv[i],"headset=",8)) {
+      fprintf(stderr,"INFO: Setting headset level to '%s'\n",&argv[i][8]);
+      modem_set_headset_gain(atoi(&argv[i][8])*2.55);
+    }
+    else if (!strncmp(argv[i],"micgain=",7)) {
+      fprintf(stderr,"INFO: Setting mic gain level to '%s'\n",&argv[i][7]);
+      modem_set_mic_gain(atoi(&argv[i][7])*2.55);
+    }
+    else if (!strncmp(argv[i],"sidetone=",9)) {
+      fprintf(stderr,"INFO: Setting side-tone level to '%s'\n",&argv[i][9]);
+      modem_set_sidetone_gain(atoi(&argv[i][9])*2.55);
     }
     else if (!strncmp(argv[i],"call=",5)) {
       fprintf(stderr,"INFO: Dialing '%s'\n",&argv[i][5]);
