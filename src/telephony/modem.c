@@ -222,7 +222,7 @@ char *modem_init_strings[]={
   "AT+CSCS=\"GSM\"", // Needed for SMS PDU mode sending?
   "AT+CREG=2", // Enable network registration and status indication
   "AT+CSQ", // Show signal strength
-  //  "AT+QSPN", // Show network name  
+  "AT+QSPN", // Show network name  
   NULL
 };
 
@@ -370,7 +370,7 @@ char modem_parser_quotedstr(char **s, char *out, uint8_t max_len)
 
 void modem_parse_line(void)
 {
-
+  
   // Check for messages from the modem, and process them accordingly
   // RING
   // CONNECTED
@@ -387,7 +387,24 @@ void modem_parse_line(void)
     shared.modem_line_len = MODEM_LINE_SIZE - 1;
   shared.modem_line[shared.modem_line_len]=0;
 
-  if (!strncmp((char *)shared.modem_line,"+QCFG: \"ims\",",13)) {
+  // +QSPN: "CHN-UNICOM","UNICOM","",0,"46001"
+  if (!strncmp((char *)shared.modem_line,"+QSPN: ",7)) {
+    char *s = (char *)&shared.modem_line[7];
+    char network_full[NUMBER_FIELD_LEN+1];
+    char network_short[NUMBER_FIELD_LEN+1];
+    char good=0;
+    do {
+      if (modem_parser_quotedstr(&s,network_full,sizeof(network_full))) break;
+      if (modem_parser_comma(&s)) break;
+      if (modem_parser_quotedstr(&s,network_short,sizeof(network_short))) break;
+      if (modem_parser_comma(&s)) break;
+      good=1;
+    } while(0);
+    if (good) {
+      strcpy((char *)shared.modem_network_name,network_full);
+    }
+  }
+  else if (!strncmp((char *)shared.modem_line,"+QCFG: \"ims\",",13)) {
     char *s = (char *)&shared.modem_line[13];
     uint16_t first,second;
     char good=0;
@@ -791,6 +808,12 @@ void modem_query_volte(void)
   modem_uart_write((unsigned char *)"at+qcfg=\"ims\"\r\n",15);
 }
 
+void modem_query_network(void)
+{
+  modem_getready_to_issue_command();
+  modem_uart_write((unsigned char *)"at+qspn\r\n",9);
+}
+
 
 #ifdef STANDALONE
 int main(int argc,char **argv)
@@ -916,6 +939,13 @@ else if (!strncmp(argv[i], "smssend=", 8)) {
       fprintf(stderr,"INFO: VoLTE is%s enabled.\n",
 	      shared.volte_enabled?"":" not");
       
+    }
+    else if (!strncmp(argv[i],"network",7)) {
+      shared.modem_network_name[0]=0;
+      modem_query_network();
+      while(!shared.modem_network_name[0]) modem_poll();
+      fprintf(stderr,"INFO: Network name is '%s'.\n",
+	      shared.modem_network_name);      
     }
     else if (!strncmp(argv[i],"call=",5)) {
       fprintf(stderr,"INFO: Dialing '%s'\n",&argv[i][5]);

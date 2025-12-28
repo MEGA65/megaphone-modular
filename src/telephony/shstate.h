@@ -39,6 +39,7 @@ typedef struct shared_state_t {
 
   // Modem status information
   uint8_t volte_enabled;
+  char modem_network_name[NUMBER_FIELD_LEN+1];
   
   
   struct shared_resource fonts[NUM_FONTS];

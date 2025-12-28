@@ -143,7 +143,9 @@ void statusbar_draw_netname(void)
   draw_string_nowrap(ST_GL_TIME,1,
 		     FONT_UI,
 		     0x81, // reverse white
-		     (unsigned char *)"MEGAtel",
+		     shared.modem_network_name[0]?
+		     (unsigned char *)shared.modem_network_name
+		     : (unsigned char *)"<Connecting...>",
 		     ST_PX_TIME,ST_PX_NETNAME,
 		     ST_GL_TIME+ST_GL_NETNAME,
 		     NULL,

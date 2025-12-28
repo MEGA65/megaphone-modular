@@ -15,6 +15,7 @@ char modem_set_mic_gain(uint8_t gain);
 char modem_set_headset_gain(uint8_t gain);
 char modem_set_sidetone_gain(uint8_t gain);
 void modem_query_volte(void);
+void modem_query_network(void);
 
 int modem_uart_write(uint8_t *buffer, uint16_t size);
 uint16_t modem_uart_read(uint8_t *buffer, uint16_t size);
