@@ -168,7 +168,7 @@ void modem_getready_to_issue_command(void)
 }
 
 
-int modem_uart_write(uint8_t *buffer, uint16_t size)
+uint16_t modem_uart_write(uint8_t *buffer, uint16_t size)
 {
 
   uint16_t offset = 0;
@@ -263,7 +263,9 @@ char modem_init(void)
       }
       if (j==6) {
 #ifdef STANDALONE
+#ifdef DEBUG
 	fprintf(stderr,"DEBUG: AT command '%s' succeeded.\n",modem_init_strings[i]);
+#endif
 #endif
 	break;
       }
@@ -475,8 +477,10 @@ void modem_parse_line(void)
       
     } while(0);
     if (!good) {
+#ifndef MEGA65
       fprintf(stderr,"DEBUG: Failed to parse QIND ccinfo line:\n       '%s'\n",
 	      (char *)shared.modem_line);
+#endif
     }
   }
   
@@ -597,7 +601,9 @@ char modem_set_sidetone_gain(uint8_t gain)
 {
   char num[6];
   num_to_str(gain<<8, num);
+#ifdef DEBUG
   fprintf(stderr,"DEBUG: Sidetone gain = %s\n",num);
+#endif
   
   modem_getready_to_issue_command();
   modem_uart_write((unsigned char *)"AT+QSIDET=",10);
@@ -651,7 +657,9 @@ uint16_t modem_get_sms_count(void)
   
   while(!(shared.modem_saw_ok|shared.modem_saw_error)) {
     if (modem_poll()) {
+#ifndef MEGA65
       fprintf(stderr,"DEBUG: Saw line '%s'\n",shared.modem_line);
+#endif
     }
 #ifndef MEGA65
     else {
