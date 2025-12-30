@@ -153,9 +153,9 @@ bin65/%.llvm.prg:	src/telephony/%.c $(NATIVE_TELEPHONY_COMMON)
 	mkdir -p bin65
 	rm -f src/telephony/mega65/function_table.c
 	echo "struct function_table function_table[]={}; const unsigned int function_table_count=0; const unsigned char __wp_regs[9];" > src/telephony/mega65/function_table.c
-	$(CC) -o bin65/$*.llvm.prg -Iinclude -Isrc/mega65-libc/include $< $(HELPER_SRCS) $(NATIVE_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS)  -Wl,-Map,bin65/$*.map
+	$(CC) -o bin65/$*.llvm.prg -Iinclude -DMEGA65 -Isrc/mega65-libc/include $< $(HELPER_SRCS) $(NATIVE_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS)  -Wl,-Map,bin65/$*.map
 	tools/function_table.py bin65/$*.map src/telephony/mega65/function_table.c
-	$(CC) -o bin65/$*.llvm.prg -Iinclude -Isrc/mega65-libc/include $< $(HELPER_SRCS) $(NATIVE_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS) -Wl,-Map,bin65/$*.map
+	$(CC) -o bin65/$*.llvm.prg -Iinclude -DMEGA65 -Isrc/mega65-libc/include $< $(HELPER_SRCS) $(NATIVE_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS) -Wl,-Map,bin65/$*.map
 	llvm-objdump -drS --print-imm-hex bin65/$*.llvm.prg.elf >bin65/$*.llvm.dump
 
 bin/modem:	src/telephony/modem.c src/telephony/format.c src/telephony/linux/hal.c src/telephony/buffers.c src/telephony/shstate.c src/telephony/smsdecode.c src/telephony/smsencode.c src/telephony/utf.c
@@ -175,6 +175,9 @@ sdcardprep:	$(LINUX_BINARIES)
 	src/telephony/linux/provision /media/paul/MEGA65FDISK
 	python3 src/telephony/sms-stim.py -o stim.txt 10 100
 	src/telephony/linux/import stim.txt /media/paul/MEGA65FDISK
+
+bin65/megacom:  bin65/megacom.llvm.prg
+	cp $< $@
 
 sdbin:	bin65/foneinit.llvm.prg bin65/foneclst.llvm.prg bin65/fonesms.llvm.prg
 

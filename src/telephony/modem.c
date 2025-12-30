@@ -11,7 +11,13 @@
 #include "smsdecode.h"
 #include "format.h"
 
+#include <string.h>
+
 sms_decoded_t sms;
+
+//char qltone_string_calling[]="AT+QLTONE=1,400,500,800,30000\r\n";      
+char qltone_string_calling[]="AT+QTTS=2,\"ring ring\"\r\n";      
+char qltone_string_off[]="AT+QLTONE=0\r\n";      
 
 #ifdef MEGA65
 #else
@@ -38,10 +44,6 @@ sms_decoded_t sms;
 #include <unistd.h>
 
 int fd=-1;
-
-//char qltone_string_calling[]="AT+QLTONE=1,400,500,800,30000\r\n";      
-char qltone_string_calling[]="AT+QTTS=2,\"ring ring\"\r\n";      
-char qltone_string_off[]="AT+QLTONE=0\r\n";      
 
 // Dummy declarations for drawing the dial pad or updating the call state display
 void dialpad_draw(char active_field,uint8_t button_restrict)
@@ -347,7 +349,7 @@ char modem_parser_int16(char **s, uint16_t *out)
   char negative=0;
   if ((**s)=='-') { negative=1; (*s)++; }
   uint16_t v = parse_u16_dec(*s);
-  while (isdigit(**s)) (*s)++;
+  while (((**s)>='0')&&((**s)<='9')) (*s)++;
   if (negative) *out=-v; else *out=v;
   return 0;
 }

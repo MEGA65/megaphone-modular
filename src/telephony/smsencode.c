@@ -408,7 +408,7 @@ char sms_send_utf8(const char *receiver, const char *utf8_msg, uint8_t ref_num) 
         current_part++;
 
 	// Be nice to the modem if sending multiple parts
-	if (current_part < total_parts) sleep(1);
+	if (current_part < total_parts) usleep(1000000);
     }
 
     return 0;

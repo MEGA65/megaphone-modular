@@ -2,6 +2,7 @@
 
 #include "screen.h"
 #include "status.h"
+#include "shstate.h"
 
 uint8_t registered_with_network = 1;
 uint8_t signal_level = 0xb0;
