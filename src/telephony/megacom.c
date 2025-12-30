@@ -9,13 +9,13 @@
 
 void screen_stash(void)
 {
-  lcopy(0xc000,0x40000L,80*50);
+  lcopy(0xf000,0x40000L,80*50);
   lcopy(0xff80000L,0x40000L+80*50,80*50);
 }
 
 void screen_restore(void)
 {
-  lcopy(0x40000L,0xc000,80*50);
+  lcopy(0x40000L,0xf000,80*50);
   lcopy(0x40000L+80*50,0xff80000L,80*50);
 }
 
@@ -23,33 +23,33 @@ void print_box(unsigned char x1, unsigned char y1,
 	       unsigned char x2, unsigned char y2,
 	       unsigned char colour)
 {
-  uint16_t char_addr = 0xC000 + y1 * 80;
+  uint16_t char_addr = 0xf000 + y1 * 80;
   for(int x=x1;x<=x2;x++) {
     POKE(char_addr+x,0x20);
-    lpoke(0xff80000L - 0xc000 + char_addr+x, 0x20 | colour);    
+    lpoke(0xff80000L - 0xf000 + char_addr+x, 0x20 | colour);    
   }
   for(int y=y1+1;y<y2;y++) {
     char_addr+=80;
     POKE(char_addr+x1,0x20);
-    lpoke(0xff80000L - 0xc000 + char_addr+x1, 0x20 | colour);    
+    lpoke(0xff80000L - 0xf000 + char_addr+x1, 0x20 | colour);    
     POKE(char_addr+x2,0x20);
-    lpoke(0xff80000L - 0xc000 + char_addr+x2, 0x20 | colour);        
+    lpoke(0xff80000L - 0xf000 + char_addr+x2, 0x20 | colour);        
   }
   char_addr+=80;
   for(int x=x1;x<=x2;x++) {
     POKE(char_addr+x,0x20);
-    lpoke(0xff80000L - 0xc000 + char_addr+x, 0x20 | colour);    
+    lpoke(0xff80000L - 0xf000 + char_addr+x, 0x20 | colour);    
   }
   
 }
 
 void print_text80(unsigned char x, unsigned char y, unsigned char colour, char *msg)
 {
-  uint16_t char_addr = 0xC000 + x + y * 80;
+  uint16_t char_addr = 0xf000 + x + y * 80;
   while (*msg) {
     uint8_t char_code = *msg;
     POKE(char_addr + 0, char_code);
-    lpoke(0xff80000L - 0xc000 + char_addr, colour);
+    lpoke(0xff80000L - 0xf000 + char_addr, colour);
     msg++;
     char_addr += 1;
   }
@@ -85,9 +85,9 @@ void h640_text_mode(void)
   POKE(0xD059, 80 / 256);
   // Draw 80 chars per row
   POKE(0xD05E, 80);
-  // Put 4KB screen at $C000
+  // Put 4KB screen at $F000
   POKE(0xD060, 0x00);
-  POKE(0xD061, 0xc0);
+  POKE(0xD061, 0xf0);
   POKE(0xD062, 0x00);
 
   // 50 lines of text
@@ -99,7 +99,7 @@ void h640_text_mode(void)
   POKE(0xD069,0xE0);
   
   
-  lfill(0xc000, 0x20, 4000);
+  lfill(0xf000, 0x20, 4000);
   // Clear colour RAM, while setting all chars to 4-bits per pixel
   lfill(0xff80000L, 0x0E, 4000);
   
@@ -152,7 +152,7 @@ struct baud_rate baud_list[NUM_BAUD_RATES]={
 };
 
 uint8_t current_baud_rate = 8;
-uint8_t current_uart = 0;
+uint8_t current_uart = 1;
 
 #define SERIAL_PORT_MENU_ITEMS 16
 char *serial_port_menu_item[SERIAL_PORT_MENU_ITEMS]={
@@ -192,12 +192,12 @@ void serial_port_menu(void)
       // Update current UART and baud rate -- we do this in here
       // so that there's less chance of visible tearing
       if (!i) {
-	POKE(0xc000+4*80+48,'0'+current_uart);
-	POKE(0xc000+49*80+79,'0'+current_uart);
+	POKE(0xf000+4*80+48,'0'+current_uart);
+	POKE(0xf000+49*80+79,'0'+current_uart);
       }
       if (i==4) {
-	for(int i=0;i<7;i++) POKE(0xc000+8*80+34+i,baud_list[current_baud_rate].baud_str[i]);
-	for(int i=0;i<7;i++) POKE(0xc000+49*80+21+i,baud_list[current_baud_rate].baud_str[i]);
+	for(int i=0;i<7;i++) POKE(0xf000+8*80+34+i,baud_list[current_baud_rate].baud_str[i]);
+	for(int i=0;i<7;i++) POKE(0xf000+49*80+21+i,baud_list[current_baud_rate].baud_str[i]);
       }
       
     }
@@ -305,12 +305,18 @@ void term_scroll_check(void)
     term_x=0;
     term_y++;
   }
+
   if (term_y>=49) {
     // Scroll screen
     term_y=48;
-    lcopy(0xc000+80,0xc000,49*80);
-    lcopy(0xff80000L+80,0xff80000L,49*80);
+    lcopy(0xf050,0xf000,48*80);
+    lcopy(0xff80050L,0xff80000L,48*80);
+
+    // Blank last line of screen after scroll
+    lfill(0xf000+80*48,' ',80);
+    lfill(0xff80000L+80*48,term_colour,80);
   }
+  
 }
 
 void term_process_char(uint8_t c)
@@ -330,9 +336,10 @@ void term_process_char(uint8_t c)
       // Advance a line
       term_y++;
       term_scroll_check();
+      break;
     default:
-      POKE(0xc000 + term_y*80 + term_x, c);
-      POKE(0xff80000L + term_y*80 + term_x, term_colour);
+      POKE(0xf000 + term_y*80 + term_x, c);
+      lpoke(0xff80000L + term_y*80 + term_x, term_colour);
       term_x++;
       term_scroll_check();
     }
@@ -343,18 +350,28 @@ int main(void)
 {
   mega65_io_enable();
 
+  // Install NMI and BRK catchers
+  POKE(0x0316,(uint8_t)(((uint16_t)&brk_catcher)>>0));
+  POKE(0x0317,(uint8_t)(((uint16_t)&brk_catcher)>>8));
+  POKE(0x0318,(uint8_t)(((uint16_t)&nmi_catcher)>>0));
+  POKE(0x0319,(uint8_t)(((uint16_t)&nmi_catcher)>>8));
+  
   h640_text_mode();
 
   print_text80(0,49,0x21,status_line);
 
   // Apply initial serial port settings
   modem_setup_serial(current_uart,baud_list[current_baud_rate].baud_divisor);	
-  POKE(0xc000+49*80+79,'0'+current_uart);
-  for(int i=0;i<7;i++) POKE(0xc000+49*80+21+i,baud_list[current_baud_rate].baud_str[i]);
+  POKE(0xf000+49*80+79,'0'+current_uart);
+  for(int i=0;i<7;i++) POKE(0xf000+49*80+21+i,baud_list[current_baud_rate].baud_str[i]);
   
   uint8_t ctrl_a_mode=0;
 
   unsigned char c;
+
+  print_text80(0,45,0x0e,"Welcome to MEGAcom 0.1");
+  term_y=47;
+  term_x=0;
   
   while(1) {
 
