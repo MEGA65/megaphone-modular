@@ -323,9 +323,27 @@ void term_process_char(uint8_t c)
 {
   if (term_esc) {
     // XXX - Actually implement ESC mode properly
-    term_esc=0;
+    switch(term_esc) {
+    case 1:
+      if (c=='[') term_esc=2; else term_esc=0;
+      break;
+    case 2:
+      if (c=='m') term_esc=0;
+      break;
+    default:
+      term_esc=0;
+    }
   } else {
     switch(c) {
+    case 0x07:
+      visual_bell();
+      break;
+    case 0x08: // back space
+      term_x--;
+      if (term_x>79) {term_x=79; term_y--; }
+      if (term_y<0) term_y=0;
+      POKE(0xf000+term_y*80+term_x,' ');      
+      break;
     case 0x1b:
       term_esc=1;
       break;
@@ -398,8 +416,13 @@ int main(void)
 	}
 	ctrl_a_mode=0;
       } else {
-	if (PEEK(0xD610)==0x01) ctrl_a_mode=1;
-	else {
+	switch(PEEK(0xD610)) {
+	case 0x01: ctrl_a_mode=1; break;
+	case 0x14: // INST/DEL -> send backspace
+	  c=0x08;
+	  modem_uart_write(&c,1);
+	  break;
+	default:
 	  // Send char to UART
 	  c=PEEK(0xD610);
 	  modem_uart_write(&c,1);
