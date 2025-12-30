@@ -122,32 +122,33 @@ char status_line[80 +1]="CTRL-A Z for help |  0000000 8N1 | MEGAcom 0.1 | ASCII 
 struct baud_rate {
   uint32_t baud;
   char baud_str[9];
+  uint32_t baud_divisor;
 };
 
 #define NUM_BAUD_RATES 22
 struct baud_rate baud_list[NUM_BAUD_RATES]={
-  {300, "    300"},
-  {1200,"   1200"},
-  {2400,"   2400"},
-  {4800,"   4800"},
-  {9600,"   9600"},
-  {19200,"  19200"},
-  {38400,"  38400"},
-  {57600,"  57600"},
-  {115200," 115200"},
-  {230400," 230400"},
-  {460800," 460800"},
-  {500000," 500000"},
-  {576000," 576000"},
-  {921600," 921600"},
-  {1000000,"1000000"},
-  {1152000,"1152000"},
-  {1500000,"1500000"},
-  {2000000,"2000000"},
-  {2500000,"2500000"},
-  {3000000,"3000000"},
-  {3500000,"3500000"},
-  {4000000,"4000000"}  
+  {300, "    300", 40500000 / 300},
+  {1200,"   1200", 40500000 / 1200},
+  {2400,"   2400", 40500000 / 2400},
+  {4800,"   4800", 40500000 / 4800},
+  {9600,"   9600", 40500000 / 9600},
+  {19200,"  19200", 40500000 / 19200},
+  {38400,"  38400", 40500000 / 38400},
+  {57600,"  57600", 40500000 / 57600},
+  {115200," 115200", 40500000 / 115200},
+  {230400," 230400", 40500000 / 230400},
+  {460800," 460800", 40500000 / 460800},
+  {500000," 500000", 40500000 / 500000},
+  {576000," 576000", 40500000 / 576000},
+  {921600," 921600", 40500000 / 921600},
+  {1000000,"1000000", 40500000 / 1000000},
+  {1152000,"1152000", 40500000 / 1152000},
+  {1500000,"1500000", 40500000 / 1500000},
+  {2000000,"2000000", 40500000 / 2000000},
+  {2500000,"2500000", 40500000 / 2500000},
+  {3000000,"3000000", 40500000 / 3000000},
+  {3500000,"3500000", 40500000 / 3500000},
+  {4000000,"4000000", 40500000 / 4000000},
 };
 
 uint8_t current_baud_rate = 8;
@@ -190,9 +191,13 @@ void serial_port_menu(void)
 
       // Update current UART and baud rate -- we do this in here
       // so that there's less chance of visible tearing
-      if (!i) POKE(0xc000+4*80+48,'0'+current_uart);
+      if (!i) {
+	POKE(0xc000+4*80+48,'0'+current_uart);
+	POKE(0xc000+49*80+79,'0'+current_uart);
+      }
       if (i==4) {
 	for(int i=0;i<7;i++) POKE(0xc000+8*80+34+i,baud_list[current_baud_rate].baud_str[i]);
+	for(int i=0;i<7;i++) POKE(0xc000+49*80+21+i,baud_list[current_baud_rate].baud_str[i]);
       }
       
     }
@@ -206,7 +211,12 @@ void serial_port_menu(void)
       case 'a':
 	current_uart++;
 	if (current_uart>7) current_uart=0;
+	modem_setup_serial(current_uart,baud_list[current_baud_rate].baud_divisor);
 	break;
+      case 'e':
+	current_baud_rate++;
+	if (current_baud_rate>=NUM_BAUD_RATES) current_baud_rate=0;
+	modem_setup_serial(current_uart,baud_list[current_baud_rate].baud_divisor);
       default:
 	visual_bell();
       }
@@ -243,7 +253,7 @@ void config_menu(void)
     for(int i=0;i<CONFIG_MENU_ITEMS;i++) {
       print_text80(13,10+i,(i==item)?0x2e:0x0e,config_item[i]);
     }
-
+    
     if (PEEK(0xD610)) {
       switch(PEEK(0xD610)) {
       case 0x1b: // ESC - Exit
@@ -284,6 +294,51 @@ void config_menu(void)
   
 }
 
+uint8_t term_colour=0x0e;
+uint8_t term_x=0;
+uint8_t term_y=0;
+uint8_t term_esc=0;
+
+void term_scroll_check(void)
+{
+  if (term_x>79) {
+    term_x=0;
+    term_y++;
+  }
+  if (term_y>=49) {
+    // Scroll screen
+    term_y=48;
+    lcopy(0xc000+80,0xc000,49*80);
+    lcopy(0xff80000L+80,0xff80000L,49*80);
+  }
+}
+
+void term_process_char(uint8_t c)
+{
+  if (term_esc) {
+    // XXX - Actually implement ESC mode properly
+    term_esc=0;
+  } else {
+    switch(c) {
+    case 0x1b:
+      term_esc=1;
+      break;
+    case 0x0d:
+      term_x=0;
+      break;
+    case 0x0a:
+      // Advance a line
+      term_y++;
+      term_scroll_check();
+    default:
+      POKE(0xc000 + term_y*80 + term_x, c);
+      POKE(0xff80000L + term_y*80 + term_x, term_colour);
+      term_x++;
+      term_scroll_check();
+    }
+  }
+}
+
 int main(void)
 {
   mega65_io_enable();
@@ -292,9 +347,23 @@ int main(void)
 
   print_text80(0,49,0x21,status_line);
 
+  // Apply initial serial port settings
+  modem_setup_serial(current_uart,baud_list[current_baud_rate].baud_divisor);	
+  POKE(0xc000+49*80+79,'0'+current_uart);
+  for(int i=0;i<7;i++) POKE(0xc000+49*80+21+i,baud_list[current_baud_rate].baud_str[i]);
+  
   uint8_t ctrl_a_mode=0;
+
+  unsigned char c;
   
   while(1) {
+
+    uint16_t read_count = modem_uart_read(&c,1);
+    if (read_count) {
+      // Got a char -- render it
+      term_process_char(c);
+    }
+    
     if (PEEK(0xD610)) {
       if (ctrl_a_mode) {
 	switch(PEEK(0xD610)) {
@@ -315,6 +384,8 @@ int main(void)
 	if (PEEK(0xD610)==0x01) ctrl_a_mode=1;
 	else {
 	  // Send char to UART
+	  c=PEEK(0xD610);
+	  modem_uart_write(&c,1);
 	}
       }
 
