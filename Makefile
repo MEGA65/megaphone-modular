@@ -91,6 +91,7 @@ NATIVE_TELEPHONY_COMMON=	$(SRC_TELEPHONY_COMMON) \
 			src/telephony/screen.c \
 			src/telephony/dialer.c \
 			src/telephony/modem.c \
+			src/telephony/uart.c \
 			src/telephony/format.c \
 			src/telephony/status.c \
 			src/telephony/smsscreens.c \
