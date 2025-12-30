@@ -12,12 +12,6 @@ void print_text80(unsigned char x, unsigned char y, unsigned char colour, char *
   uint16_t char_addr = 0xC000 + x + y * 80;
   while (*msg) {
     uint8_t char_code = *msg;
-    if (*msg >= 0xc0 && *msg <= 0xe0)
-      char_code = *msg - 0x80;
-    else if (*msg >= 0x40 && *msg <= 0x60)
-      char_code = *msg - 0x40;
-    else if (*msg >= 0x60 && *msg <= 0x7A)
-      char_code = *msg - 0x20;
     POKE(char_addr + 0, char_code);
     lpoke(0xff80000L - 0xc000 + char_addr, colour);
     msg++;
@@ -74,7 +68,9 @@ void h640_text_mode(void)
   
 }
 
-char status_line[80]="";
+char status_line[80 +1]="CTRL-A Z for help |  0000000 8N1 | MEGAcom 0.1 | ASCII         | Buffered uart 0";
+#define BAUD_OFFSET 22
+#define UART_NUM_OFFSET 79
 
 int main(void)
 {
@@ -82,6 +78,6 @@ int main(void)
   
   h640_text_mode();
 
-  
+  print_text80(0,49,0x21,status_line);
   
 }
