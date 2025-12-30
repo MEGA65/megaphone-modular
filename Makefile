@@ -176,7 +176,10 @@ sdcardprep:	$(LINUX_BINARIES)
 	python3 src/telephony/sms-stim.py -o stim.txt 10 100
 	src/telephony/linux/import stim.txt /media/paul/MEGA65FDISK
 
-bin65/megacom:  bin65/megacom.llvm.prg
+src/telephony/ascii-font.c:	tools/make-ascii-font-c.sh asciifont.bin
+	tools/make-ascii-font-c.sh
+
+bin65/megacom:   bin65/megacom.llvm.prg src/telephony/ascii-font.c
 	cp $< $@
 
 sdbin:	bin65/foneinit.llvm.prg bin65/foneclst.llvm.prg bin65/fonesms.llvm.prg
