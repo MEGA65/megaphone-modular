@@ -5,6 +5,8 @@
 
 #include "includes.h"
 
+#include <string.h>
+
 #include "uart.h"
 
 void screen_stash(void)
@@ -107,12 +109,12 @@ void h640_text_mode(void)
 
 void visual_bell(void)
 {
-  POKE(0xD021,0x01);
+  POKE(0xD020,0x01);
   for(int i=0;i<10;i++) {
     uint8_t old = PEEK(0xD7FA);
     while (PEEK(0xD7FA)==old) continue;
   }
-  POKE(0xD021,0x06);
+  POKE(0xD020,0x00);
 }
 
 char status_line[80 +1]="CTRL-A Z for help |  0000000 8N1 | MEGAcom 0.1 | ASCII         | Buffered uart 0";
@@ -319,6 +321,11 @@ void term_scroll_check(void)
   
 }
 
+char esc_str_ofs=0;
+char esc_str[32+1]={0};
+
+void term_echo_str(char *s);
+
 void term_process_char(uint8_t c)
 {
   if (term_esc) {
@@ -328,7 +335,49 @@ void term_process_char(uint8_t c)
       if (c=='[') term_esc=2; else term_esc=0;
       break;
     case 2:
-      if (c=='m') term_esc=0;
+      if (esc_str_ofs<32)
+	esc_str[esc_str_ofs++]=c;
+      if (c>=0x40&&c<=0x7e) {
+	esc_str[esc_str_ofs]=0;
+	if (!strcmp(esc_str,"0m")) {
+	  // RESET
+	  term_colour=0x0e;
+	}
+	else if (!strcmp(esc_str,"K")) {
+	  // Erase to end of line
+	  lfill(0xf000 + term_x + term_y*80,' ',80-term_x);
+	}
+	else if (!strcmp(esc_str,"0K")) {
+	  // Erase to end of line
+	  lfill(0xf000 + term_x + term_y*80,' ',80-term_x);
+	}
+	else if (!strcmp(esc_str,"1K")) {
+	  // Erase to start of line
+	  lfill(0xf000 + term_y*80,' ',term_x+1);
+	}
+	else if (!strcmp(esc_str,"2K")) {
+	  // Erase entire line
+	  lfill(0xf000 + term_y*80,' ',80);
+	}
+	else if (!strcmp(esc_str,"01;30m")) term_colour=0x00;
+	else if (!strcmp(esc_str,"01;31m")) term_colour=0x01;
+	else if (!strcmp(esc_str,"01;32m")) term_colour=0x05;
+	else if (!strcmp(esc_str,"01;33m")) term_colour=0x06;
+	else if (!strcmp(esc_str,"01;34m")) term_colour=0x07;
+	else if (!strcmp(esc_str,"01;35m")) term_colour=0x04;
+	else if (!strcmp(esc_str,"01;36m")) term_colour=0x0A;
+	else if (!strcmp(esc_str,"01;37m")) term_colour=0x01;
+	else if (!strcmp(esc_str,"01;39m")) term_colour=0x0e;
+	else  {
+	  term_echo_str("<ESC sequence: '");
+	  term_echo_str(esc_str);
+	  term_echo_str("'>");
+	}
+
+	  term_esc=0;
+
+	esc_str_ofs=0;
+      }
       break;
     default:
       term_esc=0;
@@ -364,10 +413,29 @@ void term_process_char(uint8_t c)
   }
 }
 
+void term_echo_str(char *s)
+{
+  while(*s) {
+    char temp=term_esc;
+    term_esc=0;
+    term_process_char(*s);
+    s++;
+    term_esc=temp;
+  }
+}
+
+unsigned char cursor_left[]={0x1b,'[','D'};
+unsigned char cursor_right[]={0x1b,'[','C'};
+unsigned char cursor_up[]={0x1b,'[','A'};
+unsigned char cursor_down[]={0x1b,'[','B'};
+
 int main(void)
 {
   mega65_io_enable();
 
+  POKE(0xd020,0);
+  POKE(0xd021,0);  
+  
   // Install NMI and BRK catchers
   POKE(0x0316,(uint8_t)(((uint16_t)&brk_catcher)>>0));
   POKE(0x0317,(uint8_t)(((uint16_t)&brk_catcher)>>8));
@@ -418,6 +486,14 @@ int main(void)
       } else {
 	switch(PEEK(0xD610)) {
 	case 0x01: ctrl_a_mode=1; break;
+	case 0x11: // cursor down
+	  modem_uart_write(cursor_down,sizeof(cursor_down)); break;
+	case 0x91: // cursor up
+	  modem_uart_write(cursor_up,sizeof(cursor_up)); break;
+	case 0x1d: // cursor right
+	  modem_uart_write(cursor_right,sizeof(cursor_right)); break;
+	case 0x9d: // cursor left
+	  modem_uart_write(cursor_left,sizeof(cursor_left)); break;
 	case 0x14: // INST/DEL -> send backspace
 	  c=0x08;
 	  modem_uart_write(&c,1);
