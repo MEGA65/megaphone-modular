@@ -17,6 +17,7 @@ uint16_t modem_uart_read(uint8_t *buffer, uint16_t size)
   uint16_t ofs=0;
   while((ofs<size)&&((PEEK(0xD0E1)&0x40)==0x00)) {
     buffer[ofs++]=PEEK(0xD0E2);
+    POKE(0xD0E2,1); // ACK RX of byte
   }
   return ofs;
 }
