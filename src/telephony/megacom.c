@@ -105,6 +105,16 @@ void h640_text_mode(void)
   
 }
 
+void visual_bell(void)
+{
+  POKE(0xD021,0x01);
+  for(int i=0;i<10;i++) {
+    uint8_t old = PEEK(0xD7FA);
+    while (PEEK(0xD7FA)==old) continue;
+  }
+  POKE(0xD021,0x06);
+}
+
 char status_line[80 +1]="CTRL-A Z for help |  0000000 8N1 | MEGAcom 0.1 | ASCII         | Buffered uart 0";
 #define BAUD_OFFSET 22
 #define UART_NUM_OFFSET 79
@@ -140,6 +150,74 @@ struct baud_rate baud_list[NUM_BAUD_RATES]={
   {4000000,"4000000"}  
 };
 
+uint8_t current_baud_rate = 8;
+uint8_t current_uart = 0;
+
+#define SERIAL_PORT_MENU_ITEMS 16
+char *serial_port_menu_item[SERIAL_PORT_MENU_ITEMS]={
+" A -    Serial Device      : Buffered UART 0      ",
+" B - Lockfile Location     : /var/lock            ",
+" C -   Callin Program      :                      ",
+" D -  Callout Program      :                      ",
+" E -    Bps/Par/Bits       :      00 8N1          ",
+" F - Hardware Flow Control : No                   ",
+" G - Software Flow Control : No                   ",
+" H -     RS485 Enable      : No                   ",
+" I -   RS485 Rts On Send   : No                   ",
+" J -  RS485 Rts After Send : No                   ",
+" K -  RS485 Rx During Tx   : No                   ",
+" L -  RS485 Terminate Bus  : No                   ",
+" M - RS485 Delay Rts Before: 0                    ",
+" N - RS485 Delay Rts After : 0                    ",
+"                                                  ",
+"    Change which setting?                         ",
+};
+  
+
+void serial_port_menu(void)
+{
+
+  POKE(0xD610,0);
+  
+  while(1) {
+    
+    print_box(4,3,55,3+SERIAL_PORT_MENU_ITEMS+2,0x0c);
+    for(int i=0;i<SERIAL_PORT_MENU_ITEMS;i++) {
+      // Avoid tearing with baud rate display update
+      while(PEEK(0xD012)<0x80) continue;
+
+      print_text80(5,4+i,0x0e,serial_port_menu_item[i]);
+
+      // Update current UART and baud rate -- we do this in here
+      // so that there's less chance of visible tearing
+      if (!i) POKE(0xc000+4*80+48,'0'+current_uart);
+      if (i==4) {
+	for(int i=0;i<7;i++) POKE(0xc000+8*80+34+i,baud_list[current_baud_rate].baud_str[i]);
+      }
+      
+    }
+
+    if (PEEK(0xD610)) {
+      switch(PEEK(0xD610)) {
+      case 0x1b: // ESC - Exit
+	POKE(0xD610,0);
+	screen_restore();
+	return;
+      case 'a':
+	current_uart++;
+	if (current_uart>7) current_uart=0;
+	break;
+      default:
+	visual_bell();
+      }
+      POKE(0xD610,0);
+    }
+  }
+  
+
+
+}
+
 #define CONFIG_MENU_ITEMS 9
 char *config_item[CONFIG_MENU_ITEMS]={
 " Filenames and paths     ",
@@ -157,11 +235,11 @@ char *config_item[CONFIG_MENU_ITEMS]={
 void config_menu(void)
 {
   screen_stash();
-  print_box(12,9,12+26,9+10,0x0c);
 
   uint8_t item = 0;
 
   while(1) {
+    print_box(12,9,12+26,9+10,0x0c);
     for(int i=0;i<CONFIG_MENU_ITEMS;i++) {
       print_text80(13,10+i,(i==item)?0x2e:0x0e,config_item[i]);
     }
@@ -188,15 +266,11 @@ void config_menu(void)
 	case 5: // Keyboard and Misc
 	case 6: // Save setup as dfl
 	case 7: // Save setup as..
-	  // Inimplemented!
-	  POKE(0xD021,0x01);
-	  for(int i=0;i<10;i++) {
-	    uint8_t old = PEEK(0xD7FA);
-	    while (PEEK(0xD7FA)==old) continue;
-	  }
-	  POKE(0xD021,0x06);
+	  // Unimplemented!
+	  visual_bell();
 	  break;
 	case 2: // Serial port setup
+	  serial_port_menu();
 	  break;
 	case 8: // Exit
 	  screen_restore();
@@ -213,7 +287,7 @@ void config_menu(void)
 int main(void)
 {
   mega65_io_enable();
-  
+
   h640_text_mode();
 
   print_text80(0,49,0x21,status_line);
