@@ -18,7 +18,7 @@ void modem_query_volte(void);
 void modem_query_network(void);
 void modem_getready_to_issue_command(void);
 
-int modem_uart_write(uint8_t *buffer, uint16_t size);
+uint16_t modem_uart_write(uint8_t *buffer, uint16_t size);
 uint16_t modem_uart_read(uint8_t *buffer, uint16_t size);
 
 #define MODEM_CALL_ESTABLISHMENT_TIMEOUT_SECONDS 10

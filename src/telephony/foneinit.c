@@ -17,6 +17,7 @@
 #include "status.h"
 #include "af.h"
 #include "mountstate.h"
+#include "uart.h"
 
 #include "loader.h"
 
@@ -118,6 +119,9 @@ main(void)
   statusbar_setup();
 
   generate_rgb332_palette();
+
+  // Open UART to cellular modem @ 115,200
+  modem_setup_serial(0,40500000 / 115200);
   
   // Make sure SD card is idle
   if (PEEK(0xD680)&0x03) {
@@ -131,6 +135,8 @@ main(void)
   
   hal_init();
 
+  
+  
   mount_state_set(MS_CONTACT_LIST, 0);
   read_sector(0,1,0);
   shared.contact_count = record_allocate_next(SECTOR_BUFFER_ADDRESS) - 1;

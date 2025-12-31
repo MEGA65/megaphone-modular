@@ -19,6 +19,7 @@
 #include "af.h"
 #include "mountstate.h"
 #include "modem.h"
+#include "uart.h"
 
 #define PAGE_UNKNOWN 0
 #define PAGE_SMS_THREAD 1
@@ -122,6 +123,9 @@ main(void)
   
   hal_init();
 
+  // Open UART to cellular modem @ 115,200
+  modem_setup_serial(0,40500000 / 115200);
+    
   mount_state_set(MS_CONTACT_LIST, 0);
   read_sector(0,1,0);
   shared.contact_count = record_allocate_next(SECTOR_BUFFER_ADDRESS) - 1;

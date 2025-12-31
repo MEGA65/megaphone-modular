@@ -19,6 +19,7 @@
 #include "af.h"
 #include "mountstate.h"
 #include "modem.h"
+#include "uart.h"
 
 unsigned char i;
 
@@ -116,10 +117,15 @@ main(void)
   POKE(0x0319,(uint8_t)(((uint16_t)&nmi_catcher)>>8));
 
   asm volatile ( "cli");  
-  
+
+  // Open UART to cellular modem @ 115,200
+  modem_setup_serial(0,40500000 / 115200);
+    
   show_busy();
 
   while(1) {
+    modem_poll();
+    
     // Reload and redraw things as required when changing views.
     if (shared.current_page != shared.last_page) {
       reset_view(shared.current_page);
