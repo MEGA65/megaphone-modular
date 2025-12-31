@@ -159,17 +159,6 @@ int open_the_serial_port(char *serial_port,int serial_speed)
   return 0;
 }
 
-void modem_getready_to_issue_command(void)
-{
-  while (shared.modem_response_pending) {
-    usleep(1000);
-    shared.modem_response_pending--;
-    modem_poll();
-  }
-  shared.modem_response_pending=1000;
-}
-
-
 uint16_t modem_uart_write(uint8_t *buffer, uint16_t size)
 {
 
@@ -824,6 +813,15 @@ void modem_query_network(void)
   modem_uart_write((unsigned char *)"at+qspn\r\n",9);
 }
 
+void modem_getready_to_issue_command(void)
+{
+  while (shared.modem_response_pending) {
+    usleep(1000);
+    shared.modem_response_pending--;
+    modem_poll();
+  }
+  shared.modem_response_pending=1000;
+}
 
 #ifdef STANDALONE
 int main(int argc,char **argv)
