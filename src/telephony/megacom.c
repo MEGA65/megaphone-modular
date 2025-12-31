@@ -137,7 +137,7 @@ struct baud_rate baud_list[NUM_BAUD_RATES]={
   {19200,"  19200", 40500000 / 19200},
   {38400,"  38400", 40500000 / 38400},
   {57600,"  57600", 40500000 / 57600},
-  {115200," 115200", 40500000 / 115200},
+  {115200," 115200", 40500000 / 115200 + 1},
   {230400," 230400", 40500000 / 230400},
   {460800," 460800", 40500000 / 460800},
   {500000," 500000", 40500000 / 500000},
@@ -154,7 +154,7 @@ struct baud_rate baud_list[NUM_BAUD_RATES]={
 };
 
 uint8_t current_baud_rate = 8;
-uint8_t current_uart = 1;
+uint8_t current_uart = 0;
 
 #define SERIAL_PORT_MENU_ITEMS 16
 char *serial_port_menu_item[SERIAL_PORT_MENU_ITEMS]={
@@ -359,6 +359,14 @@ void term_process_char(uint8_t c)
 	  // Erase entire line
 	  lfill(0xf000 + term_y*80,' ',80);
 	}
+	else if (!strcmp(esc_str,"?2004h")) {
+	  // DEC private paste mode.
+	  // Ignore it for now
+	}
+	else if (!strcmp(esc_str,"?2004l")) {
+	  // DEC private mode that happens on logout?
+	  // Ignore it for now
+	}
 	else if (!strcmp(esc_str,"01;30m")) term_colour=0x00;
 	else if (!strcmp(esc_str,"01;31m")) term_colour=0x01;
 	else if (!strcmp(esc_str,"01;32m")) term_colour=0x05;
@@ -368,6 +376,7 @@ void term_process_char(uint8_t c)
 	else if (!strcmp(esc_str,"01;36m")) term_colour=0x0A;
 	else if (!strcmp(esc_str,"01;37m")) term_colour=0x01;
 	else if (!strcmp(esc_str,"01;39m")) term_colour=0x0e;
+	else if (!strcmp(esc_str,"34;42m")) term_colour=0x25;
 	else  {
 	  term_echo_str("<ESC sequence: '");
 	  term_echo_str(esc_str);
@@ -476,6 +485,11 @@ int main(void)
 	case 'o':
 	  // Config menu
 	  config_menu();
+
+	  // Update serial state in status bar after screen has been restored
+	  POKE(0xf000+49*80+79,'0'+current_uart);
+	  for(int i=0;i<7;i++) POKE(0xf000+49*80+21+i,baud_list[current_baud_rate].baud_str[i]);
+
 	  break;
 	case 'q':
 	  // Quit
