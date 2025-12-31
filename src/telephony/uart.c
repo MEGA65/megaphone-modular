@@ -10,6 +10,8 @@ uint16_t modem_uart_write(uint8_t *buffer, uint16_t size)
     // Write byte
     POKE(0xD0E3,buffer[ofs++]);
   }
+
+  return ofs;
 }
 
 uint16_t modem_uart_read(uint8_t *buffer, uint16_t size)
@@ -32,5 +34,6 @@ char modem_setup_serial(uint8_t port_number, uint32_t baud_rate_divisor)
   POKE(0xD0E4,baud_rate_divisor>>0);
   POKE(0xD0E5,baud_rate_divisor>>8);
   POKE(0xD0E6,baud_rate_divisor>>16);
-  
+
+  return 0;
 }
