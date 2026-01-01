@@ -428,7 +428,7 @@ void modem_parse_line(void)
 
 #ifdef MEGA65
   mega65_uart_print("Modem line: '");
-  mega65_uart_print(shared.modem_line);
+  mega65_uart_print((unsigned char *)shared.modem_line);
   mega65_uart_print("'\r\n");  
 #endif
 
@@ -541,32 +541,53 @@ void modem_parse_line(void)
       uint8_t qltone_mode=0;
 
       mega65_uart_print("Parsed Call state update.\r\n");
-      
-      switch(call_state) {
-      case 65535: // i.e., -1 : Call terminated
-	shared.call_state = CALLSTATE_DISCONNECTED;
-	break;
-      case 0: // CALL ACTIVE
-	shared.call_state = CALLSTATE_CONNECTED;
-	break;
-      case 1: // CALL HELD
-	break;
-      case 2: // CALLING (outbound)
-	// FALL THROUGH
-      case 3: // ALERTING (ringing in handset to indicate call being established) 
-	shared.call_state = CALLSTATE_CONNECTING;
-	qltone_mode='1';
-	break;
-      case 4: // RINGING (inbound)
-	shared.call_state = CALLSTATE_RINGING;
-	strncpy((char *)shared.call_state_number,number,NUMBER_FIELD_LEN);
-	shared.call_state_number[NUMBER_FIELD_LEN]=0;
-	break;
-      case 5: // WAITING (inbound)
-	// Indicate call waiting? No idea
-	break;
-      }
 
+      // Detect if "call 3" (== voice call) has disappeared
+      if (id==1&&shared.modem_last_call_id==2) {
+	// We have no call state
+	if (shared.call_state != CALLSTATE_NUMBER_ENTRY) {
+	  if (shared.call_state != CALLSTATE_DISCONNECTED) {
+	    shared.call_state = CALLSTATE_DISCONNECTED;
+
+	    // Update display to show call state
+	  }
+	}
+      }
+      shared.modem_last_call_id = id;
+
+      // Or if we see state for the current call, then update things
+      uint8_t prev_state = shared.call_state;
+      if (number[0]) {
+	switch(call_state) {
+	case 65535: // i.e., -1 : Call terminated
+	  shared.call_state = CALLSTATE_DISCONNECTED;
+	  break;
+	case 0: // CALL ACTIVE
+	  shared.call_state = CALLSTATE_CONNECTED;
+	  break;
+	case 1: // CALL HELD
+	  break;
+	case 2: // CALLING (outbound)
+	  // FALL THROUGH
+	case 3: // ALERTING (ringing in handset to indicate call being established) 
+	  shared.call_state = CALLSTATE_CONNECTING;
+	  qltone_mode='1';
+	  break;
+	case 4: // RINGING (inbound)
+	  shared.call_state = CALLSTATE_RINGING;
+	  strncpy((char *)shared.call_state_number,number,NUMBER_FIELD_LEN);
+	  shared.call_state_number[NUMBER_FIELD_LEN]=0;
+	  break;
+	case 5: // WAITING (inbound)
+	  // Indicate call waiting? No idea
+	  break;
+	}
+      }
+      if (prev_state != shared.call_state) {
+	dialpad_draw(shared.active_field, DIALPAD_ALL);
+	dialpad_draw_call_state(shared.active_field);
+      }
+      
       modem_getready_to_issue_command();
       if (qltone_mode)
 	modem_uart_write((unsigned char *)qltone_string_calling,strlen(qltone_string_calling));
