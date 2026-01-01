@@ -80,6 +80,15 @@ typedef struct shared_state_t {
   uint8_t modem_saw_ok;
   uint8_t modem_saw_error;
   uint16_t modem_response_pending;
+
+  // Network time from modem
+  uint16_t nettime_year;
+  uint8_t nettime_month;
+  uint8_t nettime_day;
+  uint8_t nettime_hour;
+  uint8_t nettime_minute;
+  uint8_t nettime_sec;
+  uint8_t nettime_set;
   
 } Shared;
 

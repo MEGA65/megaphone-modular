@@ -111,11 +111,18 @@ void statusbar_draw_indicators(void)
 
 void statusbar_draw_time(void)
 {
+  uint8_t hour = lpeek(0xffd7112L)&0x7f;
+  uint8_t minute = lpeek(0xffd7111L);
+
+  if (shared.nettime_set) {
+    hour = shared.nettime_hour;
+    minute = shared.nettime_minute;
+  }
   // Hour
-  bcd_to_str(lpeek(0xffd7112L)&0x7f,&status_time[0]);
+  bcd_to_str(hour,&status_time[0]);
   status_time[2]=':';
   // minute
-  bcd_to_str(lpeek(0xffd7111L),&status_time[3]);
+  bcd_to_str(minute,&status_time[3]);
 
 #ifdef SHOW_SECONDS
   // seconds

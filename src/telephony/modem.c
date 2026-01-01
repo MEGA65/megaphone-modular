@@ -10,6 +10,7 @@
 #include "modem.h"
 #include "smsdecode.h"
 #include "format.h"
+#include "status.h"
 
 #include <string.h>
 
@@ -352,8 +353,16 @@ char modem_poll(void)
   return 0;
 }
 
+char modem_parser_expect_char(char **s, uint8_t expected)
+{
+  if ((**s)!=expected) return 1;
+  (*s)++;
+  return 0;
+}
+
 char modem_parser_comma(char **s)
 {
+  return modem_parser_expect_char(s,',');
   if ((**s)!=',') return 1;
   (*s)++;
   return 0;
@@ -366,6 +375,18 @@ char modem_parser_int16(char **s, uint16_t *out)
   uint16_t v = parse_u16_dec(*s);
   while (((**s)>='0')&&((**s)<='9')) (*s)++;
   if (negative) *out=-v; else *out=v;
+  return 0;
+}
+
+char modem_parser_bcd16(char **s, uint16_t *out)
+{
+  char negative=0;
+  if ((**s)=='-') { negative=1; (*s)++; }
+  while (((**s)>='0')&&((**s)<='9')) {
+    (*out)<<=4;
+    (*out)+=(**s)-'0';
+    (*s)++;
+  }
   return 0;
 }
 
@@ -409,12 +430,42 @@ void modem_parse_line(void)
 #ifdef MEGA65
   mega65_uart_print("Modem line: '");
   mega65_uart_print((unsigned char *)shared.modem_line);
-  mega65_uart_print("'\r\n");
-  
+  mega65_uart_print("'\r\n");  
 #endif
+
+  // +QLTS: "2026/01/01,16:58:25+42,1"'
+  if (!strncmp((char *)shared.modem_line,"+QLTS: ",7)) {
+    char *s = (char *)&shared.modem_line[13];
+    uint16_t year,month,day,hour,minute;
+    char good=0;
+    do {
+      // XXX Store numbers as BCD, not ints
+      if (modem_parser_expect_char(&s,'\"')) break;
+      if (modem_parser_bcd16(&s,&year)) break;
+      if (modem_parser_expect_char(&s,'/')) break;
+      if (modem_parser_bcd16(&s,&month)) break;
+      if (modem_parser_expect_char(&s,'/')) break;
+      if (modem_parser_bcd16(&s,&day)) break;
+      if (modem_parser_expect_char(&s,',')) break;
+      if (modem_parser_bcd16(&s,&hour)) break;
+      if (modem_parser_expect_char(&s,':')) break;
+      if (modem_parser_bcd16(&s,&minute)) break;
+      good=1;
+    } while(0);
+    if (good) {
+      // XXX -- Store network time and mark it fresh
+      shared.nettime_year = year;
+      shared.nettime_month = month;
+      shared.nettime_day = day;
+      shared.nettime_hour = hour;
+      shared.nettime_minute = minute;
+      shared.nettime_set = 1;
+      // XXX -- Update status bar to show it
+    }
   
+  }
   // +QSPN: "CHN-UNICOM","UNICOM","",0,"46001"
-  if (!strncmp((char *)shared.modem_line,"+QSPN: ",7)) {
+  else if (!strncmp((char *)shared.modem_line,"+QSPN: ",7)) {
     char *s = (char *)&shared.modem_line[7];
     char network_full[NUMBER_FIELD_LEN+1];
     char network_short[NUMBER_FIELD_LEN+1];
@@ -428,6 +479,7 @@ void modem_parse_line(void)
     } while(0);
     if (good) {
       strcpy((char *)shared.modem_network_name,network_full);
+      statusbar_draw_netname();
     }
   }
   else if (!strncmp((char *)shared.modem_line,"+QCFG: \"ims\",",13)) {
