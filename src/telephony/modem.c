@@ -557,7 +557,8 @@ void modem_parse_line(void)
 
       // Or if we see state for the current call, then update things
       uint8_t prev_state = shared.call_state;
-      if (number[0]) {
+      // If no caller ID supplied, we can only trust the call_state field
+      if (number[0]||call_state) {
 	switch(call_state) {
 	case 65535: // i.e., -1 : Call terminated
 	  shared.call_state = CALLSTATE_DISCONNECTED;
