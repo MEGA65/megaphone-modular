@@ -6,7 +6,8 @@
 
 uint8_t registered_with_network = 1;
 
-unsigned char signal_none[]="📵";
+unsigned char signal_none[]="📵cccc";
+unsigned char signal_not_yet_set[]="       ";
 // The following two strings must use unicode symbols that encode to the same number of bytes as each other.
 // The filler chars after must be exactly 7px wide to keep alignment
 unsigned char signal_strength[]="📱cccc";
@@ -64,21 +65,26 @@ void statusbar_draw_signal(void)
   // Signal strength
   uint8_t *signal_string = NULL;
   uint8_t bars = 0;
-  if (shared.signal_level == 0) signal_string = signal_none;
+
+  // When we parse the signal strength in modem.c, we add 1 to it,
+  // so that the default value of 0 can be used to detect when we haven't
+  // yet worked out if we have signal.
+  if (shared.signal_level == 0) signal_string = signal_not_yet_set;
+  else if (shared.signal_level == 1) signal_string = signal_none;
   else {
     signal_string = signal_strength;
     if (!registered_with_network) signal_string = signal_strength_forbidden;
-    if (shared.signal_level<99) {
+    if (shared.signal_level<100) {
       // 0 = -113dBm or less
       // 31 = -51dBm or better
-      bars = (shared.signal_level+1)/8;
+      bars = (shared.signal_level)/8;
     } else {
       // 100 = -116dBm or less
       // 191 = -25dBm or better
-      bars = (shared.signal_level-100)/22;
+      bars = (shared.signal_level-99)/22;
     }
     // No signal
-    if (shared.signal_level==99|shared.signal_level==199) bars=0;
+    if (shared.signal_level==100|shared.signal_level==200) bars=0;
     if (bars>4) bars=4;
   }
   draw_string_nowrap(ST_GL_SIGNAL_START,1,
@@ -91,13 +97,30 @@ void statusbar_draw_signal(void)
 		     NULL,
 		     VIEWPORT_PADDED,
 		     NULL,NULL);
-  // Then we munge the _ characters to instead show our signal strength indicators
-  for(uint8_t bar = 0; bar < 4; bar++) {
-    // Draw bar or lack of bar
-    lpoke(screen_ram + 1 * (2 * 0x100) + (ST_GL_SIGNAL_START+2 + bar)*2 + 0, (bar < bars) ? 0x71 + bar*2 : 0x79 + bar * 2);
-    // Choose non-FCM glyph and trim to 7px wide
-    lpoke(screen_ram + 1 * (2 * 0x100) + (ST_GL_SIGNAL_START+2 + bar)*2 + 1, 0x20);
+  if (shared.signal_level) {
+    // Then we munge the _ characters to instead show our signal strength indicators
+    for(uint8_t bar = 0; bar < 4; bar++) {
+      // Draw bar or lack of bar
+      lpoke(screen_ram + 1 * (2 * 0x100) + (ST_GL_SIGNAL_START+2 + bar)*2 + 0, (bar < bars) ? 0x71 + bar*2 : 0x79 + bar * 2);
+      // Choose non-FCM glyph and trim to 7px wide
+      lpoke(screen_ram + 1 * (2 * 0x100) + (ST_GL_SIGNAL_START+2 + bar)*2 + 1, 0x20);
+    }
   }
+}
+
+void statusbar_draw_volte(void)
+{
+  // Reserved for status indicators
+  draw_string_nowrap(ST_GL_VOLTE_START,1,
+		     FONT_UI,
+		     0x81, // reverse white
+		     shared.volte_enabled?(unsigned char *)"VoLTE" : (unsigned char *)"",
+		     ST_PX_VOLTE_START,
+		     ST_PX_VOLTE,
+		     ST_GL_VOLTE_START+ST_GL_VOLTE,
+		     NULL,
+		     VIEWPORT_PADDED,
+		     NULL,NULL);  
 }
 
 void statusbar_draw_indicators(void)
@@ -200,9 +223,9 @@ void statusbar_draw()
   statusbar_draw_netname();
   statusbar_draw_reserved();
   statusbar_draw_indicators();
+  statusbar_draw_volte();
   statusbar_draw_signal();
   statusbar_draw_battery();
-
   
 }
 

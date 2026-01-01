@@ -286,6 +286,7 @@ char *enhanced_poll_commands[]={
   "at+qspn\r\n", // Get network name
   "at+qcfg=\"ims\"\r\n", // Get VoLTE status
   "at+qlts=2\r\n", // Get network time (adjusted to local time)
+  "AT+CLCC\r\n", // Query call state
   ""
 };
 
@@ -295,7 +296,7 @@ char modem_poll_enhanced(void)
     // Modem is not doing anything.
     // We can periodically ask the modem to report network name,
     // network time and signal strength
-    if ((shared.frame_counter&0x3f)==0x3f) {
+    if ((shared.frame_counter&0x7f)==0x7f) {
       if (!enhanced_poll_commands[enhanced_poll_command_num][0])
 	enhanced_poll_command_num=0;
       modem_uart_write((unsigned char *)enhanced_poll_commands[enhanced_poll_command_num],
@@ -442,7 +443,10 @@ void modem_parse_line(void)
       good=1;
     } while(0);
     if (good) {
-      shared.signal_level = sig;
+      // We add 1 to the level before storing it, so that a value of 0 = not set
+      // so that when we launch we don't make the user think there's no signal,
+      // rather than we just don't know what signal level.
+      shared.signal_level = sig + 1;
       statusbar_draw_signal();
     }
   } 
@@ -507,7 +511,10 @@ void modem_parse_line(void)
       if (modem_parser_int16(&s,&second)) break;
       good=1;
     } while(0);
-    if (good) shared.volte_enabled=second;
+    if (good) {
+      shared.volte_enabled=second;
+      statusbar_draw_volte();
+    }
   }  
   else if (!strncmp((char *)shared.modem_line,"+QIND: \"ccinfo\",",16)) {
     char *s = (char *)&shared.modem_line[16];
@@ -532,6 +539,8 @@ void modem_parse_line(void)
       good=1;
 
       uint8_t qltone_mode=0;
+
+      mega65_uart_print("Parsed Call state update.\r\n");
       
       switch(call_state) {
       case 65535: // i.e., -1 : Call terminated
@@ -1046,7 +1055,6 @@ else if (!strncmp(argv[i], "smssend=", 8)) {
       while(shared.volte_enabled==99) modem_poll();
       fprintf(stderr,"INFO: VoLTE is%s enabled.\n",
 	      shared.volte_enabled?"":" not");
-      
     }
     else if (!strncmp(argv[i],"network",7)) {
       shared.modem_network_name[0]=0;

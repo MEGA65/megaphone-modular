@@ -16,7 +16,7 @@
 #define ST_GL_RESERVED_START (ST_GL_NETNAME_START + ST_GL_NETNAME)
 
 #define ST_GL_RESERVED 50
-#define ST_PX_RESERVED (199+38)
+#define ST_PX_RESERVED 207
 
 #define ST_PX_INDICATORS_START (ST_PX_RESERVED_START + ST_PX_RESERVED)
 #define ST_GL_INDICATORS_START (ST_GL_RESERVED_START + ST_GL_RESERVED)
@@ -24,8 +24,14 @@
 #define ST_GL_INDICATORS 24
 #define ST_PX_INDICATORS 130
 
-#define ST_PX_SIGNAL_START (ST_PX_INDICATORS_START + ST_PX_INDICATORS)
-#define ST_GL_SIGNAL_START (ST_GL_INDICATORS_START + ST_GL_INDICATORS)
+#define ST_PX_VOLTE_START (ST_PX_INDICATORS_START + ST_PX_INDICATORS)
+#define ST_GL_VOLTE_START (ST_GL_INDICATORS_START + ST_GL_INDICATORS)
+
+#define ST_GL_VOLTE 6
+#define ST_PX_VOLTE 38
+
+#define ST_PX_SIGNAL_START (ST_PX_VOLTE_START + ST_PX_VOLTE)
+#define ST_GL_SIGNAL_START (ST_GL_VOLTE_START + ST_GL_VOLTE)
 
 #define ST_GL_SIGNAL 8
 #define ST_PX_SIGNAL 48
@@ -37,6 +43,7 @@
 #define ST_PX_BATTERY 64
 
 void statusbar_draw_time(void);
+void statusbar_draw_volte(void);
 void statusbar_draw_signal(void);
 void statusbar_draw_battery(void);
 void statusbar_draw_reserved(void);
