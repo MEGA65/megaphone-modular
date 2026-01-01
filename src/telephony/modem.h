@@ -1,4 +1,5 @@
 char modem_init(void);
+char modem_poll_enhanced(void);
 char modem_poll(void);
 void modem_parse_line(void);
 char modem_place_call(void);

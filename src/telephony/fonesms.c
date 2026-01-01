@@ -119,12 +119,12 @@ main(void)
   asm volatile ( "cli");  
 
   // Open UART to cellular modem @ 115,200
-  modem_setup_serial(0,40500000 / 115200);
+  modem_setup_serial(0,40500000 / 115200 + 10);
     
   show_busy();
 
   while(1) {
-    modem_poll();
+    modem_poll_enhanced();
     
     // Reload and redraw things as required when changing views.
     if (shared.current_page != shared.last_page) {
@@ -205,7 +205,7 @@ uint8_t fonemain_sms_thread_controller(void)
   while(!PEEK(0xD610)) {
     // Keep the clock updated
     statusbar_draw_time();
-    modem_poll();
+    modem_poll_enhanced();
     continue;
   }
   show_busy();

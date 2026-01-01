@@ -18,6 +18,7 @@
 #include "af.h"
 #include "mountstate.h"
 #include "uart.h"
+#include "modem.h"
 
 #include "loader.h"
 
@@ -121,7 +122,9 @@ main(void)
   generate_rgb332_palette();
 
   // Open UART to cellular modem @ 115,200
-  modem_setup_serial(0,40500000 / 115200);
+  modem_setup_serial(0,40500000 / 115200 + 10);
+
+  modem_init();
   
   // Make sure SD card is idle
   if (PEEK(0xD680)&0x03) {

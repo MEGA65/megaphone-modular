@@ -124,7 +124,7 @@ main(void)
   hal_init();
 
   // Open UART to cellular modem @ 115,200
-  modem_setup_serial(0,40500000 / 115200);
+  modem_setup_serial(0,40500000 / 115200 + 10);
     
   mount_state_set(MS_CONTACT_LIST, 0);
   read_sector(0,1,0);
@@ -133,7 +133,7 @@ main(void)
   show_busy();
 
   while(1) {
-    modem_poll();
+    modem_poll_enhanced();
 
     // Reload and redraw things as required when changing views.
     if (shared.current_page != shared.last_page) {
@@ -190,7 +190,7 @@ uint8_t fonemain_contact_list_controller(void)
   while(!PEEK(0xD610)) {
     // Keep the clock updated
     statusbar_draw_time();
-    modem_poll();
+    modem_poll_enhanced();
     continue;
   }
   show_busy();

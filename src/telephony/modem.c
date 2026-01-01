@@ -279,6 +279,31 @@ char modem_init(void)
   return errors;
 }
 
+uint8_t enhanced_poll_command_num=0;
+char *enhanced_poll_commands[]={
+  "AT+CSQ\r\n",  // Get signal strength
+  "at+qspn\r\n", // Get network name
+  "at+qcfg=\"ims\"\r\n", // Get VoLTE status
+  "at+qlts=2\r\n", // Get network time (adjusted to local time)
+  ""
+};
+
+char modem_poll_enhanced(void)
+{
+  modem_poll();
+  if (shared.modem_line_len==0&&(!shared.modem_response_pending)) {
+    // Modem is not doing anything.
+    // We can periodically ask the modem to report network name,
+    // network time and signal strength
+    if ((shared.frame_counter&0x3f)==0x3f) {
+      if (!enhanced_poll_commands[enhanced_poll_command_num][0])
+	enhanced_poll_command_num=0;
+      modem_uart_write(enhanced_poll_commands[enhanced_poll_command_num],
+		       strlen(enhanced_poll_commands[enhanced_poll_command_num]));
+      enhanced_poll_command_num++;
+    } 
+  }
+}
 
 char modem_poll(void)
 {
@@ -306,7 +331,7 @@ char modem_poll(void)
   shared.modem_poll_reset_line = 0;
   
   while (counter&&modem_uart_read(&c,1)) {
-    if (c=='\r'||c=='\n') {
+    if (c==0x0a||c==0x0d) {
       // End of line
       if (shared.modem_line_len) {
 	modem_parse_line();
@@ -318,7 +343,8 @@ char modem_poll(void)
       }
       shared.modem_line_len=0;
     } else {
-      if (shared.modem_line_len < MODEM_LINE_SIZE) shared.modem_line[shared.modem_line_len++]=c;
+      if (shared.modem_line_len < MODEM_LINE_SIZE)
+	shared.modem_line[shared.modem_line_len++]=c;
     }
     if (counter) counter--;
   }
@@ -375,11 +401,18 @@ void modem_parse_line(void)
   // Call mute status
 
   // What else?
-
+  
   if (shared.modem_line_len>= MODEM_LINE_SIZE)
     shared.modem_line_len = MODEM_LINE_SIZE - 1;
   shared.modem_line[shared.modem_line_len]=0;
 
+#ifdef MEGA65
+  mega65_uart_print("Modem line: '");
+  mega65_uart_print((unsigned char *)shared.modem_line);
+  mega65_uart_print("'\r\n");
+  
+#endif
+  
   // +QSPN: "CHN-UNICOM","UNICOM","",0,"46001"
   if (!strncmp((char *)shared.modem_line,"+QSPN: ",7)) {
     char *s = (char *)&shared.modem_line[7];
