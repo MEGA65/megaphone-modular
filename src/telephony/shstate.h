@@ -89,6 +89,13 @@ typedef struct shared_state_t {
   uint8_t nettime_minute;
   uint8_t nettime_sec;
   uint8_t nettime_set;
+
+  // Network signal
+  uint8_t signal_level;
+
+  // Battery level
+  uint8_t battery_percent;
+  uint8_t is_charging;
   
 } Shared;
 

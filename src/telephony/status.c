@@ -5,9 +5,6 @@
 #include "shstate.h"
 
 uint8_t registered_with_network = 1;
-uint8_t signal_level = 0xb0;
-uint8_t battery_percent = 100;
-uint8_t is_charging = 0;
 
 unsigned char signal_none[]="📵";
 // The following two strings must use unicode symbols that encode to the same number of bytes as each other.
@@ -29,14 +26,14 @@ void statusbar_draw_battery(void)
   // Signal strength
   uint8_t *battery_string = NULL;
   uint8_t bars = 0;
-  if (battery_percent <20) {
-    if (is_charging) battery_string = battery_flat_charging;
+  if (shared.battery_percent <20) {
+    if (shared.is_charging) battery_string = battery_flat_charging;
     else battery_string = battery_flat;
   }
   else {
-    if (is_charging) battery_string = battery_charging;
+    if (shared.is_charging) battery_string = battery_charging;
     else battery_string = battery_discharging;
-    bars = battery_percent/19;
+    bars = shared.battery_percent/19;
     if (bars>5) bars=5;
     if (bars>=4) battery_string = battery_fullish;
   }
@@ -50,7 +47,7 @@ void statusbar_draw_battery(void)
 		     NULL,
 		     VIEWPORT_PADDED,
 		     NULL,NULL);
-  if (battery_percent >= 20) {
+  if (shared.battery_percent >= 20) {
     // Then we munge the c characters to instead show our battery charge level bars
     for(uint8_t bar = 0; bar < 5; bar++) {
       // Draw bar or lack of bar
@@ -67,11 +64,21 @@ void statusbar_draw_signal(void)
   // Signal strength
   uint8_t *signal_string = NULL;
   uint8_t bars = 0;
-  if (signal_level == 0) signal_string = signal_none;
+  if (shared.signal_level == 0) signal_string = signal_none;
   else {
     signal_string = signal_strength;
     if (!registered_with_network) signal_string = signal_strength_forbidden;
-    bars = signal_level/50;
+    if (shared.signal_level<99) {
+      // 0 = -113dBm or less
+      // 31 = -51dBm or better
+      bars = (shared.signal_level+1)/8;
+    } else {
+      // 100 = -116dBm or less
+      // 191 = -25dBm or better
+      bars = (shared.signal_level-100)/22;
+    }
+    // No signal
+    if (shared.signal_level==99|shared.signal_level==199) bars=0;
     if (bars>4) bars=4;
   }
   draw_string_nowrap(ST_GL_SIGNAL_START,1,
@@ -111,27 +118,11 @@ void statusbar_draw_indicators(void)
 
 void statusbar_draw_time(void)
 {
-  uint8_t hour = lpeek(0xffd7112L)&0x7f;
-  uint8_t minute = lpeek(0xffd7111L);
-
-  if (shared.nettime_set) {
-    hour = shared.nettime_hour;
-    minute = shared.nettime_minute;
-  }
   // Hour
-  bcd_to_str(hour,&status_time[0]);
+  bcd_to_str(shared.nettime_hour,&status_time[0]);
   status_time[2]=':';
   // minute
-  bcd_to_str(minute,&status_time[3]);
-
-#ifdef SHOW_SECONDS
-  // seconds
-  status_time[5]=':';
-  bcd_to_str(lpeek(0xffd7110L),&status_time[6]);
-  status_time[8]=0;
-#else
-  status_time[5]=0;
-#endif
+  bcd_to_str(shared.nettime_minute,&status_time[3]);
   
   draw_string_nowrap(0,1,
 		     FONT_UI,

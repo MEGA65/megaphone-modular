@@ -291,7 +291,6 @@ char *enhanced_poll_commands[]={
 
 char modem_poll_enhanced(void)
 {
-  modem_poll();
   if (shared.modem_line_len==0&&(!shared.modem_response_pending)) {
     // Modem is not doing anything.
     // We can periodically ask the modem to report network name,
@@ -299,11 +298,12 @@ char modem_poll_enhanced(void)
     if ((shared.frame_counter&0x3f)==0x3f) {
       if (!enhanced_poll_commands[enhanced_poll_command_num][0])
 	enhanced_poll_command_num=0;
-      modem_uart_write(enhanced_poll_commands[enhanced_poll_command_num],
+      modem_uart_write((unsigned char *)enhanced_poll_commands[enhanced_poll_command_num],
 		       strlen(enhanced_poll_commands[enhanced_poll_command_num]));
       enhanced_poll_command_num++;
     } 
   }
+  return modem_poll();
 }
 
 char modem_poll(void)
@@ -380,8 +380,6 @@ char modem_parser_int16(char **s, uint16_t *out)
 
 char modem_parser_bcd16(char **s, uint16_t *out)
 {
-  char negative=0;
-  if ((**s)=='-') { negative=1; (*s)++; }
   while (((**s)>='0')&&((**s)<='9')) {
     (*out)<<=4;
     (*out)+=(**s)-'0';
@@ -429,13 +427,28 @@ void modem_parse_line(void)
 
 #ifdef MEGA65
   mega65_uart_print("Modem line: '");
-  mega65_uart_print((unsigned char *)shared.modem_line);
+  mega65_uart_print(shared.modem_line);
   mega65_uart_print("'\r\n");  
 #endif
 
-  // +QLTS: "2026/01/01,16:58:25+42,1"'
-  if (!strncmp((char *)shared.modem_line,"+QLTS: ",7)) {
-    char *s = (char *)&shared.modem_line[13];
+
+  // '+CSQ: 21,99'
+  if (!strncmp((char *)shared.modem_line,"+CSQ: ",6)) {
+    char *s = (char *)&shared.modem_line[6];
+    uint16_t sig;
+    char good=0;
+    do {
+      if (modem_parser_int16(&s,&sig)) break;
+      good=1;
+    } while(0);
+    if (good) {
+      shared.signal_level = sig;
+      statusbar_draw_signal();
+    }
+  } 
+    // +QLTS: "2026/01/01,16:58:25+42,1"'
+    else if (!strncmp((char *)shared.modem_line,"+QLTS: ",7)) {
+    char *s = (char *)&shared.modem_line[7];
     uint16_t year,month,day,hour,minute;
     char good=0;
     do {
@@ -453,14 +466,16 @@ void modem_parse_line(void)
       good=1;
     } while(0);
     if (good) {
-      // XXX -- Store network time and mark it fresh
+      // Store network time and mark it fresh
       shared.nettime_year = year;
       shared.nettime_month = month;
       shared.nettime_day = day;
       shared.nettime_hour = hour;
       shared.nettime_minute = minute;
       shared.nettime_set = 1;
-      // XXX -- Update status bar to show it
+      // (No need to update status bar, as we do that regularly)
+      // (But maybe it uses less program RAM to do that here, rather than
+      //  having an IRQ doing it?)
     }
   
   }
