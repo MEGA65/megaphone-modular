@@ -244,6 +244,10 @@ void dialpad_draw(char active_field, uint8_t button_restrict)
     btn_colour_end = 0x22;
     break;
   case CALLSTATE_RINGING:
+    btn_colour_phone = 0x33; // BLinking cyan for incoming call
+    btn_colour_mute = shared.call_state_muted ? 0x32 : 0x2e;
+    btn_colour_end = 0x2b;
+    break;
   default:
     btn_colour_phone = 0x2b; 
     btn_colour_mute = shared.call_state_muted ? 0x32 : 0x2e;
