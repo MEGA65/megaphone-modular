@@ -14,7 +14,7 @@
 #define SHARED_MAGIC 0xfade
 
 #ifdef MEGA65
-#define SHARED_ADDR 0xC000
+#define SHARED_ADDR 0xB800
 #define SHARED_TOP 0xCFFF
 #define SHARED_SIZE (SHARED_TOP + 1 - SHARED_ADDR)
 #else
@@ -40,7 +40,7 @@ typedef struct shared_state_t {
   // Modem status information
   uint8_t volte_enabled;
   char modem_network_name[NUMBER_FIELD_LEN+1];
-  
+
   
   struct shared_resource fonts[NUM_FONTS];
 
@@ -67,7 +67,7 @@ typedef struct shared_state_t {
 // 128KB buffer for 128KB / 256 bytes per glyph = 512 unique unicode glyphs on screen at once
 #define GLYPH_DATA_START 0x40000
 #define GLYPH_CACHE_SIZE 512
-  unsigned long cached_codepoints[GLYPH_CACHE_SIZE];
+  uint32_t cached_codepoints[GLYPH_CACHE_SIZE];
   unsigned char cached_fontnums[GLYPH_CACHE_SIZE];
   unsigned char cached_glyph_flags[GLYPH_CACHE_SIZE];
 
@@ -84,7 +84,7 @@ typedef struct shared_state_t {
 } Shared;
 
 #include <stddef.h>
-_Static_assert(sizeof(Shared) < 4096, "Shared memory structure is too large. Must be <= 4KB");
+_Static_assert(sizeof(Shared) < SHARED_SIZE, "Shared memory structure is too large.");
 
 //extern struct shared_state_t shared;
 
