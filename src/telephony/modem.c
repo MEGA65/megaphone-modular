@@ -576,7 +576,11 @@ void modem_parse_line(void)
 	  break;
 	case 4: // RINGING (inbound)
 	  shared.call_state = CALLSTATE_RINGING;
-	  strncpy((char *)shared.call_state_number,number,NUMBER_FIELD_LEN);
+	  if (number[0])
+	    strncpy((char *)shared.call_state_number,number,NUMBER_FIELD_LEN);
+	  else
+	    strncpy((char *)shared.call_state_number,"Private (No Caller ID)",NUMBER_FIELD_LEN);
+	    
 	  shared.call_state_number[NUMBER_FIELD_LEN]=0;
 	  break;
 	case 5: // WAITING (inbound)
@@ -659,6 +663,7 @@ void modem_answer_call(void)
 {
   switch (shared.call_state) {
   case CALLSTATE_RINGING:
+
     shared.call_state = CALLSTATE_CONNECTED;
 
     // Send ATA to modem

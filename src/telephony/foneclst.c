@@ -205,14 +205,13 @@ uint8_t fonemain_contact_list_controller(void)
     POKE(0xD610,0); // Remove key event from queue
     return PAGE_SMS_THREAD;
   case 0x20: case 0x0D: // SPACE or RETURN dials number if set
-    if ((shared.call_state_number[0])&&(shared.call_state_number[0]!=CURSOR_CHAR))
-      {
-	switch (shared.call_state) {
+    switch (shared.call_state) {
 	case CALLSTATE_RINGING: modem_answer_call(); break;
 	case CALLSTATE_CONNECTED: modem_hangup_call(); break;
-	default: modem_place_call();
-	}
-      }
+	default:
+	  if ((shared.call_state_number[0])&&(shared.call_state_number[0]!=CURSOR_CHAR))
+	    modem_place_call();
+    }
     break;
   case 0x11: // Cursor down
   case 0x91: // Cursor up
