@@ -686,8 +686,11 @@ void modem_hangup_call(void)
   case CALLSTATE_CONNECTED:
     shared.call_state = CALLSTATE_DISCONNECTED;
     shared.call_state_timeout = 0;
-
   }
+
+  dialpad_draw(shared.active_field, DIALPAD_ALL);
+  dialpad_draw_call_state(shared.active_field);
+  
 }
 
 char modem_set_mic_gain(uint8_t gain)
