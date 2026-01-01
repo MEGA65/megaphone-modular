@@ -83,6 +83,9 @@ typedef struct shared_state_t {
   
 } Shared;
 
+#include <stddef.h>
+_Static_assert(sizeof(Shared) < 4096, "Shared memory structure is too large. Must be <= 4KB");
+
 //extern struct shared_state_t shared;
 
 #ifdef MEGA65
