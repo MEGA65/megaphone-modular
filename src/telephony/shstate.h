@@ -14,7 +14,7 @@
 #define SHARED_MAGIC 0xfade
 
 #ifdef MEGA65
-#define SHARED_ADDR 0xB800
+#define SHARED_ADDR 0xC000
 #define SHARED_TOP 0xCFFF
 #define SHARED_SIZE (SHARED_TOP + 1 - SHARED_ADDR)
 #else
