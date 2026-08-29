@@ -11,7 +11,8 @@ LINUX_BINARIES=	src/telephony/linux/provision \
 COPT_M65=	-Iinclude	-Isrc/telephony/mega65 -Isrc/mega65-libc/include
 
 COMPILER=llvm
-COMPILER_PATH=/usr/local/bin
+#COMPILER_PATH=/usr/local/bin
+COMPILER_PATH=/opt/llvm-mos/bin
 CC=   $(COMPILER_PATH)/mos-c64-clang -mcpu=mos45gs02 -Iinclude -Isrc/telephony/mega65 -Isrc/mega65-libc/include -DLLVM -fno-unroll-loops -ffunction-sections -fdata-sections -mllvm -inline-threshold=0 -fvisibility=hidden -Oz -Wall -Wextra -Wtype-limits
 
 # Uncomment to include stacktraces on calls to fail()
