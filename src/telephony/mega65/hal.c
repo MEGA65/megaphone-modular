@@ -260,7 +260,7 @@ char mega65_mkdir(char *dir)
 char mega65_cdroot(void)
 {
   // XXX - Doesn't allow use of different partitions
-  chdirroot(0);
+  chdirroot();
   // XXX - chddirroot()'s HYPPO call lacks failure semantics, and doesn't set return value.  
   // So we have to assume it succeeded.
 
