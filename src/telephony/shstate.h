@@ -64,15 +64,20 @@ typedef struct shared_state_t {
   
   unsigned int first_message_displayed;
 
+
+// XXX - Note some structures below trimmed in size to keep shared state structure <4KB
+
 // 128KB buffer for 128KB / 256 bytes per glyph = 512 unique unicode glyphs on screen at once
 #define GLYPH_DATA_START 0x40000
-#define GLYPH_CACHE_SIZE 512
+// #define GLYPH_CACHE_SIZE 512
+#define GLYPH_CACHE_SIZE 430
   uint32_t cached_codepoints[GLYPH_CACHE_SIZE];
   unsigned char cached_fontnums[GLYPH_CACHE_SIZE];
   unsigned char cached_glyph_flags[GLYPH_CACHE_SIZE];
 
   // Modem status
-#define MODEM_LINE_SIZE 512
+// #define MODEM_LINE_SIZE 512
+#define MODEM_LINE_SIZE 256
   unsigned char modem_line[MODEM_LINE_SIZE];
   char modem_poll_reset_line;
   uint16_t modem_line_len;
