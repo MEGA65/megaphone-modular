@@ -213,12 +213,12 @@ void serial_port_menu(void)
       case 'a':
 	current_uart++;
 	if (current_uart>7) current_uart=0;
-	modem_setup_serial(current_uart,baud_list[current_baud_rate].baud_divisor);
+	modem_setup_serial(current_uart,baud_list[current_baud_rate].baud_divisor - 1);
 	break;
       case 'e':
 	current_baud_rate++;
 	if (current_baud_rate>=NUM_BAUD_RATES) current_baud_rate=0;
-	modem_setup_serial(current_uart,baud_list[current_baud_rate].baud_divisor);
+	modem_setup_serial(current_uart,baud_list[current_baud_rate].baud_divisor - 1);
       default:
 	visual_bell();
       }
