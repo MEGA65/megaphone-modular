@@ -4,63 +4,48 @@
 #include <stdlib.h>
 #include "uart.h"
 
-void print_box(unsigned char x1, unsigned char y1,
-	       unsigned char x2, unsigned char y2,
-	       unsigned char colour)
-{
-  uint16_t char_addr = 0xf000 + y1 * 80;
-  for(int x=x1;x<=x2;x++) {
-    POKE(char_addr+x,0x20);
-    lpoke(0xff80000L - 0xf000 + char_addr+x, 0x20 | colour);    
+uint8_t ascii_to_screencode(uint8_t c) {
+  if (c >= 64 && c <= 95) {
+     if (c == 64) return 0;
+     if (c >= 65 && c <= 90) return c; // 'A'-'Z' -> 65-90
+     if (c >= 91 && c <= 95) return c - 64;
   }
-  for(int y=y1+1;y<y2;y++) {
-    char_addr+=80;
-    POKE(char_addr+x1,0x20);
-    lpoke(0xff80000L - 0xf000 + char_addr+x1, 0x20 | colour);    
-    POKE(char_addr+x2,0x20);
-    lpoke(0xff80000L - 0xf000 + char_addr+x2, 0x20 | colour);        
+  if (c >= 96 && c <= 127) {
+     if (c >= 97 && c <= 122) return c - 96; // 'a'-'z' -> 1-26
+     return c - 96; 
   }
-  char_addr+=80;
-  for(int x=x1;x<=x2;x++) {
-    POKE(char_addr+x,0x20);
-    lpoke(0xff80000L - 0xf000 + char_addr+x, 0x20 | colour);    
-  }
+  return c;
 }
 
-void print_text80(unsigned char x, unsigned char y, unsigned char colour, char *msg)
+void print_text40(unsigned char x, unsigned char y, unsigned char colour, unsigned char reverse, const char *msg)
 {
-  uint16_t char_addr = 0xf000 + x + y * 80;
-  while (*msg) {
-    uint8_t char_code = *msg;
-    POKE(char_addr + 0, char_code);
-    lpoke(0xff80000L - 0xf000 + char_addr, colour);
+  uint16_t addr = 0x0400 + x + y * 40;
+  uint16_t caddr = 0xD800 + x + y * 40;
+  while (*msg && x < 40) {
+    uint8_t sc = ascii_to_screencode(*msg);
+    if (reverse) sc |= 0x80;
+    POKE(addr, sc);
+    POKE(caddr, colour);
     msg++;
-    char_addr += 1;
+    addr++;
+    caddr++;
+    x++;
   }
 }
 
-#include "ascii-font.c"
-
-void h640_text_mode(void)
+void c64_40col_mode(void)
 {
-  POKE(0xD018, 0x16);
-  POKE(0xD054, 0x00);
-  POKE(0xD031, 0xE8);
-  POKE(0xD016, 0xC9);
-  POKE(0xD058, 80);
-  POKE(0xD059, 80 / 256);
-  POKE(0xD05E, 80);
-  POKE(0xD060, 0x00);
-  POKE(0xD061, 0xf0);
-  POKE(0xD062, 0x00);
-  POKE(0xD07B, 50);
-
-  lcopy((uint16_t)&ascii_font[0],0xe000,4096);
-  POKE(0xD068,0x00);
-  POKE(0xD069,0xE0);
+  // Switch to standard lowercase/uppercase C64 mode
+  POKE(0xD018, 0x16); // Screen RAM $0400, Char ROM $1800
+  POKE(0xD058, 40);   // Logical row width
+  POKE(0xD011, PEEK(0xD011) & ~0x80); // clear high bit of raster
+  POKE(0xD016, 0xC8); // 40 cols
   
-  lfill(0xf000, 0x20, 4000);
-  lfill(0xff80000L, 0x0E, 4000);
+  // Clear screen
+  for(int i=0; i<1000; i++) {
+    POKE(0x0400 + i, 0x20); // space
+    POKE(0xD800 + i, 0x01); // white
+  }
 }
 
 void send_cmd(char *cmd) {
@@ -79,48 +64,12 @@ void sleep_approx_1s() {
   }
 }
 
-int dbg_x = 0;
-int dbg_y = 2;
-
-const char hex_chars[] = "0123456789ABCDEF";
-
-void debug_char(uint8_t c) {
-  if (c >= 32 && c <= 126) {
-    POKE(0xf000 + dbg_y * 80 + 40 + dbg_x, c);
-    lpoke(0xff80000L - 0xf000 + (0xf000 + dbg_y * 80 + 40 + dbg_x), 0x05);
-  } else {
-    char hex[4];
-    hex[0] = '\\';
-    hex[1] = hex_chars[c >> 4];
-    hex[2] = hex_chars[c & 0x0F];
-    hex[3] = 0;
-    
-    for(int j=0; hex[j]; j++) {
-       POKE(0xf000 + dbg_y * 80 + 40 + dbg_x, hex[j]);
-       lpoke(0xff80000L - 0xf000 + (0xf000 + dbg_y * 80 + 40 + dbg_x), 0x08);
-       dbg_x++;
-       if (dbg_x >= 38) { dbg_x = 0; dbg_y++; }
-    }
-    dbg_x--; 
-  }
-  dbg_x++;
-  if (dbg_x >= 38) { dbg_x = 0; dbg_y++; }
-  if (dbg_y >= 48) { 
-    dbg_y = 2; 
-    dbg_x = 0; 
-    for(int i=2; i<48; i++) {
-      lfill(0xf000 + i * 80 + 40, 0x20, 38); 
-      lfill(0xff80000L + i * 80 + 40, 0x0e, 38);
-    }
-  }
-}
-
 void wait_for_modem() {
   char buf[80];
   int buf_idx = 0;
   
   while (1) {
-    print_text80(2, 3, 0x0a, "Waiting for JTAG modem to respond... ");
+    print_text40(0, 2, 0x0a, 0, "Waiting for JTAG modem to respond...    ");
     send_cmd("AT");
     
     uint32_t frames_passed = 0;
@@ -139,7 +88,6 @@ void wait_for_modem() {
         frames_passed = 0; // reset timeout on receiving character
         for (uint16_t i=0; i<count; i++) {
           uint8_t c = rx_buf[i];
-          debug_char(c);
           if (c == '\r' || c == '\n') {
             if (buf_idx > 0) {
               buf[buf_idx] = 0;
@@ -156,7 +104,7 @@ void wait_for_modem() {
       if (got_ok) break;
     }
     if (got_ok) {
-      print_text80(2, 3, 0x05, "Modem OK!                            ");
+      print_text40(0, 2, 0x05, 0, "Modem OK!                               ");
       break;
     }
     sleep_approx_1s();
@@ -168,11 +116,10 @@ char ati_build[80] = "";
 char ati_identity[80] = "";
 char ati_sdcard[80] = "";
 char ati_wifi_hw[80] = "";
-
 char wifi_url[80] = "";
 
 void query_info() {
-  print_text80(2, 4, 0x07, "Querying ATI...                      ");
+  print_text40(0, 3, 0x07, 0, "Querying ATI...                         ");
   send_cmd("ATI");
   
   char buf[128];
@@ -183,7 +130,6 @@ void query_info() {
   uint8_t last_raster = PEEK(0xD012);
   int done = 0;
   
-  // Wait up to 5 seconds
   while(frames_passed < 250 && !done) {
     uint8_t current_raster = PEEK(0xD012);
     if (current_raster < last_raster) frames_passed++;
@@ -195,7 +141,6 @@ void query_info() {
       frames_passed = 0;
       for (uint16_t i=0; i<count; i++) {
         uint8_t c = rx_buf[i];
-        debug_char(c);
         if (c == '\r' || c == '\n') {
           if (buf_idx > 0) {
             buf[buf_idx] = 0;
@@ -204,15 +149,15 @@ void query_info() {
             }
             if (strncmp(buf, "ATI", 3) != 0 && !done) {
               if (line_count == 0) {
-                strncpy(ati_version, buf, 79);
+                strncpy(ati_version, buf, 39);
               } else if (strncmp(buf, "BUILD:", 6) == 0) {
-                strncpy(ati_build, buf, 79);
+                strncpy(ati_build, buf, 39);
               } else if (strncmp(buf, "IDENTITY:", 9) == 0) {
-                strncpy(ati_identity, buf, 79);
+                strncpy(ati_identity, buf, 39);
               } else if (strncmp(buf, "SDCARD:", 7) == 0) {
-                strncpy(ati_sdcard, buf, 79);
+                strncpy(ati_sdcard, buf, 39);
               } else if (strncmp(buf, "WIFI:", 5) == 0) {
-                strncpy(ati_wifi_hw, buf, 79);
+                strncpy(ati_wifi_hw, buf, 39);
               }
               line_count++;
             }
@@ -225,7 +170,7 @@ void query_info() {
     }
   }
 
-  print_text80(2, 4, 0x07, "Querying AT+WIFI?...                 ");
+  print_text40(0, 3, 0x07, 0, "Querying AT+WIFI?...                    ");
   send_cmd("AT+WIFI?");
   buf_idx = 0;
   frames_passed = 0;
@@ -243,7 +188,6 @@ void query_info() {
       frames_passed = 0;
       for (uint16_t i=0; i<count; i++) {
         uint8_t c = rx_buf[i];
-        debug_char(c);
         if (c == '\r' || c == '\n') {
           if (buf_idx > 0) {
             buf[buf_idx] = 0;
@@ -284,18 +228,21 @@ void query_info() {
 char cores[MAX_CORES][80];
 int core_count = 0;
 
+int parse_core_num(const char* str);
+
 void read_cores() {
-  print_text80(2, 4, 0x07, "Querying AT+CORELIST...              ");
-  send_cmd("AT+CORELIST");
+  print_text40(0, 3, 0x07, 0, "Querying AT+COREDETAIL...               ");
+  send_cmd("AT+COREDETAIL");
   
-  char buf[128];
+  static char buf[512];
   int buf_idx = 0;
 
   uint32_t frames_passed = 0;
   uint8_t last_raster = PEEK(0xD012);
-  
+  int done = 0;
+
   // Wait up to 5 seconds of no data for the list to finish sending
-  while(frames_passed < 250) {
+  while(frames_passed < 250 && !done) {
     uint8_t current_raster = PEEK(0xD012);
     if (current_raster < last_raster) frames_passed++;
     last_raster = current_raster;
@@ -306,21 +253,74 @@ void read_cores() {
       frames_passed = 0;
       for (uint16_t i=0; i<count; i++) {
         uint8_t c = rx_buf[i];
-        debug_char(c);
         if (c == '\r' || c == '\n') {
           if (buf_idx > 0) {
             buf[buf_idx] = 0;
-            // Ignore the command echo and the "OK L /" header
-            if (strncmp(buf, "AT+CORELIST", 11) != 0 && strncmp(buf, "OK L /", 6) != 0) {
-               // Only add it if it's not exactly "OK" which might come at the very end
-               if (strcmp(buf, "OK") != 0 && core_count < MAX_CORES) {
-                 strncpy(cores[core_count++], buf, 79);
+            if (strncmp(buf, "END", 3) == 0) {
+               done = 1;
+            } else if (strncmp(buf, "+COREDETAIL:", 12) == 0) {
+               char *p = strstr(buf, "index=");
+               if (p) {
+                 int num = parse_core_num(p + 6);
+                 if (num > 0 && core_count < MAX_CORES) {
+                   char *kind = strstr(buf, "kind=");
+                   char *path = strstr(buf, "path=\"");
+                   char *title = strstr(buf, "title=\"");
+                   
+                   int is_dir = 0;
+                   if (kind && strncmp(kind + 5, "DIR", 3) == 0) is_dir = 1;
+                   
+                   char nice[80] = {0};
+                   char name_buf[80] = {0};
+                   
+                   if (is_dir && path) {
+                     char *start = path + 6;
+                     char *end = strchr(start, '"');
+                     if (end) {
+                       int len = end - start;
+                       if (len > 29) len = 29;
+                       strncpy(name_buf, start, len);
+                     }
+                   } else if (title) {
+                     char *start = title + 7;
+                     char *end = strchr(start, '"');
+                     if (end && end > start) {
+                       int len = end - start;
+                       if (len > 29) len = 29;
+                       strncpy(name_buf, start, len);
+                     } else if (path) {
+                       start = path + 6;
+                       end = strchr(start, '"');
+                       if (end) {
+                         int len = end - start;
+                         if (len > 29) len = 29;
+                         strncpy(name_buf, start, len);
+                       }
+                     }
+                   }
+                   
+                   char num_str[10];
+                   if (num < 10) {
+                     num_str[0] = ' '; num_str[1] = ' '; num_str[2] = '0' + num; num_str[3] = 0;
+                   } else if (num < 100) {
+                     num_str[0] = ' '; num_str[1] = '0' + (num/10); num_str[2] = '0' + (num%10); num_str[3] = 0;
+                   } else {
+                     num_str[0] = '0' + (num/100); num_str[1] = '0' + ((num/10)%10); num_str[2] = '0' + (num%10); num_str[3] = 0;
+                   }
+                   
+                   strcpy(nice, num_str);
+                   if (is_dir) strcat(nice, " DIR  ");
+                   else strcat(nice, " CORE ");
+                   strncat(nice, name_buf, 79 - strlen(nice));
+                   
+                   strncpy(cores[core_count++], nice, 79);
+                 }
                }
             }
             buf_idx = 0;
           }
         } else {
-          if (buf_idx < 127) buf[buf_idx++] = c;
+          if (buf_idx < 511) buf[buf_idx++] = c;
         }
       }
     }
@@ -340,8 +340,8 @@ int parse_core_num(const char* str) {
 int main(void)
 {
   mega65_io_enable();
-  POKE(0xd020,0);
-  POKE(0xd021,0);  
+  POKE(0xd020,0); // black border
+  POKE(0xd021,0); // black bg
   
   // Install NMI and BRK catchers from megacom.c
   POKE(0x0316,(uint8_t)(((uint16_t)&brk_catcher)>>0));
@@ -349,11 +349,9 @@ int main(void)
   POKE(0x0318,(uint8_t)(((uint16_t)&nmi_catcher)>>0));
   POKE(0x0319,(uint8_t)(((uint16_t)&nmi_catcher)>>8));
   
-  h640_text_mode();
+  c64_40col_mode();
 
-  print_box(0,0,79,49,0x01);
-  print_text80(2,1,0x0e,"MEGA65 JTAG Core Loader");
-  print_text80(40,1,0x0e,"UART Traffic:");
+  print_text40(0, 0, 0x01, 1, " MEGA65 JTAG Core Loader                ");
 
   // UART 0 at 2mbps
   modem_setup_serial(0, (40500000 / 2000000) - 1);
@@ -362,54 +360,63 @@ int main(void)
   query_info();
   read_cores();
 
-  lfill(0xf000+80*4, 0x20, 80); // Clear querying text
-  lfill(0xff80000L+80*4, 0x0e, 80); 
+  // Clear querying text
+  print_text40(0, 3, 0x01, 0, "                                        "); 
 
-  // Print ATI info
-  print_text80(2, 4, 0x06, ati_version);
-  print_text80(2, 5, 0x0a, ati_build);
-  print_text80(2, 6, 0x0e, ati_identity);
-  print_text80(2, 7, 0x0e, ati_sdcard);
-  print_text80(2, 8, 0x0e, ati_wifi_hw);
+  int info_row = 2;
+  print_text40(0, info_row++, 0x05, 0, ati_version);
+  if (ati_build[0]) print_text40(0, info_row++, 0x0a, 0, ati_build);
+  if (ati_identity[0]) print_text40(0, info_row++, 0x0e, 0, ati_identity);
+  
+  if (ati_sdcard[0] && strncmp(ati_sdcard, "SDCARD: ACTIVE", 14) != 0) {
+    print_text40(0, info_row++, 0x02, 0, ati_sdcard);
+  }
+  if (ati_wifi_hw[0] && strncmp(ati_wifi_hw, "WIFI: BUILT-IN", 14) != 0) {
+    print_text40(0, info_row++, 0x02, 0, ati_wifi_hw);
+  }
   
   if (wifi_url[0]) {
-    char wbuf[80];
-    strcpy(wbuf, "Web UI: ");
-    strcat(wbuf, wifi_url);
-    print_text80(2, 10, 0x03, wbuf);
+    char wbuf[40];
+    strcpy(wbuf, "Web: ");
+    strncat(wbuf, wifi_url, 34);
+    print_text40(0, info_row++, 0x03, 0, wbuf);
+  }
+
+  // Clear any remaining rows before the core list starts at row 9
+  while (info_row < 9) {
+    print_text40(0, info_row++, 0x01, 0, "                                        ");
   }
 
   if (core_count == 0) {
-    print_text80(2, 12, 0x02, "No cores found or failed to read.");
+    print_text40(0, 9, 0x02, 0, "No cores found or failed to read.       ");
   } else {
-    print_text80(2, 12, 0x0a, "Select a core and press RETURN or FIRE");
+    print_text40(0, 9, 0x0a, 0, "Select a core and press RETURN or FIRE: ");
   }
 
   int selected = 0;
   int top_idx = 0;
-  int page_size = 30;
+  int page_size = 14;
   
   uint8_t last_joy = 0xff;
 
   while(1) {
     for (int i=0; i<page_size; i++) {
       int c_idx = top_idx + i;
-      char disp[40];
+      char disp[41];
       if (c_idx < core_count) {
+        strncpy(disp, cores[c_idx], 40);
+        disp[40] = 0; // ensure null term
+        // Pad with spaces to clear old text
+        for (int p=strlen(disp); p<40; p++) disp[p] = ' ';
+        disp[40] = 0;
+        
         if (c_idx == selected) {
-          char tmp[80];
-          strcpy(tmp, " > ");
-          strncat(tmp, cores[c_idx], 35);
-          print_text80(2, 14+i, 0x01, tmp); // highlight
+          print_text40(0, 11+i, 0x01, 1, disp); // highlight reversed
         } else {
-          char tmp[80];
-          strcpy(tmp, "   ");
-          strncat(tmp, cores[c_idx], 35);
-          print_text80(2, 14+i, 0x0e, tmp);
+          print_text40(0, 11+i, 0x01, 0, disp); // normal
         }
       } else {
-        lfill(0xf000+80*(14+i)+2, 0x20, 36);
-        lfill(0xff80000L+80*(14+i)+2, 0x0e, 36);
+        print_text40(0, 11+i, 0x01, 0, "                                        ");
       }
     }
 
@@ -439,24 +446,24 @@ int main(void)
     if (move_down) {
       if (selected < core_count - 1) {
         selected++;
-        if (selected >= top_idx + page_size) top_idx++;
+        if (selected >= top_idx + page_size) top_idx = selected - page_size + 1;
       }
     } else if (move_up) {
       if (selected > 0) {
         selected--;
-        if (selected < top_idx) top_idx--;
+        if (selected < top_idx) top_idx = selected;
       }
     } else if (do_launch) {
       if (core_count > 0) {
-        char cmd[80];
+        char cmd[40];
         int core_num = parse_core_num(cores[selected]);
         char nbuf[10];
         sprintf(nbuf, "%d", core_num);
         strcpy(cmd, "AT+JTAGLOAD=");
         strcat(cmd, nbuf);
         send_cmd(cmd);
-        print_text80(2, 47, 0x0a, "Command sent:                ");
-        print_text80(16, 47, 0x0a, cmd);
+        print_text40(0, 24, 0x0a, 0, "Command sent:");
+        print_text40(14, 24, 0x0e, 0, cmd);
       }
     }
   }
