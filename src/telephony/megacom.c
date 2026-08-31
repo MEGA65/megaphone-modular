@@ -456,7 +456,7 @@ int main(void)
   print_text80(0,49,0x21,status_line);
 
   // Apply initial serial port settings
-  modem_setup_serial(current_uart,baud_list[current_baud_rate].baud_divisor);	
+  modem_setup_serial(current_uart,baud_list[current_baud_rate].baud_divisor - 1);	
   POKE(0xf000+49*80+79,'0'+current_uart);
   for(int i=0;i<7;i++) POKE(0xf000+49*80+21+i,baud_list[current_baud_rate].baud_str[i]);
   

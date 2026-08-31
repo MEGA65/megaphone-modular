@@ -1,4 +1,4 @@
-PROGRAMS := foneinit fonemain
+PROGRAMS := foneinit fonemain megacom jcore
 
 all:	tools/bomtool $(PROGRAMS:%=bin65/%.llvm.prg) $(FONTS)
 
@@ -157,7 +157,7 @@ bin65/%.llvm.prg:	src/telephony/%.c $(NATIVE_TELEPHONY_COMMON)
 	$(CC) -o bin65/$*.llvm.prg -Iinclude -DMEGA65 -Isrc/mega65-libc/include $< $(HELPER_SRCS) $(NATIVE_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS)  -Wl,-Map,bin65/$*.map
 	tools/function_table.py bin65/$*.map src/telephony/mega65/function_table.c
 	$(CC) -o bin65/$*.llvm.prg -Iinclude -DMEGA65 -Isrc/mega65-libc/include $< $(HELPER_SRCS) $(NATIVE_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS) -Wl,-Map,bin65/$*.map
-	llvm-objdump -drS --print-imm-hex bin65/$*.llvm.prg.elf >bin65/$*.llvm.dump
+	$(COMPILER_PATH)/llvm-objdump -drS --print-imm-hex bin65/$*.llvm.prg.elf >bin65/$*.llvm.dump
 
 bin/modem:	src/telephony/modem.c src/telephony/format.c src/telephony/linux/hal.c src/telephony/buffers.c src/telephony/shstate.c src/telephony/smsdecode.c src/telephony/smsencode.c src/telephony/utf.c
 	mkdir -p bin
@@ -181,6 +181,9 @@ src/telephony/ascii-font.c:	tools/make-ascii-font-c.sh asciifont.bin
 	tools/make-ascii-font-c.sh
 
 bin65/megacom:   bin65/megacom.llvm.prg src/telephony/ascii-font.c
+	cp $< $@
+
+bin65/jcore:   bin65/jcore.llvm.prg src/telephony/ascii-font.c
 	cp $< $@
 
 sdbin:	bin65/foneinit.llvm.prg bin65/foneclst.llvm.prg bin65/fonesms.llvm.prg
