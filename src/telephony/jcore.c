@@ -228,20 +228,116 @@ void query_info() {
 char cores[MAX_CORES][80];
 int core_count = 0;
 
-int parse_core_num(const char* str);
+int parse_core_num(const char* str) {
+  int num = 0;
+  while(*str == ' ' || *str == '\t') str++;
+  while(*str >= '0' && *str <= '9') {
+    num = num * 10 + (*str - '0');
+    str++;
+  }
+  return num;
+}
 
-void read_cores() {
-  print_text40(0, 3, 0x07, 0, "Querying AT+COREDETAIL...               ");
-  send_cmd("AT+COREDETAIL");
+void read_cores(const char* path) {
+  core_count = 0;
+  
+  if (strcmp(path, "/") != 0) {
+    strcpy(cores[core_count++], "  0 DIR  /");
+    strcpy(cores[core_count++], "  0 DIR  ..");
+  }
+  
+  char cmd[128];
+  strcpy(cmd, "AT+CORELIST");
+  if (strcmp(path, "/") != 0) {
+    strcat(cmd, "=");
+    strcat(cmd, path);
+  }
+  
+  print_text40(0, 3, 0x07, 0, "Querying directories...                 ");
+  send_cmd(cmd);
   
   static char buf[512];
   int buf_idx = 0;
-
   uint32_t frames_passed = 0;
   uint8_t last_raster = PEEK(0xD012);
   int done = 0;
 
-  // Wait up to 5 seconds of no data for the list to finish sending
+  // PASS 1: AT+CORELIST to get DIRs
+  while(frames_passed < 250 && !done) {
+    uint8_t current_raster = PEEK(0xD012);
+    if (current_raster < last_raster) frames_passed++;
+    last_raster = current_raster;
+
+    uint8_t rx_buf[64];
+    uint16_t count = modem_uart_read(rx_buf, sizeof(rx_buf));
+    if (count > 0) {
+      frames_passed = 0;
+      for (uint16_t i=0; i<count; i++) {
+        uint8_t c = rx_buf[i];
+        if (c == '\r' || c == '\n') {
+          if (buf_idx > 0) {
+            buf[buf_idx] = 0;
+            if (strncmp(buf, "END", 3) == 0) {
+               done = 1;
+            } else if (strncmp(buf, "AT+CORELIST", 11) != 0 && strncmp(buf, "OK", 2) != 0) {
+               int num = parse_core_num(buf);
+               if (num > 0 && core_count < MAX_CORES) {
+                 char *dir_ptr = strstr(buf, "DIR ");
+                 if (dir_ptr) {
+                   char *p = dir_ptr + 4;
+                   while(*p == ' ') p++;
+                   while(*p >= '0' && *p <= '9') p++; // skip size
+                   while(*p == ' ') p++;
+                   if (*p == '-') {
+                     p++;
+                     while(*p == ' ') p++;
+                   } else if (*p >= '0' && *p <= '9') {
+                     while(*p && *p != ' ') p++; // skip date
+                     while(*p == ' ') p++;
+                     while(*p && *p != ' ') p++; // skip time
+                     while(*p == ' ') p++;
+                   }
+                   if (*p) {
+                     char nice[80] = {0};
+                     char num_str[10];
+                     if (num < 10) {
+                       num_str[0] = ' '; num_str[1] = ' '; num_str[2] = '0' + num; num_str[3] = 0;
+                     } else if (num < 100) {
+                       num_str[0] = ' '; num_str[1] = '0' + (num/10); num_str[2] = '0' + (num%10); num_str[3] = 0;
+                     } else {
+                       num_str[0] = '0' + (num/100); num_str[1] = '0' + ((num/10)%10); num_str[2] = '0' + (num%10); num_str[3] = 0;
+                     }
+                     strcpy(nice, num_str);
+                     strcat(nice, " DIR  ");
+                     strncat(nice, p, 79 - strlen(nice));
+                     strncpy(cores[core_count++], nice, 79);
+                   }
+                 }
+               }
+            }
+            buf_idx = 0;
+          }
+        } else {
+          if (buf_idx < 511) buf[buf_idx++] = c;
+        }
+      }
+    }
+  }
+
+  // PASS 2: AT+COREDETAIL to get COREs
+  strcpy(cmd, "AT+COREDETAIL");
+  if (strcmp(path, "/") != 0) {
+    strcat(cmd, "=");
+    strcat(cmd, path);
+  }
+  print_text40(0, 3, 0x07, 0, "Querying cores...                       ");
+  send_cmd(cmd);
+
+  buf_idx = 0;
+  frames_passed = 0;
+  last_raster = PEEK(0xD012);
+  done = 0;
+
   while(frames_passed < 250 && !done) {
     uint8_t current_raster = PEEK(0xD012);
     if (current_raster < last_raster) frames_passed++;
@@ -264,56 +360,50 @@ void read_cores() {
                  int num = parse_core_num(p + 6);
                  if (num > 0 && core_count < MAX_CORES) {
                    char *kind = strstr(buf, "kind=");
-                   char *path = strstr(buf, "path=\"");
+                   char *path_ptr = strstr(buf, "path=\"");
                    char *title = strstr(buf, "title=\"");
                    
+                   // Skip directories as we already got them!
                    int is_dir = 0;
                    if (kind && strncmp(kind + 5, "DIR", 3) == 0) is_dir = 1;
                    
-                   char nice[80] = {0};
-                   char name_buf[80] = {0};
-                   
-                   if (is_dir && path) {
-                     char *start = path + 6;
-                     char *end = strchr(start, '"');
-                     if (end) {
-                       int len = end - start;
-                       if (len > 29) len = 29;
-                       strncpy(name_buf, start, len);
-                     }
-                   } else if (title) {
-                     char *start = title + 7;
-                     char *end = strchr(start, '"');
-                     if (end && end > start) {
-                       int len = end - start;
-                       if (len > 29) len = 29;
-                       strncpy(name_buf, start, len);
-                     } else if (path) {
-                       start = path + 6;
-                       end = strchr(start, '"');
-                       if (end) {
+                   if (!is_dir) {
+                     char nice[80] = {0};
+                     char name_buf[80] = {0};
+                     
+                     if (title) {
+                       char *start = title + 7;
+                       char *end = strchr(start, '"');
+                       if (end && end > start) {
                          int len = end - start;
                          if (len > 29) len = 29;
                          strncpy(name_buf, start, len);
+                       } else if (path_ptr) {
+                         start = path_ptr + 6;
+                         end = strchr(start, '"');
+                         if (end) {
+                           int len = end - start;
+                           if (len > 29) len = 29;
+                           strncpy(name_buf, start, len);
+                         }
                        }
                      }
+                     
+                     char num_str[10];
+                     if (num < 10) {
+                       num_str[0] = ' '; num_str[1] = ' '; num_str[2] = '0' + num; num_str[3] = 0;
+                     } else if (num < 100) {
+                       num_str[0] = ' '; num_str[1] = '0' + (num/10); num_str[2] = '0' + (num%10); num_str[3] = 0;
+                     } else {
+                       num_str[0] = '0' + (num/100); num_str[1] = '0' + ((num/10)%10); num_str[2] = '0' + (num%10); num_str[3] = 0;
+                     }
+                     
+                     strcpy(nice, num_str);
+                     strcat(nice, " CORE ");
+                     strncat(nice, name_buf, 79 - strlen(nice));
+                     
+                     strncpy(cores[core_count++], nice, 79);
                    }
-                   
-                   char num_str[10];
-                   if (num < 10) {
-                     num_str[0] = ' '; num_str[1] = ' '; num_str[2] = '0' + num; num_str[3] = 0;
-                   } else if (num < 100) {
-                     num_str[0] = ' '; num_str[1] = '0' + (num/10); num_str[2] = '0' + (num%10); num_str[3] = 0;
-                   } else {
-                     num_str[0] = '0' + (num/100); num_str[1] = '0' + ((num/10)%10); num_str[2] = '0' + (num%10); num_str[3] = 0;
-                   }
-                   
-                   strcpy(nice, num_str);
-                   if (is_dir) strcat(nice, " DIR  ");
-                   else strcat(nice, " CORE ");
-                   strncat(nice, name_buf, 79 - strlen(nice));
-                   
-                   strncpy(cores[core_count++], nice, 79);
                  }
                }
             }
@@ -327,39 +417,7 @@ void read_cores() {
   }
 }
 
-int parse_core_num(const char* str) {
-  int num = 0;
-  while(*str == ' ' || *str == '\t') str++;
-  while(*str >= '0' && *str <= '9') {
-    num = num * 10 + (*str - '0');
-    str++;
-  }
-  return num;
-}
-
-int main(void)
-{
-  mega65_io_enable();
-  POKE(0xd020,0); // black border
-  POKE(0xd021,0); // black bg
-  
-  // Install NMI and BRK catchers from megacom.c
-  POKE(0x0316,(uint8_t)(((uint16_t)&brk_catcher)>>0));
-  POKE(0x0317,(uint8_t)(((uint16_t)&brk_catcher)>>8));
-  POKE(0x0318,(uint8_t)(((uint16_t)&nmi_catcher)>>0));
-  POKE(0x0319,(uint8_t)(((uint16_t)&nmi_catcher)>>8));
-  
-  c64_40col_mode();
-
-  print_text40(0, 0, 0x01, 1, " MEGA65 JTAG Core Loader                ");
-
-  // UART 0 at 2mbps
-  modem_setup_serial(0, (40500000 / 2000000) - 1);
-
-  wait_for_modem();
-  query_info();
-  read_cores();
-
+void print_ati_info() {
   // Clear querying text
   print_text40(0, 3, 0x01, 0, "                                        "); 
 
@@ -392,78 +450,135 @@ int main(void)
   } else {
     print_text40(0, 9, 0x0a, 0, "Select a core and press RETURN or FIRE: ");
   }
+}
 
-  int selected = 0;
-  int top_idx = 0;
-  int page_size = 14;
+int main(void)
+{
+  mega65_io_enable();
+  POKE(0xd020,0); // black border
+  POKE(0xd021,0); // black bg
   
-  uint8_t last_joy = 0xff;
+  // Install NMI and BRK catchers from megacom.c
+  POKE(0x0316,(uint8_t)(((uint16_t)&brk_catcher)>>0));
+  POKE(0x0317,(uint8_t)(((uint16_t)&brk_catcher)>>8));
+  POKE(0x0318,(uint8_t)(((uint16_t)&nmi_catcher)>>0));
+  POKE(0x0319,(uint8_t)(((uint16_t)&nmi_catcher)>>8));
+  
+  c64_40col_mode();
+
+  print_text40(0, 0, 0x01, 1, " MEGA65 JTAG Core Loader                ");
+
+  // UART 0 at 2mbps
+  modem_setup_serial(0, (40500000 / 2000000) - 1);
+
+  wait_for_modem();
+  query_info();
+
+  char current_path[128] = "/";
 
   while(1) {
-    for (int i=0; i<page_size; i++) {
-      int c_idx = top_idx + i;
-      char disp[41];
-      if (c_idx < core_count) {
-        strncpy(disp, cores[c_idx], 40);
-        disp[40] = 0; // ensure null term
-        // Pad with spaces to clear old text
-        for (int p=strlen(disp); p<40; p++) disp[p] = ' ';
-        disp[40] = 0;
-        
-        if (c_idx == selected) {
-          print_text40(0, 11+i, 0x01, 1, disp); // highlight reversed
+    read_cores(current_path);
+    print_ati_info();
+
+    int selected = 0;
+    int top_idx = 0;
+    int page_size = 14;
+    uint8_t last_joy = 0xff;
+    int break_to_refresh = 0;
+
+    while(!break_to_refresh) {
+      for (int i=0; i<page_size; i++) {
+        int c_idx = top_idx + i;
+        char disp[41];
+        if (c_idx < core_count) {
+          strncpy(disp, cores[c_idx], 40);
+          disp[40] = 0;
+          for (int p=strlen(disp); p<40; p++) disp[p] = ' ';
+          disp[40] = 0;
+          
+          if (c_idx == selected) {
+            print_text40(0, 11+i, 0x01, 1, disp); // highlight reversed
+          } else {
+            print_text40(0, 11+i, 0x01, 0, disp); // normal
+          }
         } else {
-          print_text40(0, 11+i, 0x01, 0, disp); // normal
+          print_text40(0, 11+i, 0x01, 0, "                                        ");
         }
-      } else {
-        print_text40(0, 11+i, 0x01, 0, "                                        ");
       }
-    }
 
-    uint8_t joy = PEEK(0xDC00);
-    uint8_t joy_changed = (joy != last_joy);
-    last_joy = joy;
-    
-    int move_up = 0;
-    int move_down = 0;
-    int do_launch = 0;
-    
-    if (joy_changed) {
-      if ((joy & 0x01) == 0) move_up = 1;
-      if ((joy & 0x02) == 0) move_down = 1;
-      if ((joy & 0x10) == 0) do_launch = 1;
-    }
-
-    if (PEEK(0xD610)) {
-      uint8_t key = PEEK(0xD610);
-      POKE(0xD610, 0);
+      uint8_t joy = PEEK(0xDC00);
+      uint8_t joy_changed = (joy != last_joy);
+      last_joy = joy;
       
-      if (key == 0x11) move_down = 1; // cursor down
-      if (key == 0x91) move_up = 1; // cursor up
-      if (key == 0x0d) do_launch = 1; // return
-    }
-    
-    if (move_down) {
-      if (selected < core_count - 1) {
-        selected++;
-        if (selected >= top_idx + page_size) top_idx = selected - page_size + 1;
+      int move_up = 0;
+      int move_down = 0;
+      int do_launch = 0;
+      
+      if (joy_changed) {
+        if ((joy & 0x01) == 0) move_up = 1;
+        if ((joy & 0x02) == 0) move_down = 1;
+        if ((joy & 0x10) == 0) do_launch = 1;
       }
-    } else if (move_up) {
-      if (selected > 0) {
-        selected--;
-        if (selected < top_idx) top_idx = selected;
+
+      if (PEEK(0xD610)) {
+        uint8_t key = PEEK(0xD610);
+        POKE(0xD610, 0);
+        
+        if (key == 0x11) move_down = 1; // cursor down
+        if (key == 0x91) move_up = 1; // cursor up
+        if (key == 0x0d) do_launch = 1; // return
       }
-    } else if (do_launch) {
-      if (core_count > 0) {
-        char cmd[40];
-        int core_num = parse_core_num(cores[selected]);
-        char nbuf[10];
-        sprintf(nbuf, "%d", core_num);
-        strcpy(cmd, "AT+JTAGLOAD=");
-        strcat(cmd, nbuf);
-        send_cmd(cmd);
-        print_text40(0, 24, 0x0a, 0, "Command sent:");
-        print_text40(14, 24, 0x0e, 0, cmd);
+      
+      if (move_down) {
+        if (selected < core_count - 1) {
+          selected++;
+          if (selected >= top_idx + page_size) top_idx = selected - page_size + 1;
+        }
+      } else if (move_up) {
+        if (selected > 0) {
+          selected--;
+          if (selected < top_idx) top_idx = selected;
+        }
+      } else if (do_launch) {
+        if (core_count > 0) {
+          char *dir_mark = strstr(cores[selected], " DIR  ");
+          if (dir_mark) {
+            char *dir_name = dir_mark + 6;
+            if (strcmp(dir_name, "..") == 0) {
+              char *last_slash = strrchr(current_path, '/');
+              if (last_slash && last_slash != current_path) {
+                *last_slash = 0;
+              } else {
+                strcpy(current_path, "/");
+              }
+            } else if (strcmp(dir_name, "/") == 0) {
+              strcpy(current_path, "/");
+            } else {
+              if (strcmp(current_path, "/") != 0) strcat(current_path, "/");
+              strcat(current_path, dir_name);
+            }
+            break_to_refresh = 1; // reload folder
+          } else {
+            // launch core
+            char cmd[40];
+            int core_num = parse_core_num(cores[selected]);
+            char nbuf[10];
+            
+            if (core_num < 10) {
+              nbuf[0] = '0' + core_num; nbuf[1] = 0;
+            } else if (core_num < 100) {
+              nbuf[0] = '0' + (core_num/10); nbuf[1] = '0' + (core_num%10); nbuf[2] = 0;
+            } else {
+              nbuf[0] = '0' + (core_num/100); nbuf[1] = '0' + ((core_num/10)%10); nbuf[2] = '0' + (core_num%10); nbuf[3] = 0;
+            }
+            
+            strcpy(cmd, "AT+JTAGLOAD=");
+            strcat(cmd, nbuf);
+            send_cmd(cmd);
+            print_text40(0, 24, 0x0a, 0, "Command sent:");
+            print_text40(14, 24, 0x0e, 0, cmd);
+          }
+        }
       }
     }
   }
