@@ -21,7 +21,7 @@ entity megaphonepwr is
     B4 : in std_logic;    -- Power button wake pin
     
     -- Power control pins for six subsystems
-    LED : out std_logic := '1';  -- Also B6, used to control main FPGA power
+    LED : out std_logic := '0';  -- Also B6, used to control main FPGA power
     C6 : out std_logic := '0';   -- Sub-system C6 power enable
     C5 : out std_logic := '0';   -- Sub-system C5 power enable
     E2 : out std_logic := '0';   -- Sub-system E2 power enable
@@ -66,6 +66,7 @@ architecture rtl of megaphonepwr is
   signal cel_rx_ready_last : std_logic;
 
   signal power_button_hold_counter : integer range 0 to (12_000_000 * 2) := 0;
+  signal power_button_timeout : integer range 0 to 1_000_000;
   signal ring_rx_state : integer range 0 to 4 := 0;
   signal qind_rx_state : integer range 0 to 5 := 0;
 
@@ -232,7 +233,10 @@ begin
       if B4 = '0' and B4_last='1' then
         power_button_edge_seen <= '1';
       end if;
-      if B4 = '0' and power_button_edge_seen='1' then
+      if power_button_timeout > 0 and B4 = '1' then
+        power_button_timeout <= power_button_timeout - 1;
+      end if;
+      if B4 = '0' and power_button_edge_seen='1' and power_button_timeout = 0 then
         if power_button_hold_counter /= (12_000_000 * 2) then
           power_button_hold_counter <= power_button_hold_counter + 1;
           if power_button_hold_counter = 1 then
@@ -243,10 +247,11 @@ begin
             cel_log_waddr <= cel_log_waddr + 1;
             cel_log_we <= '1';
             cel_log_wdata <= x"50"; -- ASCII 'P'
-            
+
           elsif power_button_hold_counter = (12_000_000 * 2 - 2) then
             LED <= '0';
             report_power_status <= '1';
+            power_button_timeout <= 1_000_000;
           end if;
         end if;
       else
