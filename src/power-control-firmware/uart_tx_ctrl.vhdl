@@ -138,11 +138,12 @@ begin
         txData <= '1' & DATA & '0';
         -- report "UART_TX: Sending byte $" & to_hstring(DATA);
       end if;
-		elsif (txState = LOAD_BIT) then
+      txBit <= '1';
+    elsif (txState = LOAD_BIT) then
       txBit  <= txData(0);
       txData <= '1' & txData(9 downto 1);
-		end if;
-	end if;
+    end if;
+    end if;
 end process;
 
 UART_TX <= txBit;
