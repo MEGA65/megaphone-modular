@@ -232,23 +232,21 @@ begin
       if B4 = '0' and B4_last='1' then
         power_button_edge_seen <= '1';
       end if;
-      if B4 = '0' then
+      if B4 = '0' and power_button_edge_seen='1' then
         if power_button_hold_counter /= (12_000_000 * 2) then
           power_button_hold_counter <= power_button_hold_counter + 1;
-          if power_button_hold_counter = 1 and power_button_edge_seen='1' then
+          if power_button_hold_counter = 1 then
             LED <= '1';
             report_power_status <= '1';
-            power_button_edge_seen <= '0';
 
             -- Insert that P into the log
             cel_log_waddr <= cel_log_waddr + 1;
             cel_log_we <= '1';
             cel_log_wdata <= x"50"; -- ASCII 'P'
             
-          elsif power_button_hold_counter = (12_000_000 * 2 - 2) and power_button_edge_seen='1' then
+          elsif power_button_hold_counter = (12_000_000 * 2 - 2) then
             LED <= '0';
             report_power_status <= '1';
-            power_button_edge_seen <= '0';
           end if;
         end if;
       else
