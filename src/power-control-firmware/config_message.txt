@@ -27,10 +27,9 @@ MINOR:0
 CIRCUITS:6
 0:30:20:01:Main FPGA,LCD,LED,B6
 1:31:21:02:Auxilliary device 1,C6
-2:32:22:04:Auxilliary device 2,C5
 3:33:23:08:Auxilliary device 3,E2
-4:34:24:10:Auxilliary device 4,B5
-5:35:25:20:Auxilliary device 5,C2
+4:34:24:10:UART BUFFER /OE1,B5
+5:35:25:20:UART BUFFER /OE2,C2
 6:50:58:40:Cellular modem event flag
 7:2e:2e:80:Status byte indicate
 END

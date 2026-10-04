@@ -1,4 +1,4 @@
-PROGRAMS := foneinit fonemain megacom jcore
+PROGRAMS := foneinit fonemain megacom jcore uartprobe
 
 all:	tools/bomtool $(PROGRAMS:%=bin65/%.llvm.prg) $(FONTS)
 
@@ -181,6 +181,9 @@ src/telephony/ascii-font.c:	tools/make-ascii-font-c.sh asciifont.bin
 	tools/make-ascii-font-c.sh
 
 bin65/megacom:   bin65/megacom.llvm.prg src/telephony/ascii-font.c
+	cp $< $@
+
+bin65/uartprobe:   bin65/uartprobe.llvm.prg src/telephony/ascii-font.c
 	cp $< $@
 
 bin65/jcore:   bin65/jcore.llvm.prg src/telephony/ascii-font.c

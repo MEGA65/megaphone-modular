@@ -23,7 +23,9 @@ entity megaphonepwr is
     -- Power control pins for six subsystems
     LED : out std_logic := '0';  -- Also B6, used to control main FPGA power
     C6 : out std_logic := '0';   -- Sub-system C6 power enable
-    C5 : out std_logic := '0';   -- Sub-system C5 power enable
+    -- XXX - USB_RX doesn't work on the physical A3 pin that it's supposed to.
+    -- So for MEGA65 to us UART we're using C5 instead
+    C5 : in std_logic := '0';   -- Sub-system C5 power enable
     E2 : out std_logic := '0';   -- Sub-system E2 power enable
     -- These two on the prototype are the two /OE lines on the 74HC244 buffer
     B5 : out std_logic := '0';   -- Sub-system B5 power enable
@@ -96,6 +98,11 @@ architecture rtl of megaphonepwr is
 
   signal power_button_edge_seen : std_logic := '0';
   signal B4_last : std_logic := '0';
+
+  signal uart_rx_combined : std_logic := '1';
+
+  signal C5_recently_high : std_logic := '0';
+  signal C5_timeout : integer range 0 to 1_000_000 := 0;
   
 begin
 
@@ -140,7 +147,7 @@ begin
       data => pwr_rx_data,
       data_ready => pwr_rx_ready,
       data_acknowledge => pwr_rx_ack,
-      uart_rx => usb_rx
+      uart_rx => uart_rx_combined
       );
 
   -- UART that listens to the cellular modem
@@ -162,6 +169,24 @@ begin
   begin
     if rising_edge(clk) then
 
+      -- See note above about working around whatever it is that's weird about
+      -- the 3 pin.
+      if C5_recently_high='1' then
+        uart_rx_combined <= USB_RX and C5;
+      else
+        uart_rx_combined <= USB_RX;
+      end if;
+      if C5 = '1' then
+        C5_recently_high <= '1';
+        C5_timeout <= 1000000;
+      else
+        if C5_timeout /= 0 then
+          C5_timeout <= C5_timeout - 1;
+        else
+          C5_recently_high <= '0';
+        end if;
+      end if;
+      
       if cel_log_waddr > 1 then
         cel_log_notempty <= '1';
       else
@@ -428,7 +453,7 @@ begin
             C6 <= pwr_rx_data(4);
             report_power_status <= '1';
           when x"32" | x"22" | x"40" =>  -- '2'/'"'(or '@' for US keyboards) = control power supply 2
-            C5 <= pwr_rx_data(4);
+            -- C5 <= pwr_rx_data(4);
             report_power_status <= '1';
           when x"33" | x"23" =>  -- '3'/'#' = control power supply 3
             E2 <= pwr_rx_data(4);
