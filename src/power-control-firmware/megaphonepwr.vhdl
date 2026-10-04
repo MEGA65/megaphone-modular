@@ -25,6 +25,7 @@ entity megaphonepwr is
     C6 : out std_logic := '0';   -- Sub-system C6 power enable
     C5 : out std_logic := '0';   -- Sub-system C5 power enable
     E2 : out std_logic := '0';   -- Sub-system E2 power enable
+    -- These two on the prototype are the two /OE lines on the 74HC244 buffer
     B5 : out std_logic := '0';   -- Sub-system B5 power enable
     C2 : out std_logic := '0'    -- Sub-system C2 power enable
 
@@ -243,15 +244,29 @@ begin
             LED <= '1';
             report_power_status <= '1';
 
-            -- Insert that P into the log
+            -- Enable 74HC244 buffer output enables for UART comms
+            B5 <= '0'; C2 <= '0';
+            
+            -- Insert B into the log to indicate user power on via boot button
+            cel_log_waddr <= cel_log_waddr + 1;
+            cel_log_we <= '1';
+            cel_log_wdata <= x"42"; -- ASCII 'B'
+
+          elsif power_button_hold_counter = (12_000_000 * 2 - 2) then
+            LED <= '0';
+
+            -- Disable 74HC244 buffer output enables for UART comms
+            B5 <= '1'; C2 <= '1';            
+            
+            report_power_status <= '1';
+            power_button_timeout <= 1_000_000;
+
+            -- Insert that P into the log to indicate user power off via boot button
             cel_log_waddr <= cel_log_waddr + 1;
             cel_log_we <= '1';
             cel_log_wdata <= x"50"; -- ASCII 'P'
 
-          elsif power_button_hold_counter = (12_000_000 * 2 - 2) then
-            LED <= '0';
-            report_power_status <= '1';
-            power_button_timeout <= 1_000_000;
+            
           end if;
         end if;
       else
@@ -392,8 +407,23 @@ begin
             report_configuration <= '1';
             cfg_raddr <= to_unsigned(0,CFG_BITS);
           when x"30" | x"20" | x"28" | x"29" =>  -- '0'/SPACE (or '(' or ')' for shift-0 on most keyboards = control power supply 0 (LED / MAIN FPGA)
-            LED <= pwr_rx_data(4);
+            LED <= pwr_rx_data(4);            
             report_power_status <= '1';
+
+            -- Enable/disable 74HC244 buffer output enables for UART comms
+            B5 <= not pwr_rx_data(4);
+            C2 <= not pwr_rx_data(4);            
+            
+            -- Insert char into log to indicate if power was turned on or off
+            -- via explicit circuit switch.
+            cel_log_waddr <= cel_log_waddr + 1;
+            cel_log_we <= '1';
+            if pwr_rx_data(4) = '1' then
+              cel_log_wdata <= x"4E"; -- ASCII (o)'N'
+            else
+              cel_log_wdata <= x"46"; -- ASCII (of)'F'
+            end if;
+            
           when x"31" | x"21" =>  -- '1'/'!' = control power supply 1
             C6 <= pwr_rx_data(4);
             report_power_status <= '1';
