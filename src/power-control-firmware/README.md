@@ -238,6 +238,7 @@ The standalone utility supports the following commands:
 
 config  
 status  
+watch  
 +<n|name>  
 -<n|name>  
 celspeed=<baud>  
@@ -247,6 +248,7 @@ celclear
 Examples:
 
     powerctl /dev/ttyUSB0 115200 status
+    powerctl /dev/ttyUSB0 115200 watch
     powerctl /dev/ttyUSB0 115200 +2
     powerctl /dev/ttyUSB0 115200 -main
     powerctl /dev/ttyUSB0 115200 celplay celclear

@@ -421,10 +421,152 @@ char powerctl_cel_setbaud(uint32_t speed)
 }
 
 #ifdef STANDALONE
+static void powerctl_print_timestamp(FILE *f)
+{
+  time_t now = time(NULL);
+  struct tm tm_now;
+  char timestamp[32];
+
+  localtime_r(&now, &tm_now);
+  strftime(timestamp, sizeof(timestamp), "%Y-%m-%d %H:%M:%S", &tm_now);
+  fprintf(f, "%s ", timestamp);
+}
+
+static void powerctl_watch_print_circuit(uint8_t circuit_id, uint8_t on)
+{
+  powerctl_print_timestamp(stderr);
+  fprintf(stderr, "EVENT: Circuit %d %s\n", circuit_id, on ? "ON" : "OFF");
+  fflush(stderr);
+}
+
+static void powerctl_watch_print_initial_status(uint8_t status)
+{
+  powerctl_print_timestamp(stderr);
+  fprintf(stderr, "INFO: Initial status 0x%02x\n", status);
+  for(int circuit_id=0;circuit_id<6;circuit_id++) {
+    powerctl_print_timestamp(stderr);
+    fprintf(stderr, "INFO: Circuit %d %s\n",
+	    circuit_id, (status&(1<<circuit_id)) ? "ON" : "OFF");
+  }
+  if (status&0x40) {
+    powerctl_print_timestamp(stderr);
+    fprintf(stderr, "INFO: Cellular event log is not empty\n");
+  }
+  fflush(stderr);
+}
+
+static void powerctl_watch_report_status_change(uint8_t previous_status,
+						uint8_t status)
+{
+  uint8_t changed = (previous_status ^ status) & 0x3f;
+
+  for(int circuit_id=0;circuit_id<6;circuit_id++) {
+    if (changed&(1<<circuit_id)) {
+      powerctl_watch_print_circuit(circuit_id, status&(1<<circuit_id));
+    }
+  }
+
+  if ((previous_status ^ status) & 0x40) {
+    powerctl_print_timestamp(stderr);
+    fprintf(stderr, "EVENT: Cellular event log %s\n",
+	    (status&0x40) ? "not empty" : "cleared");
+    fflush(stderr);
+  }
+}
+
+static uint8_t powerctl_watch_read_status(void)
+{
+  uint8_t buf;
+
+  while(1) {
+    if (powerctl_uart_read(&buf,1)==1) {
+      if (buf&0x80) return buf;
+    } else usleep(1000);
+  }
+}
+
+static uint16_t powerctl_watch_cellog_retrieve(uint8_t *out, uint16_t buf_len)
+{
+  uint16_t ofs=0;
+  uint8_t buf=1;
+
+  powerctl_uart_write((unsigned char *)"P",1);
+  while(1) {
+    if (powerctl_uart_read(&buf,1)==1) {
+      if (!buf) break;
+      if (!(buf&0x80)) {
+	if (ofs<buf_len) out[ofs++]=buf;
+      }
+    } else usleep(1000);
+  }
+  if (ofs<buf_len) out[ofs]=0;
+  return ofs;
+}
+
+static void powerctl_watch_print_cellog(uint8_t *buf, uint16_t len)
+{
+  powerctl_print_timestamp(stderr);
+  fprintf(stderr, "EVENT: Cellular event log (%u byte%s):\n",
+	  (unsigned)len, (len==1) ? "" : "s");
+  fflush(stderr);
+
+  for(uint16_t i=0;i<len;i++) {
+    printf("%c",buf[i]);
+    if (buf[i]==0x0d) printf("\n");
+  }
+  if (len && buf[len-1]!=0x0a && buf[len-1]!=0x0d) printf("\n");
+  fflush(stdout);
+
+  powerctl_print_timestamp(stderr);
+  fprintf(stderr, "INFO: End of cellular event log\n");
+  fflush(stderr);
+}
+
+static void powerctl_watch_check_cellog(void)
+{
+  uint8_t buf[512];
+  uint16_t len = powerctl_watch_cellog_retrieve(buf,sizeof(buf));
+
+  if (!len) return;
+
+  powerctl_watch_print_cellog(buf,len);
+  powerctl_cellog_clear();
+  powerctl_uart_write((unsigned char *)".",1);
+}
+
+static int powerctl_watch(void)
+{
+  uint8_t previous_status = powerctl_sync();
+
+  if (!(previous_status&0x80)) {
+    fprintf(stderr,"ERROR: Failed to read status (received 0x%02x)\n",
+	    previous_status);
+    return -1;
+  }
+
+  powerctl_watch_print_initial_status(previous_status);
+  powerctl_watch_check_cellog();
+
+  powerctl_print_timestamp(stderr);
+  fprintf(stderr, "INFO: Watching for power and cellular log events\n");
+  fflush(stderr);
+
+  while(1) {
+    uint8_t status = powerctl_watch_read_status();
+
+    powerctl_watch_report_status_change(previous_status,status);
+    powerctl_watch_check_cellog();
+    previous_status = status;
+  }
+
+  return 0;
+}
+
 int main(int argc,char **argv)
 {
   if (argc<3) {
     fprintf(stderr,"usage: powerctl <serial port> <serial speed> [command [...]]\n");
+    fprintf(stderr,"commands: status config watch celplay celclear celspeed=<baud> +<n|name> -<n|name>\n");
     exit(-1);
   }
 
@@ -465,6 +607,9 @@ int main(int argc,char **argv)
 	if (st&(1<<i)) fprintf(stderr,"INFO: Circuit %d ON\n",i);
 	else fprintf(stderr,"INFO: Circuit %d OFF\n",i);
       }
+    }
+    else if (!strcmp(argv[i],"watch")) {
+      exit(powerctl_watch());
     }
     else if (!strncmp(argv[i],"celspeed=",9)) {
       int speed = atoi(&argv[i][9]);
