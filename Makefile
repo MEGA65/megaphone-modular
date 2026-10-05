@@ -1,6 +1,6 @@
 PROGRAMS := foneinit fonemain megacom jcore uartprobe
 
-all:	tools/bomtool $(PROGRAMS:%=bin65/%.llvm.prg) $(FONTS)
+all:	$(PROGRAMS:%=bin65/%.llvm.prg) $(FONTS) bin65/FONEBOOT.D81
 
 LINUX_BINARIES=	src/telephony/linux/provision \
 		src/telephony/linux/import \
@@ -158,6 +158,12 @@ bin65/%.llvm.prg:	src/telephony/%.c $(NATIVE_TELEPHONY_COMMON)
 	tools/function_table.py bin65/$*.map src/telephony/mega65/function_table.c
 	$(CC) -o bin65/$*.llvm.prg -Iinclude -DMEGA65 -Isrc/mega65-libc/include $< $(HELPER_SRCS) $(NATIVE_TELEPHONY_COMMON) $(SRC_MEGA65_LIBC_LLVM) $(LDFLAGS) -Wl,-Map,bin65/$*.map
 	$(COMPILER_PATH)/llvm-objdump -drS --print-imm-hex bin65/$*.llvm.prg.elf >bin65/$*.llvm.dump
+
+bin65/FONEBOOT.D81:	bin65/foneinit.llvm.prg
+	rm -f $@
+	c1541 -format "megaphone boot,26" d81 $@
+	c1541 $@ -write $< autoboot.c65
+
 
 bin/modem:	src/telephony/modem.c src/telephony/format.c src/telephony/linux/hal.c src/telephony/buffers.c src/telephony/shstate.c src/telephony/smsdecode.c src/telephony/smsencode.c src/telephony/utf.c
 	mkdir -p bin
