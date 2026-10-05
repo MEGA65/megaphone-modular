@@ -355,6 +355,9 @@ begin
               LED <= '1';
               report_power_status <= '1';
 
+              -- Enable 74HC244 buffer output enables for UART comms
+              B5 <= '0'; C2 <= '0';
+              
               -- Insert that R into the log
               cel_log_waddr <= cel_log_waddr + 1;
               cel_log_we <= '1';
@@ -396,6 +399,9 @@ begin
               -- up. (note that it will skip the +QIND from each line logged, so
               -- we put a 'Q' into the log to mark the cause of logging.
 
+              -- Enable 74HC244 buffer output enables for UART comms
+              B5 <= '0'; C2 <= '0';
+              
               -- Log until the next CR or LF
               log_cel <= '1';
               -- Insert that Q into the log
