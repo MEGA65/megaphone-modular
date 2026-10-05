@@ -281,7 +281,9 @@ begin
             LED <= '0';
 
             -- Disable 74HC244 buffer output enables for UART comms
-            B5 <= '1'; C2 <= '1';            
+            -- But DO NOT disable /OE2 on C2, because otherwise we can't hear
+            -- the cellular modem wake us up.
+            B5 <= '1'; -- C2 <= '1';   
             
             report_power_status <= '1';
             power_button_timeout <= 1_000_000;
@@ -437,7 +439,9 @@ begin
 
             -- Enable/disable 74HC244 buffer output enables for UART comms
             B5 <= not pwr_rx_data(4);
-            C2 <= not pwr_rx_data(4);            
+            -- But not /OE2 on C2, because that has to stay on for us to hear
+            -- the cellular modem waking us up.
+            -- C2 <= not pwr_rx_data(4);            
             
             -- Insert char into log to indicate if power was turned on or off
             -- via explicit circuit switch.
