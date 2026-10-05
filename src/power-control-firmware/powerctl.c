@@ -294,13 +294,13 @@ char powerctl_start_read_config(void)
 
 char powerctl_switch_circuit(uint8_t circuit_id, char on_off)
 {
-  unsigned char c;
+  unsigned char c, s[3]={'{',0,'}'};
   if (circuit_id>5) return 0xff;
   
-  c=0x20 + circuit_id + (on_off?0x10:0x00);
+  s[1]=0x20 + circuit_id + (on_off?0x10:0x00);
 
   powerctl_sync();
-  powerctl_uart_write(&c,1);
+  powerctl_uart_write(s,3);
   c=powerctl_sync();
   if (!on_off)  c^=0x7f;
   c&=(0x01 << circuit_id);

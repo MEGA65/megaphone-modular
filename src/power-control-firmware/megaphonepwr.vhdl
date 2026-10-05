@@ -103,6 +103,10 @@ architecture rtl of megaphonepwr is
 
   signal C5_recently_high : std_logic := '0';
   signal C5_timeout : integer range 0 to 1_000_000 := 0;
+
+  signal queued_power_command : std_logic := '0';
+  signal queued_power_command_byte : unsigned(7 downto 0) := x"00";
+  signal power_command_gate : std_logic := '0';
   
 begin
 
@@ -414,6 +418,8 @@ begin
         pwr_rx_ack <= '1';
 
         idle_counter <= 0;
+        power_command_gate <= '0';
+        queued_power_command <= '0';
         
         case pwr_rx_data is
           when x"50" => -- 'P' -- Play back logged cellular data.
@@ -433,50 +439,68 @@ begin
           when x"3f" => -- '?' Report configuration
             report_configuration <= '1';
             cfg_raddr <= to_unsigned(0,CFG_BITS);
-          when x"30" | x"20" | x"28" | x"29" =>  -- '0'/SPACE (or '(' or ')' for shift-0 on most keyboards = control power supply 0 (LED / MAIN FPGA)
-            LED <= pwr_rx_data(4);            
-            report_power_status <= '1';
+          when x"7b" => -- '{': Commence power command gate.
+            power_command_gate <= '1';
 
-            -- Enable/disable 74HC244 buffer output enables for UART comms
-            B5 <= not pwr_rx_data(4);
-            -- But not /OE2 on C2, because that has to stay on for us to hear
-            -- the cellular modem waking us up.
-            -- C2 <= not pwr_rx_data(4);            
-            
-            -- Insert char into log to indicate if power was turned on or off
-            -- via explicit circuit switch.
-            cel_log_waddr <= cel_log_waddr + 1;
-            cel_log_we <= '1';
-            if pwr_rx_data(4) = '1' then
-              cel_log_wdata <= x"4E"; -- ASCII (o)'N'
-            else
-              cel_log_wdata <= x"46"; -- ASCII (of)'F'
+          -- '0'/SPACE (or '(' or ')' for shift-0 on most keyboards = control power supply 0 (LED / MAIN FPGA)            
+          when x"30" | x"31" | x"32" | x"33" | x"34" | x"35" | x"20" | x"21" | x"22" | x"23" | x"24" | x"25" | x"28" | x"29" =>
+            -- It's a power command: If gated, store ready for closing/execute
+            -- gate ( "}" )
+            if power_command_gate='1' then
+              queued_power_command_byte <= pwr_rx_data;
+              queued_power_command <= '1';
             end if;
+          when x"7d" => -- '}': Execute requested power command
+            if queued_power_command = '1' then
+              case queued_power_command_byte is
+                when x"30" | x"20" | x"28" | x"29" =>  -- '0'/SPACE (or '(' or ')' for shift-0 on most keyboards = control power supply 0 (LED / MAIN FPGA)
+                  LED <= queued_power_command_byte(4);            
+                  report_power_status <= '1';
+
+                  -- Enable/disable 74HC244 buffer output enables for UART comms
+                  B5 <= not queued_power_command_byte(4);
+                  -- But not /OE2 on C2, because that has to stay on for us to hear
+                  -- the cellular modem waking us up.
+                  -- C2 <= not pwr_rx_data(4);            
             
-          when x"31" | x"21" =>  -- '1'/'!' = control power supply 1
-            C6 <= pwr_rx_data(4);
-            report_power_status <= '1';
-          when x"32" | x"22" | x"40" =>  -- '2'/'"'(or '@' for US keyboards) = control power supply 2
-            -- C5 <= pwr_rx_data(4);
-            report_power_status <= '1';
-          when x"33" | x"23" =>  -- '3'/'#' = control power supply 3
-            E2 <= pwr_rx_data(4);
-            report_power_status <= '1';
-          when x"34" | x"24" =>  -- '4'/'$' = control power supply 4
-            B5 <= pwr_rx_data(4);
-            report_power_status <= '1';
-          when x"35" | x"25" =>  -- '5'/'%' = control power supply 5
-            C2 <= pwr_rx_data(4);
-            report_power_status <= '1';
+                  -- Insert char into log to indicate if power was turned on or off
+                  -- via explicit circuit switch.
+                  cel_log_waddr <= cel_log_waddr + 1;
+                  cel_log_we <= '1';
+                  if queued_power_command_byte(4) = '1' then
+                    cel_log_wdata <= x"4E"; -- ASCII (o)'N'
+                  else
+                    cel_log_wdata <= x"46"; -- ASCII (of)'F'
+                  end if;
+                when x"31" | x"21" =>  -- '1'/'!' = control power supply 1
+                  C6 <= pwr_rx_data(4);
+                  report_power_status <= '1';
+                when x"32" | x"22" | x"40" =>  -- '2'/'"'(or '@' for US keyboards) = control power supply 2
+                  -- C5 <= pwr_rx_data(4);
+                  report_power_status <= '1';
+                when x"33" | x"23" =>  -- '3'/'#' = control power supply 3
+                  E2 <= queued_power_command_byte(4);
+                  report_power_status <= '1';
+                when x"34" | x"24" =>  -- '4'/'$' = control power supply 4
+                  B5 <= queued_power_command_byte(4);
+                  report_power_status <= '1';
+                when x"35" | x"25" =>  -- '5'/'%' = control power supply 5
+                  C2 <= queued_power_command_byte(4);
+                  report_power_status <= '1';
+                when others =>
+                  null;
+              end case;
+              queued_power_command <= '0';
+            end if;
 
             -- Cellular modem tap UART speed set
-          when x"41" => cel_uart_div <= to_unsigned(UART_DIV_2MBPS,24);
-          when x"42" => cel_uart_div <= to_unsigned(UART_DIV_1MBPS,24);
-          when x"43" => cel_uart_div <= to_unsigned(UART_DIV_230K,24);
-          when x"44" => cel_uart_div <= to_unsigned(UART_DIV_115K,24);
-          when x"45" => cel_uart_div <= to_unsigned(UART_DIV_19200,24);
-          when x"46" => cel_uart_div <= to_unsigned(UART_DIV_9600,24);
-          when x"47" => cel_uart_div <= to_unsigned(UART_DIV_2400,24);
+--          when x"41" => cel_uart_div <= to_unsigned(UART_DIV_2MBPS,24);
+--          when x"42" => cel_uart_div <= to_unsigned(UART_DIV_1MBPS,24);
+--          when x"43" => cel_uart_div <= to_unsigned(UART_DIV_230K,24);
+--          when x"44" => cel_uart_div <= to_unsigned(UART_DIV_115K,24);
+--          when x"45" => cel_uart_div <= to_unsigned(UART_DIV_19200,24);
+--          when x"46" => cel_uart_div <= to_unsigned(UART_DIV_9600,24);
+--          when x"47" => cel_uart_div <= to_unsigned(UART_DIV_2400,24);
 
             -- Debug tool to see last char received from cellular UART
           when x"6e" =>
