@@ -36,11 +36,14 @@ void print_text40(unsigned char x, unsigned char y, unsigned char colour, unsign
 void c64_40col_mode(void)
 {
   // Switch to standard lowercase/uppercase C64 mode
+  POKE(0xD031, 0x40);
+
   POKE(0xD018, 0x16); // Screen RAM $0400, Char ROM $1800
   POKE(0xD058, 40);   // Logical row width
+  POKE(0xD05E, 40);
   POKE(0xD011, PEEK(0xD011) & ~0x80); // clear high bit of raster
   POKE(0xD016, 0xC8); // 40 cols
-  
+
   // Clear screen
   for(int i=0; i<1000; i++) {
     POKE(0x0400 + i, 0x20); // space
