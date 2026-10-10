@@ -21,7 +21,7 @@ void print_text40(unsigned char x, unsigned char y, unsigned char colour, unsign
 {
   uint16_t addr = 0x0400 + x + y * 40;
   uint16_t caddr = 0xD800 + x + y * 40;
-  while (*msg && x < 40) {
+  while (*msg) {
     uint8_t sc = ascii_to_screencode(*msg);
     if (reverse) sc |= 0x80;
     POKE(addr, sc);
@@ -73,7 +73,7 @@ void wait_for_modem() {
   
   while (1) {
     print_text40(0, 2, 0x0a, 0, "Waiting for JTAG modem to respond...    ");
-    send_cmd("AT");
+    send_cmd("ATZ");
     
     uint32_t frames_passed = 0;
     uint8_t last_raster = PEEK(0xD012);
@@ -94,7 +94,7 @@ void wait_for_modem() {
           if (c == '\r' || c == '\n') {
             if (buf_idx > 0) {
               buf[buf_idx] = 0;
-              if (strncmp(buf, "OK", 2) == 0) {
+              if (strncmp(buf, "OK READY", 8) == 0) {
                 got_ok = 1;
               }
               buf_idx = 0;
@@ -241,9 +241,126 @@ int parse_core_num(const char* str) {
   return num;
 }
 
+void set_max_send(uint16_t max_bytes) {
+  char max_send_command[20];
+  char buf[128];
+  int buf_idx = 0;
+  int line_count = 0;
+
+  uint32_t frames_passed = 0;
+
+  print_text40(0, 3, 0x07, 0, "Setting Max Send...                     ");
+  strcpy(max_send_command, "AT+COREMAX=");
+  if (max_bytes < 10) {
+    max_send_command[11] = '0' + max_bytes; max_send_command[12] = 0;
+  } else if (max_bytes < 100) {
+    max_send_command[11] = '0' + (max_bytes/10); max_send_command[12] = '0' + (max_bytes%10); max_send_command[13] = 0;
+  } else {
+    max_send_command[11] = '0' + (max_bytes/100); max_send_command[12] = '0' + ((max_bytes/10)%10); max_send_command[13] = '0' + (max_bytes%10); max_send_command[14] = 0;
+  }
+  strcat(max_send_command, "\n");
+  send_cmd(max_send_command);
+
+  uint8_t last_raster = PEEK(0xD012);
+  int done = 0;
+
+  while(frames_passed < 250 && !done) {
+    uint8_t current_raster = PEEK(0xD012);
+    if (current_raster < last_raster) frames_passed++;
+    last_raster = current_raster;
+
+    uint8_t rx_buf[64];
+    uint16_t count = modem_uart_read(rx_buf, sizeof(rx_buf));
+    if (count > 0) {
+      frames_passed = 0;
+      for (uint16_t i=0; i<count; i++) {
+        uint8_t c = rx_buf[i];
+        if (c == '\r' || c == '\n') {
+          if (buf_idx > 0) {
+            buf[buf_idx] = 0;
+            if (strncmp(buf, "OK", 2) == 0 || strncmp(buf, "ERROR", 5) == 0) {
+              done = 1;
+            }
+            buf_idx = 0;
+          }
+        } else {
+          if (buf_idx < 127) buf[buf_idx++] = c;
+        }
+      }
+    }
+  }
+}
+
+uint8_t any_key_pressed(void) {
+  for (uint8_t i = 0; i < 9; i++) {
+    POKE(0xD614, i);
+    uint8_t keys = PEEK(0xD613);
+    if (keys != 0xff) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+void parse_core(const char* core_detail) {
+  char *p = strstr(core_detail, "index=");
+  if (p) {
+    int num = parse_core_num(p + 6);
+    if (num > 0 && core_count < MAX_CORES) {
+      char *kind = strstr(core_detail, "kind=");
+      char *path_ptr = strstr(core_detail, "path=\"");
+      char *title = strstr(core_detail, "title=\"");
+
+      // Skip directories as we already got them!
+      int is_dir = 0;
+      if (kind && strncmp(kind + 5, "DIR", 3) == 0) is_dir = 1;
+
+      if (!is_dir) {
+        char nice[80] = {0};
+        char name_buf[80] = {0};
+
+        if (title) {
+          char *start = title + 7;
+          char *end = strchr(start, '"');
+          if (end && end > start) {
+            int len = end - start;
+            if (len > 29) len = 29;
+            strncpy(name_buf, start, len);
+          } else if (path_ptr) {
+            start = path_ptr + 6;
+            end = strchr(start, '"');
+            if (end) {
+              int len = end - start;
+              if (len > 29) len = 29;
+              strncpy(name_buf, start, len);
+            }
+          }
+        }
+
+        char num_str[10];
+        if (num < 10) {
+          num_str[0] = ' '; num_str[1] = ' '; num_str[2] = '0' + num; num_str[3] = 0;
+        } else if (num < 100) {
+          num_str[0] = ' '; num_str[1] = '0' + (num/10); num_str[2] = '0' + (num%10); num_str[3] = 0;
+        } else {
+          num_str[0] = '0' + (num/100); num_str[1] = '0' + ((num/10)%10); num_str[2] = '0' + (num%10); num_str[3] = 0;
+        }
+
+        strcpy(nice, num_str);
+        strcat(nice, " CORE ");
+        strncat(nice, name_buf, 79 - strlen(nice));
+
+        strncpy(cores[core_count++], nice, 79);
+      }
+    }
+  }
+}
+
 void read_cores(const char* path) {
   core_count = 0;
   
+  set_max_send(150);
+
   if (strcmp(path, "/") != 0) {
     strcpy(cores[core_count++], "  0 DIR  /");
     strcpy(cores[core_count++], "  0 DIR  ..");
@@ -282,6 +399,8 @@ void read_cores(const char* path) {
             buf[buf_idx] = 0;
             if (strncmp(buf, "END", 3) == 0) {
                done = 1;
+            } else if (strncmp(buf, "CONT", 4) == 0) {
+              send_cmd("AT+COREMORE");
             } else if (strncmp(buf, "AT+CORELIST", 11) != 0 && strncmp(buf, "OK", 2) != 0) {
                int num = parse_core_num(buf);
                if (num > 0 && core_count < MAX_CORES) {
@@ -341,6 +460,9 @@ void read_cores(const char* path) {
   last_raster = PEEK(0xD012);
   done = 0;
 
+  static char detail_buf[512];
+  memset(detail_buf, 0, sizeof(detail_buf));
+  uint8_t appending = 0;
   while(frames_passed < 250 && !done) {
     uint8_t current_raster = PEEK(0xD012);
     if (current_raster < last_raster) frames_passed++;
@@ -356,59 +478,27 @@ void read_cores(const char* path) {
           if (buf_idx > 0) {
             buf[buf_idx] = 0;
             if (strncmp(buf, "END", 3) == 0) {
-               done = 1;
+              done = 1;
+            } else if (strncmp(buf, "CONT", 4) == 0) {
+              send_cmd("AT+COREMORE");
             } else if (strncmp(buf, "+COREDETAIL:", 12) == 0) {
-               char *p = strstr(buf, "index=");
-               if (p) {
-                 int num = parse_core_num(p + 6);
-                 if (num > 0 && core_count < MAX_CORES) {
-                   char *kind = strstr(buf, "kind=");
-                   char *path_ptr = strstr(buf, "path=\"");
-                   char *title = strstr(buf, "title=\"");
-                   
-                   // Skip directories as we already got them!
-                   int is_dir = 0;
-                   if (kind && strncmp(kind + 5, "DIR", 3) == 0) is_dir = 1;
-                   
-                   if (!is_dir) {
-                     char nice[80] = {0};
-                     char name_buf[80] = {0};
-                     
-                     if (title) {
-                       char *start = title + 7;
-                       char *end = strchr(start, '"');
-                       if (end && end > start) {
-                         int len = end - start;
-                         if (len > 29) len = 29;
-                         strncpy(name_buf, start, len);
-                       } else if (path_ptr) {
-                         start = path_ptr + 6;
-                         end = strchr(start, '"');
-                         if (end) {
-                           int len = end - start;
-                           if (len > 29) len = 29;
-                           strncpy(name_buf, start, len);
-                         }
-                       }
-                     }
-                     
-                     char num_str[10];
-                     if (num < 10) {
-                       num_str[0] = ' '; num_str[1] = ' '; num_str[2] = '0' + num; num_str[3] = 0;
-                     } else if (num < 100) {
-                       num_str[0] = ' '; num_str[1] = '0' + (num/10); num_str[2] = '0' + (num%10); num_str[3] = 0;
-                     } else {
-                       num_str[0] = '0' + (num/100); num_str[1] = '0' + ((num/10)%10); num_str[2] = '0' + (num%10); num_str[3] = 0;
-                     }
-                     
-                     strcpy(nice, num_str);
-                     strcat(nice, " CORE ");
-                     strncat(nice, name_buf, 79 - strlen(nice));
-                     
-                     strncpy(cores[core_count++], nice, 79);
-                   }
-                 }
-               }
+              strncpy(detail_buf, buf, sizeof(detail_buf) - 1);
+              detail_buf[sizeof(detail_buf) - 1] = 0;
+              if (detail_buf[strlen(detail_buf) - 1] == '\\') {
+                appending = 1;
+                detail_buf[strlen(detail_buf) - 1] = 0;
+              } else {
+                parse_core(detail_buf);
+              }
+            } else if ((strncmp(buf, "AT+COREMORE", 11) != 0) && (strncmp(buf, "OK", 2) != 0) && appending) {
+              strncat(detail_buf, buf, sizeof(detail_buf) - 1);
+              detail_buf[sizeof(detail_buf) - 1] = 0;
+              if (detail_buf[strlen(detail_buf) - 1] == '\\') {
+                detail_buf[strlen(detail_buf) - 1] = 0;
+              } else {
+                appending = 0;
+                parse_core(detail_buf);
+              }
             }
             buf_idx = 0;
           }
@@ -418,6 +508,8 @@ void read_cores(const char* path) {
       }
     }
   }
+
+  set_max_send(0);
 }
 
 void print_ati_info() {
@@ -471,8 +563,8 @@ int main(void)
 
   print_text40(0, 0, 0x01, 1, " MEGA65 JTAG Core Loader                ");
 
-  // UART 0 at 2mbps
-  modem_setup_serial(0, (40500000 / 2000000) - 1);
+  // UART 0 at 115.2k
+  modem_setup_serial(0, (40500000 / 115200 + 1) - 1);
 
   wait_for_modem();
   query_info();
