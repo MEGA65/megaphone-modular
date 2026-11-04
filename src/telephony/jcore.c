@@ -12,7 +12,7 @@ uint8_t ascii_to_screencode(uint8_t c) {
   }
   if (c >= 96 && c <= 127) {
      if (c >= 97 && c <= 122) return c - 96; // 'a'-'z' -> 1-26
-     return c - 96; 
+     return c - 96;
   }
   return c;
 }
@@ -67,14 +67,74 @@ void sleep_approx_1s() {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Robust AT command handling
+// ---------------------------------------------------------------------------
+
+static uint8_t at_timed_out = 0;
+
+// Discard anything already waiting in the UART. Normally waits for 2 frames
+// of silence; after a timeout waits for 1 s, since a late reply is likely
+// still on its way.
+static void uart_drain(void) {
+  uint8_t need = at_timed_out ? 50 : 2;
+  at_timed_out = 0;
+  uint8_t tmp[64];
+  uint8_t last = PEEK(0xD012), quiet = 0;
+  while (quiet < need) {
+    if (modem_uart_read(tmp, sizeof tmp)) quiet = 0;
+    uint8_t r = PEEK(0xD012);
+    if (r < last) quiet++;
+    last = r;
+  }
+}
+
+typedef void (*line_handler)(const char *line);
+
+// Sends cmd and passes each response line (except its own echo) to on_line.
+// Returns 1 = OK, 0 = ERROR, -1 = timeout (250 frames of silence)
+static int at_command(const char *cmd, line_handler on_line) {
+  static char buf[256];
+  int idx = 0;
+  uart_drain();
+  send_cmd((char *)cmd);
+
+  uint16_t frames = 0;
+  uint8_t last = PEEK(0xD012);
+  while (frames < 250) {
+    uint8_t r = PEEK(0xD012);
+    if (r < last) frames++;
+    last = r;
+
+    uint8_t rx[64];
+    uint16_t n = modem_uart_read(rx, sizeof rx);
+    if (n) frames = 0;
+    for (uint16_t i = 0; i < n; i++) {
+      uint8_t c = rx[i];
+      if (c == '\r' || c == '\n') {
+        if (!idx) continue;
+        buf[idx] = 0; idx = 0;
+        if (strncmp(buf, "OK", 2) == 0)    return 1;
+        if (strncmp(buf, "ERROR", 5) == 0) return 0;
+        if (strcmp(buf, cmd) == 0) continue;   // our own echo only
+        if (on_line) on_line(buf);
+      } else if (idx < 255) {
+        buf[idx++] = c;
+      }
+    }
+  }
+  at_timed_out = 1;
+  return -1;
+}
+
 void wait_for_modem() {
   char buf[80];
   int buf_idx = 0;
-  
+
   while (1) {
     print_text40(0, 2, 0x0a, 0, "Waiting for JTAG modem to respond...    ");
     send_cmd("ATZ");
-    
+
     uint32_t frames_passed = 0;
     uint8_t last_raster = PEEK(0xD012);
     int got_ok = 0;
@@ -114,6 +174,10 @@ void wait_for_modem() {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Modem info (ATI / AT+WIFI?)
+// ---------------------------------------------------------------------------
+
 char ati_version[80] = "";
 char ati_build[80] = "";
 char ati_identity[80] = "";
@@ -121,111 +185,67 @@ char ati_sdcard[80] = "";
 char ati_wifi_hw[80] = "";
 char wifi_url[80] = "";
 
-void query_info() {
-  print_text40(0, 3, 0x07, 0, "Querying ATI...                         ");
-  send_cmd("ATI");
-  
-  char buf[128];
-  int buf_idx = 0;
-  int line_count = 0;
-  
-  uint32_t frames_passed = 0;
-  uint8_t last_raster = PEEK(0xD012);
-  int done = 0;
-  
-  while(frames_passed < 250 && !done) {
-    uint8_t current_raster = PEEK(0xD012);
-    if (current_raster < last_raster) frames_passed++;
-    last_raster = current_raster;
+// Temporaries: filled while parsing, committed only from a genuine response
+static char t_version[40], t_build[40], t_identity[40], t_sdcard[40], t_wifi_hw[40];
+static char t_url[80];
+static int  t_line;
+static uint8_t t_wifi_seen;
 
-    uint8_t rx_buf[64];
-    uint16_t count = modem_uart_read(rx_buf, sizeof(rx_buf));
-    if (count > 0) {
-      frames_passed = 0;
-      for (uint16_t i=0; i<count; i++) {
-        uint8_t c = rx_buf[i];
-        if (c == '\r' || c == '\n') {
-          if (buf_idx > 0) {
-            buf[buf_idx] = 0;
-            if (strncmp(buf, "OK", 2) == 0 || strncmp(buf, "ERROR", 5) == 0) {
-              done = 1;
-            }
-            if (strncmp(buf, "ATI", 3) != 0 && !done) {
-              if (line_count == 0) {
-                strncpy(ati_version, buf, 39);
-              } else if (strncmp(buf, "BUILD:", 6) == 0) {
-                strncpy(ati_build, buf, 39);
-              } else if (strncmp(buf, "IDENTITY:", 9) == 0) {
-                strncpy(ati_identity, buf, 39);
-              } else if (strncmp(buf, "SDCARD:", 7) == 0) {
-                strncpy(ati_sdcard, buf, 39);
-              } else if (strncmp(buf, "WIFI:", 5) == 0) {
-                strncpy(ati_wifi_hw, buf, 39);
-              }
-              line_count++;
-            }
-            buf_idx = 0;
-          }
-        } else {
-          if (buf_idx < 127) buf[buf_idx++] = c;
-        }
-      }
-    }
-  }
-
-  print_text40(0, 3, 0x07, 0, "Querying AT+WIFI?...                    ");
-  send_cmd("AT+WIFI?");
-  buf_idx = 0;
-  frames_passed = 0;
-  last_raster = PEEK(0xD012);
-  done = 0;
-
-  while(frames_passed < 250 && !done) {
-    uint8_t current_raster = PEEK(0xD012);
-    if (current_raster < last_raster) frames_passed++;
-    last_raster = current_raster;
-
-    uint8_t rx_buf[64];
-    uint16_t count = modem_uart_read(rx_buf, sizeof(rx_buf));
-    if (count > 0) {
-      frames_passed = 0;
-      for (uint16_t i=0; i<count; i++) {
-        uint8_t c = rx_buf[i];
-        if (c == '\r' || c == '\n') {
-          if (buf_idx > 0) {
-            buf[buf_idx] = 0;
-            if (strncmp(buf, "OK", 2) == 0 || strncmp(buf, "ERROR", 5) == 0) {
-              done = 1;
-            }
-            // e.g. +WIFI: wifi=up ip=192.168.1.10 port=80
-            if (strncmp(buf, "+WIFI:", 6) == 0) {
-              char *ip_ptr = strstr(buf, "ip=");
-              char *port_ptr = strstr(buf, "port=");
-              if (ip_ptr && port_ptr) {
-                ip_ptr += 3;
-                port_ptr += 5;
-                char ip_str[32] = {0};
-                char port_str[16] = {0};
-                int j = 0;
-                while (ip_ptr[j] && ip_ptr[j] != ' ' && j < 31) { ip_str[j] = ip_ptr[j]; j++; }
-                j = 0;
-                while (port_ptr[j] && port_ptr[j] != ' ' && j < 15) { port_str[j] = port_ptr[j]; j++; }
-                
-                strcpy(wifi_url, "http://");
-                strcat(wifi_url, ip_str);
-                strcat(wifi_url, ":");
-                strcat(wifi_url, port_str);
-              }
-            }
-            buf_idx = 0;
-          }
-        } else {
-          if (buf_idx < 127) buf[buf_idx++] = c;
-        }
-      }
-    }
-  }
+static void ati_line(const char *l) {
+  if (t_line++ == 0)                        strncpy(t_version,  l, 39);
+  else if (strncmp(l, "BUILD:", 6) == 0)    strncpy(t_build,    l, 39);
+  else if (strncmp(l, "IDENTITY:", 9) == 0) strncpy(t_identity, l, 39);
+  else if (strncmp(l, "SDCARD:", 7) == 0)   strncpy(t_sdcard,   l, 39);
+  else if (strncmp(l, "WIFI:", 5) == 0)     strncpy(t_wifi_hw,  l, 39);
 }
+
+// e.g. +WIFI: wifi=up ip=192.168.1.10 port=80
+static void wifi_line(const char *l) {
+  if (strncmp(l, "+WIFI:", 6) != 0) return;
+  t_wifi_seen = 1;
+  const char *ip = strstr(l, "ip="), *port = strstr(l, "port=");
+  if (!ip || !port) return;
+  ip += 3; port += 5;
+  char ip_str[32] = {0}, port_str[16] = {0};
+  for (int j = 0; ip[j]   && ip[j]   != ' ' && j < 31; j++) ip_str[j]   = ip[j];
+  for (int j = 0; port[j] && port[j] != ' ' && j < 15; j++) port_str[j] = port[j];
+  strcpy(t_url, "http://");
+  strcat(t_url, ip_str);
+  strcat(t_url, ":");
+  strcat(t_url, port_str);
+}
+
+void query_info(uint8_t quiet) {
+  if (!quiet) print_text40(0, 3, 0x07, 0, "Querying ATI...                         ");
+  memset(t_version, 0, sizeof t_version);
+  memset(t_build, 0, sizeof t_build);
+  memset(t_identity, 0, sizeof t_identity);
+  memset(t_sdcard, 0, sizeof t_sdcard);
+  memset(t_wifi_hw, 0, sizeof t_wifi_hw);
+  t_line = 0;
+
+  if (at_command("ATI", ati_line) == 1 && t_build[0]) {
+    // Only a genuine ATI response contains BUILD:, so stale "OK"s are rejected.
+    // Static fields: refresh, but never clear
+    if (t_version[0])  strcpy(ati_version,  t_version);
+    strcpy(ati_build, t_build);
+    if (t_identity[0]) strcpy(ati_identity, t_identity);
+    // Dynamic fields: update only when the modem actually reported them
+    if (t_sdcard[0])   strcpy(ati_sdcard,   t_sdcard);
+    if (t_wifi_hw[0])  strcpy(ati_wifi_hw,  t_wifi_hw);
+  }
+
+  if (!quiet) print_text40(0, 3, 0x07, 0, "Querying AT+WIFI?...                    ");
+  t_url[0] = 0;
+  t_wifi_seen = 0;
+  if (at_command("AT+WIFI?", wifi_line) == 1 && t_wifi_seen)
+    strcpy(wifi_url, t_url);   // empty if the line had no ip=, i.e. WiFi down
+  // anything else (ERROR, timeout, stale OK): keep the previous value
+}
+
+// ---------------------------------------------------------------------------
+// Core list
+// ---------------------------------------------------------------------------
 
 #define MAX_CORES 50
 char cores[MAX_CORES][80];
@@ -243,11 +263,6 @@ int parse_core_num(const char* str) {
 
 void set_max_send(uint16_t max_bytes) {
   char max_send_command[20];
-  char buf[128];
-  int buf_idx = 0;
-  int line_count = 0;
-
-  uint32_t frames_passed = 0;
 
   print_text40(0, 3, 0x07, 0, "Setting Max Send...                     ");
   strcpy(max_send_command, "AT+COREMAX=");
@@ -258,37 +273,8 @@ void set_max_send(uint16_t max_bytes) {
   } else {
     max_send_command[11] = '0' + (max_bytes/100); max_send_command[12] = '0' + ((max_bytes/10)%10); max_send_command[13] = '0' + (max_bytes%10); max_send_command[14] = 0;
   }
-  strcat(max_send_command, "\n");
-  send_cmd(max_send_command);
-
-  uint8_t last_raster = PEEK(0xD012);
-  int done = 0;
-
-  while(frames_passed < 250 && !done) {
-    uint8_t current_raster = PEEK(0xD012);
-    if (current_raster < last_raster) frames_passed++;
-    last_raster = current_raster;
-
-    uint8_t rx_buf[64];
-    uint16_t count = modem_uart_read(rx_buf, sizeof(rx_buf));
-    if (count > 0) {
-      frames_passed = 0;
-      for (uint16_t i=0; i<count; i++) {
-        uint8_t c = rx_buf[i];
-        if (c == '\r' || c == '\n') {
-          if (buf_idx > 0) {
-            buf[buf_idx] = 0;
-            if (strncmp(buf, "OK", 2) == 0 || strncmp(buf, "ERROR", 5) == 0) {
-              done = 1;
-            }
-            buf_idx = 0;
-          }
-        } else {
-          if (buf_idx < 127) buf[buf_idx++] = c;
-        }
-      }
-    }
-  }
+  // send_cmd() adds the terminator, so no "\n" here
+  at_command(max_send_command, 0);
 }
 
 uint8_t any_key_pressed(void) {
@@ -358,24 +344,25 @@ void parse_core(const char* core_detail) {
 
 void read_cores(const char* path) {
   core_count = 0;
-  
+
   set_max_send(150);
 
   if (strcmp(path, "/") != 0) {
     strcpy(cores[core_count++], "  0 DIR  /");
     strcpy(cores[core_count++], "  0 DIR  ..");
   }
-  
+
   char cmd[128];
   strcpy(cmd, "AT+CORELIST");
   if (strcmp(path, "/") != 0) {
     strcat(cmd, "=");
     strcat(cmd, path);
   }
-  
+
   print_text40(0, 3, 0x07, 0, "Querying directories...                 ");
+  uart_drain();
   send_cmd(cmd);
-  
+
   static char buf[512];
   int buf_idx = 0;
   uint32_t frames_passed = 0;
@@ -453,6 +440,7 @@ void read_cores(const char* path) {
     strcat(cmd, path);
   }
   print_text40(0, 3, 0x07, 0, "Querying cores...                       ");
+  uart_drain();
   send_cmd(cmd);
 
   buf_idx = 0;
@@ -514,20 +502,20 @@ void read_cores(const char* path) {
 
 void print_ati_info() {
   // Clear querying text
-  print_text40(0, 3, 0x01, 0, "                                        "); 
+  print_text40(0, 3, 0x01, 0, "                                        ");
 
   int info_row = 2;
   print_text40(0, info_row++, 0x05, 0, ati_version);
   if (ati_build[0]) print_text40(0, info_row++, 0x0a, 0, ati_build);
   if (ati_identity[0]) print_text40(0, info_row++, 0x0e, 0, ati_identity);
-  
+
   if (ati_sdcard[0] && strncmp(ati_sdcard, "SDCARD: ACTIVE", 14) != 0) {
     print_text40(0, info_row++, 0x02, 0, ati_sdcard);
   }
   if (ati_wifi_hw[0] && strncmp(ati_wifi_hw, "WIFI: BUILT-IN", 14) != 0) {
     print_text40(0, info_row++, 0x02, 0, ati_wifi_hw);
   }
-  
+
   if (wifi_url[0]) {
     char wbuf[40];
     strcpy(wbuf, "Web: ");
@@ -547,18 +535,46 @@ void print_ati_info() {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Periodic status re-probe
+// ---------------------------------------------------------------------------
+
+#define PROBE_FAST_FRAMES  (50 * 3)    // every 3 s while WiFi is unsettled
+#define PROBE_SLOW_FRAMES  (50 * 60)   // every 60 s once settled
+
+static uint16_t probe_frames = 0;
+static uint8_t  probe_last_raster = 0;
+static uint8_t  jtag_sent = 0;         // no probing once a core load is sent
+
+// Unsettled = still probing, or hardware present but no IP yet
+static uint8_t wifi_unsettled(void) {
+  if (strncmp(ati_wifi_hw, "WIFI: PROBING", 13) == 0) return 1;
+  if (strncmp(ati_wifi_hw, "WIFI: BUILT-IN", 14) == 0 && !wifi_url[0]) return 1;
+  return 0;
+}
+
+static void refresh_status(void) {
+  char old_wifi[80], old_url[80], old_sd[80];
+  strcpy(old_wifi, ati_wifi_hw);
+  strcpy(old_url, wifi_url);
+  strcpy(old_sd, ati_sdcard);
+  query_info(1);   // quiet: no "Querying..." flicker
+  if (strcmp(old_wifi, ati_wifi_hw) || strcmp(old_url, wifi_url) || strcmp(old_sd, ati_sdcard))
+    print_ati_info();
+}
+
 int main(void)
 {
   mega65_io_enable();
   POKE(0xd020,0); // black border
   POKE(0xd021,0); // black bg
-  
+
   // Install NMI and BRK catchers from megacom.c
   POKE(0x0316,(uint8_t)(((uint16_t)&brk_catcher)>>0));
   POKE(0x0317,(uint8_t)(((uint16_t)&brk_catcher)>>8));
   POKE(0x0318,(uint8_t)(((uint16_t)&nmi_catcher)>>0));
   POKE(0x0319,(uint8_t)(((uint16_t)&nmi_catcher)>>8));
-  
+
   c64_40col_mode();
 
   print_text40(0, 0, 0x01, 1, " MEGA65 JTAG Core Loader                ");
@@ -567,13 +583,17 @@ int main(void)
   modem_setup_serial(0, (40500000 / 115200 + 1) - 1);
 
   wait_for_modem();
-  query_info();
+  query_info(0);
 
   char current_path[128] = "/";
 
   while(1) {
     read_cores(current_path);
     print_ati_info();
+
+    // A directory reload just talked to the modem; restart the probe timer
+    probe_frames = 0;
+    probe_last_raster = PEEK(0xD012);
 
     int selected = 0;
     int top_idx = 0;
@@ -590,7 +610,7 @@ int main(void)
           disp[40] = 0;
           for (int p=strlen(disp); p<40; p++) disp[p] = ' ';
           disp[40] = 0;
-          
+
           if (c_idx == selected) {
             print_text40(0, 11+i, 0x01, 1, disp); // highlight reversed
           } else {
@@ -601,14 +621,25 @@ int main(void)
         }
       }
 
+      // Periodic status probe: fast while WiFi is settling, slow afterwards
+      uint8_t r = PEEK(0xD012);
+      if (r < probe_last_raster) probe_frames++;
+      probe_last_raster = r;
+      if (!jtag_sent &&
+          probe_frames >= (wifi_unsettled() ? PROBE_FAST_FRAMES : PROBE_SLOW_FRAMES)) {
+        refresh_status();
+        probe_frames = 0;
+        probe_last_raster = PEEK(0xD012);
+      }
+
       uint8_t joy = PEEK(0xDC00);
       uint8_t joy_changed = (joy != last_joy);
       last_joy = joy;
-      
+
       int move_up = 0;
       int move_down = 0;
       int do_launch = 0;
-      
+
       if (joy_changed) {
         if ((joy & 0x01) == 0) move_up = 1;
         if ((joy & 0x02) == 0) move_down = 1;
@@ -618,12 +649,12 @@ int main(void)
       if (PEEK(0xD610)) {
         uint8_t key = PEEK(0xD610);
         POKE(0xD610, 0);
-        
+
         if (key == 0x11) move_down = 1; // cursor down
         if (key == 0x91) move_up = 1; // cursor up
         if (key == 0x0d) do_launch = 1; // return
       }
-      
+
       if (move_down) {
         if (selected < core_count - 1) {
           selected++;
@@ -658,7 +689,7 @@ int main(void)
             char cmd[40];
             int core_num = parse_core_num(cores[selected]);
             char nbuf[10];
-            
+
             if (core_num < 10) {
               nbuf[0] = '0' + core_num; nbuf[1] = 0;
             } else if (core_num < 100) {
@@ -666,10 +697,12 @@ int main(void)
             } else {
               nbuf[0] = '0' + (core_num/100); nbuf[1] = '0' + ((core_num/10)%10); nbuf[2] = '0' + (core_num%10); nbuf[3] = 0;
             }
-            
+
             strcpy(cmd, "AT+JTAGLOAD=");
             strcat(cmd, nbuf);
+            uart_drain();
             send_cmd(cmd);
+            jtag_sent = 1;
             print_text40(0, 24, 0x0a, 0, "Command sent:");
             print_text40(14, 24, 0x0e, 0, cmd);
           }
