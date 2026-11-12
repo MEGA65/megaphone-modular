@@ -192,8 +192,17 @@ bin65/megacom:   bin65/megacom.llvm.prg src/telephony/ascii-font.c
 bin65/uartprobe:   bin65/uartprobe.llvm.prg src/telephony/ascii-font.c
 	cp $< $@
 
+# jcore is a C64-mode PRG; m65wrap makes it launchable from C65/MEGA65 mode
+# too. Set M65WRAP= (empty) to deliberately produce an unwrapped copy.
+M65WRAP ?= m65wrap
 bin65/jcore:   bin65/jcore.llvm.prg src/telephony/ascii-font.c
+ifeq ($(strip $(M65WRAP)),)
 	cp $< $@
+	@echo "NOTE: $@ is NOT wrapped (M65WRAP is empty)"
+else
+	@command -v $(M65WRAP) >/dev/null || { echo "ERROR: $(M65WRAP) not found; install it or build with M65WRAP= for an unwrapped jcore"; exit 1; }
+	$(M65WRAP) -o $@ $<
+endif
 
 sdbin:	bin65/foneinit.llvm.prg bin65/foneclst.llvm.prg bin65/fonesms.llvm.prg
 

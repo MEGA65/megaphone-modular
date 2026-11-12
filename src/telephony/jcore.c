@@ -234,21 +234,43 @@ static void wifi_line(const char *l) {
   strcat(t_url, port_str);
 }
 
-// SD card generation: the firmware bumps it every time the card is mounted or
-// unmounted, so a remove/reinsert between our polls still changes it.
+// SD card generation: the firmware bumps it whenever the card is mounted,
+// unmounted or its files change, so any of those between polls changes it.
 uint32_t sd_gen = 0;
 uint8_t  sd_gen_known = 0;     // 0 on firmware that doesn't report gen=
 static uint32_t t_gen;
 static uint8_t  t_gen_seen;
 
-// e.g. +SDCARD: state=active mounted=1 config_loaded=1 transport=hw gen=3
+// Boot ID: random per Pico start-up. The generation starts again after a
+// restart (e.g. a firmware update) and could repeat a value we have seen, and
+// the Pico forgets its numbered core list, so a new boot ID means "reload".
+uint32_t sd_boot = 0;
+uint8_t  sd_boot_known = 0;    // 0 on firmware that doesn't report boot=
+static uint32_t t_boot;
+static uint8_t  t_boot_seen;
+
+static int hex_digit(char c) {
+  if (c >= '0' && c <= '9') return c - '0';
+  if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+  if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+  return -1;
+}
+
+// e.g. +SDCARD: state=active mounted=1 config_loaded=1 transport=hw gen=3 boot=1a2b3c4d
 static void sdcard_line(const char *l) {
   if (strncmp(l, "+SDCARD:", 8) != 0) return;
   const char *g = strstr(l, "gen=");
-  if (!g || g[4] < '0' || g[4] > '9') return;
-  t_gen = 0;
-  for (g += 4; *g >= '0' && *g <= '9'; g++) t_gen = t_gen * 10 + (*g - '0');
-  t_gen_seen = 1;
+  if (g && g[4] >= '0' && g[4] <= '9') {
+    t_gen = 0;
+    for (g += 4; *g >= '0' && *g <= '9'; g++) t_gen = t_gen * 10 + (*g - '0');
+    t_gen_seen = 1;
+  }
+  const char *b = strstr(l, "boot=");
+  if (b && hex_digit(b[5]) >= 0) {
+    t_boot = 0;
+    for (b += 5; hex_digit(*b) >= 0; b++) t_boot = (t_boot << 4) | (uint32_t)hex_digit(*b);
+    t_boot_seen = 1;
+  }
 }
 
 void query_info(uint8_t quiet) {
@@ -272,9 +294,16 @@ void query_info(uint8_t quiet) {
   }
 
   t_gen_seen = 0;
-  if (at_command("AT+SDCARD?", sdcard_line) == 1 && t_gen_seen) {
-    sd_gen = t_gen;
-    sd_gen_known = 1;
+  t_boot_seen = 0;
+  if (at_command("AT+SDCARD?", sdcard_line) == 1) {
+    if (t_gen_seen) {
+      sd_gen = t_gen;
+      sd_gen_known = 1;
+    }
+    if (t_boot_seen) {
+      sd_boot = t_boot;
+      sd_boot_known = 1;
+    }
   }
 
   if (!quiet) print_text40(0, 3, 0x07, 0, "Querying AT+WIFI?...                    ");
@@ -615,11 +644,12 @@ static uint8_t  probe_last_raster = 0;
 static uint8_t  jtag_sent = 0;         // no probing once a core load is sent
 
 static uint32_t list_gen = 0;          // sd_gen when the core list was read
+static uint32_t list_boot = 0;         // sd_boot when the core list was read
 static char load_error[41] = "";       // shown on row 9 after the next redraw
 static char keep_sel[80] = "";         // entry to reselect after a reload
 
-// Returns 1 if the SD card was inserted, removed or swapped since the core
-// list was read
+// Returns 1 if the core list must be read again: the Pico restarted (e.g. a
+// firmware update), or the SD card was inserted, removed, swapped or changed
 static uint8_t refresh_status(void) {
   char old_wifi[80], old_url[80], old_sd[80];
   uint8_t was_present = sd_present();
@@ -627,6 +657,7 @@ static uint8_t refresh_status(void) {
   strcpy(old_url, wifi_url);
   strcpy(old_sd, ati_sdcard);
   query_info(1);   // quiet: no "Querying..." flicker
+  if (sd_boot_known && sd_boot != list_boot) return 1;  // Pico restarted
   if (sd_gen_known && sd_gen != list_gen) return 1;  // caller redraws everything
   if (sd_present() != was_present) return 1;   // older firmware: no gen=
   if (strcmp(old_wifi, ati_wifi_hw) || strcmp(old_url, wifi_url) || strcmp(old_sd, ati_sdcard))
@@ -670,6 +701,7 @@ int main(void)
     // Sample the generation before reading, as the web page does: if the card
     // changes mid-read, the next poll sees a newer gen and reloads again
     list_gen = sd_gen;
+    list_boot = sd_boot;
 
     if (sd_present()) {
       // Stay in the current folder across changes (an upload, a delete, even
