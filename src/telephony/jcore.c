@@ -384,8 +384,10 @@ void parse_core(const char* core_detail) {
   }
 }
 
-void read_cores(const char* path) {
+// Returns 0 if the firmware could not list the folder (e.g. it was deleted)
+int read_cores(const char* path) {
   core_count = 0;
+  int failed = 0;
 
   set_max_send(150);
 
@@ -427,6 +429,10 @@ void read_cores(const char* path) {
           if (buf_idx > 0) {
             buf[buf_idx] = 0;
             if (strncmp(buf, "END", 3) == 0) {
+               done = 1;
+            } else if (strncmp(buf, "ERR", 3) == 0) {
+               // "ERR L ..." has no END after it: stop now, not after a timeout
+               failed = 1;
                done = 1;
             } else if (strncmp(buf, "CONT", 4) == 0) {
               send_cmd("AT+COREMORE");
@@ -475,6 +481,11 @@ void read_cores(const char* path) {
     }
   }
 
+  if (failed) {
+    set_max_send(0);
+    return 0;
+  }
+
   // PASS 2: AT+COREDETAIL to get COREs
   strcpy(cmd, "AT+COREDETAIL");
   if (strcmp(path, "/") != 0) {
@@ -509,6 +520,8 @@ void read_cores(const char* path) {
             buf[buf_idx] = 0;
             if (strncmp(buf, "END", 3) == 0) {
               done = 1;
+            } else if (strncmp(buf, "ERR", 3) == 0) {
+              done = 1;   // as above: no END follows an error
             } else if (strncmp(buf, "CONT", 4) == 0) {
               send_cmd("AT+COREMORE");
             } else if (strncmp(buf, "+COREDETAIL:", 12) == 0) {
@@ -540,6 +553,7 @@ void read_cores(const char* path) {
   }
 
   set_max_send(0);
+  return 1;
 }
 
 // "ACTIVE" = mounted, "PRESENT" = inserted but not mounted yet (e.g. right
@@ -602,6 +616,7 @@ static uint8_t  jtag_sent = 0;         // no probing once a core load is sent
 
 static uint32_t list_gen = 0;          // sd_gen when the core list was read
 static char load_error[41] = "";       // shown on row 9 after the next redraw
+static char keep_sel[80] = "";         // entry to reselect after a reload
 
 // Returns 1 if the SD card was inserted, removed or swapped since the core
 // list was read
@@ -652,17 +667,22 @@ int main(void)
       query_info(1);
     }
 
-    // A different card (or none) may not have the folder we were in
-    if (!sd_present() || (sd_gen_known && sd_gen != list_gen))
-      strcpy(current_path, "/");
     // Sample the generation before reading, as the web page does: if the card
     // changes mid-read, the next poll sees a newer gen and reloads again
     list_gen = sd_gen;
 
     if (sd_present()) {
-      read_cores(current_path);
+      // Stay in the current folder across changes (an upload, a delete, even
+      // a card swap); fall back to the root only if the folder is now gone
+      if (!read_cores(current_path) && strcmp(current_path, "/") != 0) {
+        strcpy(current_path, "/");
+        keep_sel[0] = 0;
+        read_cores(current_path);
+      }
     } else {
       core_count = 0;   // card gone: the old list is invalid
+      strcpy(current_path, "/");
+      keep_sel[0] = 0;
     }
     print_ati_info();
     if (load_error[0]) {
@@ -677,6 +697,16 @@ int main(void)
     int selected = 0;
     int top_idx = 0;
     int page_size = 14;
+
+    // After a reload caused by a change on the card, stay on the same entry.
+    // Numbers can shift, so match on the text after the number.
+    if (keep_sel[0]) {
+      for (int i = 0; i < core_count; i++) {
+        if (strcmp(cores[i] + 4, keep_sel) == 0) { selected = i; break; }
+      }
+      keep_sel[0] = 0;
+      if (selected >= page_size) top_idx = selected - page_size + 1;
+    }
     uint8_t last_joy = 0xff;
     int break_to_refresh = 0;
 
@@ -706,7 +736,8 @@ int main(void)
       probe_last_raster = r;
       if (!jtag_sent && probe_frames >= PROBE_FRAMES) {
         if (refresh_status()) {
-          // SD card inserted or removed: clear or reload the core list
+          // Card swapped/removed or its files changed: reload the core list
+          if (selected < core_count) strcpy(keep_sel, cores[selected] + 4);
           break_to_refresh = 1;
           continue;
         }
@@ -787,10 +818,11 @@ int main(void)
             // the wrong core. Returns on "OK P OPEN" or "ERR P ...".
             if (at_command(cmd, 0) == 0) {
               if (strstr(at_error_line, "sd card changed"))
-                strcpy(load_error, "SD card changed; list reloaded.");
+                strcpy(load_error, "Files changed; list reloaded.");
               else
                 strcpy(load_error, at_error_line);
               query_info(1);
+              if (selected < core_count) strcpy(keep_sel, cores[selected] + 4);
               break_to_refresh = 1;
               continue;
             }
