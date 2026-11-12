@@ -33,6 +33,17 @@ void print_text40(unsigned char x, unsigned char y, unsigned char colour, unsign
   }
 }
 
+// Like print_text40, but blanks the rest of the row so no stale text remains
+void print_line40(unsigned char y, unsigned char colour, const char *msg)
+{
+  char line[41];
+  uint8_t i = 0;
+  while (i < 40 && msg[i]) { line[i] = msg[i]; i++; }
+  while (i < 40) line[i++] = ' ';
+  line[40] = 0;
+  print_text40(0, y, colour, 0, line);
+}
+
 void c64_40col_mode(void)
 {
   // Switch to standard lowercase/uppercase C64 mode
@@ -92,10 +103,14 @@ static void uart_drain(void) {
 typedef void (*line_handler)(const char *line);
 
 // Sends cmd and passes each response line (except its own echo) to on_line.
-// Returns 1 = OK, 0 = ERROR, -1 = timeout (250 frames of silence)
+// Returns 1 = OK, 0 = ERROR/ERR (line kept in at_error_line), -1 = timeout
+// (250 frames of silence)
+static char at_error_line[41];
+
 static int at_command(const char *cmd, line_handler on_line) {
   static char buf[256];
   int idx = 0;
+  at_error_line[0] = 0;
   uart_drain();
   send_cmd((char *)cmd);
 
@@ -115,7 +130,11 @@ static int at_command(const char *cmd, line_handler on_line) {
         if (!idx) continue;
         buf[idx] = 0; idx = 0;
         if (strncmp(buf, "OK", 2) == 0)    return 1;
-        if (strncmp(buf, "ERROR", 5) == 0) return 0;
+        if (strncmp(buf, "ERR", 3) == 0) {     // "ERROR" or "ERR P ..."
+          strncpy(at_error_line, buf, 40);
+          at_error_line[40] = 0;
+          return 0;
+        }
         if (strcmp(buf, cmd) == 0) continue;   // our own echo only
         if (on_line) on_line(buf);
       } else if (idx < 255) {
@@ -215,6 +234,23 @@ static void wifi_line(const char *l) {
   strcat(t_url, port_str);
 }
 
+// SD card generation: the firmware bumps it every time the card is mounted or
+// unmounted, so a remove/reinsert between our polls still changes it.
+uint32_t sd_gen = 0;
+uint8_t  sd_gen_known = 0;     // 0 on firmware that doesn't report gen=
+static uint32_t t_gen;
+static uint8_t  t_gen_seen;
+
+// e.g. +SDCARD: state=active mounted=1 config_loaded=1 transport=hw gen=3
+static void sdcard_line(const char *l) {
+  if (strncmp(l, "+SDCARD:", 8) != 0) return;
+  const char *g = strstr(l, "gen=");
+  if (!g || g[4] < '0' || g[4] > '9') return;
+  t_gen = 0;
+  for (g += 4; *g >= '0' && *g <= '9'; g++) t_gen = t_gen * 10 + (*g - '0');
+  t_gen_seen = 1;
+}
+
 void query_info(uint8_t quiet) {
   if (!quiet) print_text40(0, 3, 0x07, 0, "Querying ATI...                         ");
   memset(t_version, 0, sizeof t_version);
@@ -233,6 +269,12 @@ void query_info(uint8_t quiet) {
     // Dynamic fields: update only when the modem actually reported them
     if (t_sdcard[0])   strcpy(ati_sdcard,   t_sdcard);
     if (t_wifi_hw[0])  strcpy(ati_wifi_hw,  t_wifi_hw);
+  }
+
+  t_gen_seen = 0;
+  if (at_command("AT+SDCARD?", sdcard_line) == 1 && t_gen_seen) {
+    sd_gen = t_gen;
+    sd_gen_known = 1;
   }
 
   if (!quiet) print_text40(0, 3, 0x07, 0, "Querying AT+WIFI?...                    ");
@@ -500,35 +542,47 @@ void read_cores(const char* path) {
   set_max_send(0);
 }
 
+// "ACTIVE" = mounted, "PRESENT" = inserted but not mounted yet (e.g. right
+// after power-up). No SDCARD: line at all (older firmware) counts as present.
+static uint8_t sd_present(void) {
+  return !ati_sdcard[0] || strncmp(ati_sdcard, "SDCARD: NOT PRESENT", 19) != 0;
+}
+
+static uint8_t sd_mounted(void) {
+  return !ati_sdcard[0] || strncmp(ati_sdcard, "SDCARD: ACTIVE", 14) == 0;
+}
+
 void print_ati_info() {
   // Clear querying text
   print_text40(0, 3, 0x01, 0, "                                        ");
 
   int info_row = 2;
-  print_text40(0, info_row++, 0x05, 0, ati_version);
-  if (ati_build[0]) print_text40(0, info_row++, 0x0a, 0, ati_build);
-  if (ati_identity[0]) print_text40(0, info_row++, 0x0e, 0, ati_identity);
+  print_line40(info_row++, 0x05, ati_version);
+  if (ati_build[0]) print_line40(info_row++, 0x0a, ati_build);
+  if (ati_identity[0]) print_line40(info_row++, 0x0e, ati_identity);
 
-  if (ati_sdcard[0] && strncmp(ati_sdcard, "SDCARD: ACTIVE", 14) != 0) {
-    print_text40(0, info_row++, 0x02, 0, ati_sdcard);
+  if (!sd_mounted()) {
+    print_line40(info_row++, 0x02, ati_sdcard);
   }
   if (ati_wifi_hw[0] && strncmp(ati_wifi_hw, "WIFI: BUILT-IN", 14) != 0) {
-    print_text40(0, info_row++, 0x02, 0, ati_wifi_hw);
+    print_line40(info_row++, 0x02, ati_wifi_hw);
   }
 
   if (wifi_url[0]) {
     char wbuf[40];
     strcpy(wbuf, "Web: ");
     strncat(wbuf, wifi_url, 34);
-    print_text40(0, info_row++, 0x03, 0, wbuf);
+    print_line40(info_row++, 0x03, wbuf);
   }
 
   // Clear any remaining rows before the core list starts at row 9
   while (info_row < 9) {
-    print_text40(0, info_row++, 0x01, 0, "                                        ");
+    print_line40(info_row++, 0x01, "");
   }
 
-  if (core_count == 0) {
+  if (!sd_present()) {
+    print_text40(0, 9, 0x02, 0, "Insert an SD card to list cores.        ");
+  } else if (core_count == 0) {
     print_text40(0, 9, 0x02, 0, "No cores found or failed to read.       ");
   } else {
     print_text40(0, 9, 0x0a, 0, "Select a core and press RETURN or FIRE: ");
@@ -539,28 +593,30 @@ void print_ati_info() {
 // Periodic status re-probe
 // ---------------------------------------------------------------------------
 
-#define PROBE_FAST_FRAMES  (50 * 3)    // every 3 s while WiFi is unsettled
-#define PROBE_SLOW_FRAMES  (50 * 60)   // every 60 s once settled
+// The SD card can be pulled at any moment, so poll often
+#define PROBE_FRAMES  (50 * 2)   // every 2 s
 
 static uint16_t probe_frames = 0;
 static uint8_t  probe_last_raster = 0;
 static uint8_t  jtag_sent = 0;         // no probing once a core load is sent
 
-// Unsettled = still probing, or hardware present but no IP yet
-static uint8_t wifi_unsettled(void) {
-  if (strncmp(ati_wifi_hw, "WIFI: PROBING", 13) == 0) return 1;
-  if (strncmp(ati_wifi_hw, "WIFI: BUILT-IN", 14) == 0 && !wifi_url[0]) return 1;
-  return 0;
-}
+static uint32_t list_gen = 0;          // sd_gen when the core list was read
+static char load_error[41] = "";       // shown on row 9 after the next redraw
 
-static void refresh_status(void) {
+// Returns 1 if the SD card was inserted, removed or swapped since the core
+// list was read
+static uint8_t refresh_status(void) {
   char old_wifi[80], old_url[80], old_sd[80];
+  uint8_t was_present = sd_present();
   strcpy(old_wifi, ati_wifi_hw);
   strcpy(old_url, wifi_url);
   strcpy(old_sd, ati_sdcard);
   query_info(1);   // quiet: no "Querying..." flicker
+  if (sd_gen_known && sd_gen != list_gen) return 1;  // caller redraws everything
+  if (sd_present() != was_present) return 1;   // older firmware: no gen=
   if (strcmp(old_wifi, ati_wifi_hw) || strcmp(old_url, wifi_url) || strcmp(old_sd, ati_sdcard))
     print_ati_info();
+  return 0;
 }
 
 int main(void)
@@ -588,8 +644,31 @@ int main(void)
   char current_path[128] = "/";
 
   while(1) {
-    read_cores(current_path);
+    // Inserted but not mounted: mount it now, so the gen sampled below is the
+    // one the listing runs under (otherwise listing mounts it, bumps gen, and
+    // the next poll pointlessly reloads)
+    if (sd_present() && !sd_mounted()) {
+      at_command("AT+MOUNT", 0);
+      query_info(1);
+    }
+
+    // A different card (or none) may not have the folder we were in
+    if (!sd_present() || (sd_gen_known && sd_gen != list_gen))
+      strcpy(current_path, "/");
+    // Sample the generation before reading, as the web page does: if the card
+    // changes mid-read, the next poll sees a newer gen and reloads again
+    list_gen = sd_gen;
+
+    if (sd_present()) {
+      read_cores(current_path);
+    } else {
+      core_count = 0;   // card gone: the old list is invalid
+    }
     print_ati_info();
+    if (load_error[0]) {
+      print_line40(9, 0x02, load_error);
+      load_error[0] = 0;
+    }
 
     // A directory reload just talked to the modem; restart the probe timer
     probe_frames = 0;
@@ -621,13 +700,16 @@ int main(void)
         }
       }
 
-      // Periodic status probe: fast while WiFi is settling, slow afterwards
+      // Periodic status probe
       uint8_t r = PEEK(0xD012);
       if (r < probe_last_raster) probe_frames++;
       probe_last_raster = r;
-      if (!jtag_sent &&
-          probe_frames >= (wifi_unsettled() ? PROBE_FAST_FRAMES : PROBE_SLOW_FRAMES)) {
-        refresh_status();
+      if (!jtag_sent && probe_frames >= PROBE_FRAMES) {
+        if (refresh_status()) {
+          // SD card inserted or removed: clear or reload the core list
+          break_to_refresh = 1;
+          continue;
+        }
         probe_frames = 0;
         probe_last_raster = PEEK(0xD012);
       }
@@ -700,8 +782,19 @@ int main(void)
 
             strcpy(cmd, "AT+JTAGLOAD=");
             strcat(cmd, nbuf);
-            uart_drain();
-            send_cmd(cmd);
+            // The firmware refuses a numbered load if the card changed since
+            // our AT+CORELIST, so a pull inside the poll window can't load
+            // the wrong core. Returns on "OK P OPEN" or "ERR P ...".
+            if (at_command(cmd, 0) == 0) {
+              if (strstr(at_error_line, "sd card changed"))
+                strcpy(load_error, "SD card changed; list reloaded.");
+              else
+                strcpy(load_error, at_error_line);
+              query_info(1);
+              break_to_refresh = 1;
+              continue;
+            }
+            // OK, or no reply (the load may have reset us): stop talking
             jtag_sent = 1;
             print_text40(0, 24, 0x0a, 0, "Command sent:");
             print_text40(14, 24, 0x0e, 0, cmd);
